@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Dash: Tiny Menace Run</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="game-header">
+        <h1>🏃 Family Dash: Tiny Menace Run</h1>
+        <p>Pick your runner. Dodge chaos. Collect spark-coins. Save snacks.</p>
+      </header>
+
+      <main>
+        <section id="startScreen" class="panel active">
+          <h2>Start</h2>
+          <p>
+            A playful endless runner with 3 handcrafted levels and unique family heroes.
+          </p>
+          <button id="startBtn" class="primary">Play</button>
+          <div class="hint">Controls: Space / ↑ jump, ↓ slide, K kick, P pause.</div>
+        </section>
+
+        <section id="characterScreen" class="panel">
+          <h2>Choose Your Character</h2>
+          <div id="characterGrid" class="character-grid"></div>
+          <div class="actions">
+            <button id="backToStartBtn">Back</button>
+            <button id="toLevelBtn" class="primary" disabled>Choose Level</button>
+          </div>
+        </section>
+
+        <section id="levelScreen" class="panel">
+          <h2>Choose Level</h2>
+          <div id="levelGrid" class="level-grid"></div>
+          <div class="actions">
+            <button id="backToCharactersBtn">Back</button>
+            <button id="launchBtn" class="primary" disabled>Launch Run</button>
+          </div>
+        </section>
+
+        <section id="gameScreen" class="panel game-panel">
+          <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
+          <div id="hud" class="hud"></div>
+          <div class="mobile-controls">
+            <button data-action="jump">Jump</button>
+            <button data-action="slide">Slide</button>
+            <button data-action="kick">Kick</button>
+            <button data-action="pause">Pause</button>
+          </div>
+        </section>
+
+        <section id="overlayScreen" class="panel">
+          <h2 id="overlayTitle"></h2>
+          <p id="overlayText"></p>
+          <div class="actions">
+            <button id="overlayPrimary" class="primary"></button>
+            <button id="overlaySecondary"></button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+  </body>
+</html>
