@@ -1,16 +1,13 @@
 (function () {
   const FamilyDash = (window.FamilyDash = window.FamilyDash || {});
 
-  function drawRoundedRect(ctx, x, y, width, height, radius, color) {
+  function px(v) {
+    return Math.round(v);
+  }
+
+  function block(ctx, x, y, w, h, color) {
     ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.moveTo(x + radius, y);
-    ctx.arcTo(x + width, y, x + width, y + height, radius);
-    ctx.arcTo(x + width, y + height, x, y + height, radius);
-    ctx.arcTo(x, y + height, x, y, radius);
-    ctx.arcTo(x, y, x + width, y, radius);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(px(x), px(y), px(w), px(h));
   }
 
   class Renderer {
@@ -23,6 +20,80 @@
 
     setLevel(level) { this.level = level; }
 
+    drawHouses(offset) {
+      const ctx = this.ctx;
+      const y = 188;
+      for (let i = -1; i <= 8; i += 1) {
+        const x = i * 170 - offset;
+        block(ctx, x, y, 80, 56, "#f4e7c2");
+        block(ctx, x + 8, y + 12, 12, 10, "#4d9be6");
+        block(ctx, x + 26, y + 12, 12, 10, "#4d9be6");
+        block(ctx, x + 50, y + 12, 20, 30, "#9d5d4b");
+        block(ctx, x - 6, y - 12, 92, 14, "#c95c54");
+      }
+    }
+
+    drawTrees(offset, groundY) {
+      const ctx = this.ctx;
+      for (let i = -1; i <= 12; i += 1) {
+        const x = i * 100 - offset;
+        block(ctx, x + 16, groundY - 48, 10, 48, "#7e4f2a");
+        block(ctx, x, groundY - 70, 42, 22, "#2f9658");
+        block(ctx, x + 6, groundY - 86, 30, 16, "#39af68");
+      }
+    }
+
+    drawRunner(player, animationClock) {
+      const ctx = this.ctx;
+      const step = Math.sin(animationClock * 18);
+      const bob = Math.sin(animationClock * 16) * 1.2;
+      const w = player.width;
+      const h = player.height;
+      const x = player.x;
+      const y = player.y + bob;
+
+      const bodyW = Math.max(6, Math.round(w * 0.5));
+      const bodyH = Math.max(10, Math.round(h * 0.45));
+      const head = Math.max(5, Math.round(h * 0.22));
+      const legLen = Math.max(8, Math.round(h * 0.36));
+      const armLen = Math.max(6, Math.round(h * 0.28));
+
+      const bodyX = x + Math.round((w - bodyW) / 2);
+      const bodyY = y + head;
+      const legY = bodyY + bodyH;
+      const armY = bodyY + 4;
+
+      block(ctx, bodyX, bodyY, bodyW, bodyH, player.character.color);
+      block(ctx, bodyX + 1, y, head, head, "#ffd9b3");
+
+      const accentW = Math.max(2, Math.round(bodyW * 0.7));
+      block(ctx, bodyX + 1, bodyY + Math.round(bodyH * 0.45), accentW, 3, player.character.accent);
+
+      const legSwing = Math.round(step * 4);
+      const armSwing = Math.round(step * 3);
+
+      block(ctx, bodyX + 2, legY, 3, legLen + legSwing, "#1b1b2f");
+      block(ctx, bodyX + bodyW - 5, legY, 3, legLen - legSwing, "#1b1b2f");
+      block(ctx, bodyX - 3, armY, 3, armLen - armSwing, "#1b1b2f");
+      block(ctx, bodyX + bodyW, armY, 3, armLen + armSwing, "#1b1b2f");
+
+      if (player.character.id === "liam") {
+        block(ctx, bodyX + bodyW - 4, bodyY + 2, 4, 4, "#80ffdb");
+      }
+      if (player.character.id === "addy") {
+        block(ctx, bodyX - 2, y + 1, 3, 3, "#ff99c8");
+        block(ctx, bodyX + head, y + 1, 3, 3, "#ff99c8");
+      }
+      if (player.kickTimer > 0) {
+        block(ctx, x + w + 2, legY + 3, 16, 3, "#ffe48a");
+      }
+      if (player.shieldTimer > 0) {
+        ctx.strokeStyle = "#8ce0ff";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x - 5, y - 4, w + 10, h + 10);
+      }
+    }
+
     render(state) {
       const ctx = this.ctx;
       const canvas = this.canvas;
@@ -33,128 +104,40 @@
       const distance = state.distance;
       const groundY = state.groundY;
 
-      this.parallax.far = (distance * 0.08) % canvas.width;
-      this.parallax.mid = (distance * 0.16) % canvas.width;
-      this.parallax.near = (distance * 0.3) % canvas.width;
+      ctx.imageSmoothingEnabled = false;
+      this.parallax.far = (distance * 0.06) % canvas.width;
+      this.parallax.mid = (distance * 0.14) % canvas.width;
+      this.parallax.near = (distance * 0.28) % canvas.width;
 
-      ctx.fillStyle = this.level.backdrop.sky;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      block(ctx, 0, 0, canvas.width, canvas.height, this.level.backdrop.sky);
+      this.drawHouses(this.parallax.far);
+      this.drawTrees(this.parallax.mid, groundY);
+      block(ctx, 0, groundY, canvas.width, canvas.height - groundY, this.level.backdrop.ground);
 
-      ctx.fillStyle = this.level.backdrop.city;
-      for (let i = -1; i <= 8; i += 1) {
-        const x = i * 150 - this.parallax.far;
-        ctx.fillRect(x, 170, 100, 120 + (i % 3) * 20);
-      }
-
-      ctx.fillStyle = this.level.backdrop.hill;
-      for (let i = -1; i <= 7; i += 1) {
-        const x = i * 180 - this.parallax.mid;
-        ctx.beginPath();
-        ctx.arc(x + 90, groundY + 32, 100, Math.PI, 2 * Math.PI);
-        ctx.fill();
-      }
-
-      ctx.fillStyle = this.level.backdrop.ground;
-      ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
-
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.lineWidth = 2;
-      for (let x = -40; x < canvas.width + 60; x += 80) {
-        const pathX = x - (this.parallax.near % 80);
-        ctx.beginPath();
-        ctx.moveTo(pathX, groundY + 16);
-        ctx.lineTo(pathX + 40, groundY + 16);
-        ctx.stroke();
+      for (let x = -40; x < canvas.width + 80; x += 32) {
+        block(ctx, x - (this.parallax.near % 32), groundY + 18, 16, 2, "#f2f2f2");
       }
 
       coins.forEach((coin) => {
-        ctx.fillStyle = "#ffd447";
-        ctx.beginPath();
-        ctx.arc(coin.x + coin.radius, coin.y + coin.radius, coin.radius, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = "#ad7c00";
-        ctx.fillRect(coin.x + coin.radius - 4, coin.y + coin.radius - 8, 8, 16);
+        block(ctx, coin.x, coin.y, coin.width, coin.height, "#ffd447");
+        block(ctx, coin.x + 4, coin.y + 4, coin.width - 8, coin.height - 8, "#f6b500");
       });
 
       powerups.forEach((powerup) => {
-        drawRoundedRect(ctx, powerup.x, powerup.y, powerup.width, powerup.height, 8, powerup.color);
-        ctx.fillStyle = "#14223f";
-        ctx.font = "bold 12px sans-serif";
-        ctx.textAlign = "center";
-        ctx.fillText(powerup.label[0], powerup.x + powerup.width / 2, powerup.y + powerup.height / 1.5);
+        block(ctx, powerup.x, powerup.y, powerup.width, powerup.height, powerup.color);
+        block(ctx, powerup.x + 7, powerup.y + 7, 10, 10, "#14223f");
       });
 
       obstacles.forEach((obstacle) => {
-        ctx.fillStyle = obstacle.color;
-        if (obstacle.type === "cone") {
-          ctx.beginPath();
-          ctx.moveTo(obstacle.x, obstacle.y + obstacle.height);
-          ctx.lineTo(obstacle.x + obstacle.width / 2, obstacle.y);
-          ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
-          ctx.closePath();
-          ctx.fill();
-        } else if (obstacle.type === "drone") {
-          drawRoundedRect(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, 8, obstacle.color);
-          ctx.fillStyle = "#8dd3ff";
-          ctx.fillRect(obstacle.x + 8, obstacle.y - 6, obstacle.width - 16, 4);
-        } else if (obstacle.type === "ramp") {
-          ctx.beginPath();
-          ctx.moveTo(obstacle.x, obstacle.y + obstacle.height);
-          ctx.lineTo(obstacle.x + obstacle.width, obstacle.y + obstacle.height);
-          ctx.lineTo(obstacle.x + obstacle.width, obstacle.y);
-          ctx.closePath();
-          ctx.fill();
-        } else {
-          drawRoundedRect(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, 6, obstacle.color);
-        }
+        block(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color);
+        block(ctx, obstacle.x + 2, obstacle.y + 2, obstacle.width - 4, 3, "rgba(255,255,255,0.3)");
       });
 
-      const bob = Math.sin(state.animationClock * 14) * (player.isGrounded() ? 3 : 1);
-      const px = player.x;
-      const py = player.y + bob;
-
-      drawRoundedRect(ctx, px + 10, py + 18, 36, player.height - 18, 12, player.character.color);
-      drawRoundedRect(ctx, px + 18, py + 2, 20, 20, 10, "#ffd9b3");
-      ctx.fillStyle = player.character.accent;
-      ctx.fillRect(px + 8, py + 40, 40, 8);
-      ctx.fillStyle = "#111";
-      ctx.beginPath();
-      ctx.arc(px + 25, py + 12, 2, 0, Math.PI * 2);
-      ctx.arc(px + 32, py + 12, 2, 0, Math.PI * 2);
-      ctx.fill();
-
-      if (player.character.id === "liam") {
-        ctx.strokeStyle = "#80ffdb";
-        ctx.beginPath();
-        ctx.moveTo(px + 18, py + 28);
-        ctx.lineTo(px + 40, py + 28);
-        ctx.stroke();
-      }
-      if (player.character.id === "addy") {
-        ctx.fillStyle = "#ff99c8";
-        ctx.fillRect(px + 4, py + 14, 6, 6);
-        ctx.fillRect(px + 46, py + 14, 6, 6);
-      }
-      if (player.kickTimer > 0) {
-        ctx.strokeStyle = "#ffe48a";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(px + player.width + 8, py + player.height - 24, 18, -0.7, 0.7);
-        ctx.stroke();
-      }
-      if (player.shieldTimer > 0) {
-        ctx.strokeStyle = "rgba(140, 224, 255, 0.85)";
-        ctx.lineWidth = 4;
-        ctx.beginPath();
-        ctx.arc(px + player.width / 2, py + player.height / 2, 44, 0, Math.PI * 2);
-        ctx.stroke();
-      }
+      this.drawRunner(player, state.animationClock);
 
       const progress = Math.min(1, state.distance / this.level.length);
-      ctx.fillStyle = "rgba(16,20,34,0.6)";
-      ctx.fillRect(20, 14, canvas.width - 40, 14);
-      ctx.fillStyle = "#6ef3b5";
-      ctx.fillRect(20, 14, (canvas.width - 40) * progress, 14);
+      block(ctx, 20, 14, canvas.width - 40, 12, "#1f2a44");
+      block(ctx, 20, 14, (canvas.width - 40) * progress, 12, "#6ef3b5");
     }
   }
 

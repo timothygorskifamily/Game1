@@ -8,12 +8,13 @@ This version is intentionally built with **classic script loading** (no ES modul
 
 ## Features
 
+- Pixel-art themed UI and in-game visuals with crisp retro styling
 - Start screen, character select, level select, game HUD, pause flow, game over, and win screen
 - 6 unique playable characters with custom stats and gameplay feel
 - 3 polished levels with increasing difficulty and distinct visual themes
 - Auto-running side-scroller gameplay with jump, slide, and kick controls
-- Character-specific mechanics and stat-driven playstyles
-- Original code-generated visuals for characters, obstacles, power-ups, backgrounds, and UI
+- Character-specific mechanics and stat-driven playstyles, including visual size scaling (parents full-size, kids half-size, Addy one-third size)
+- Original code-generated visuals for characters, obstacles, power-ups, backgrounds, trees, houses, and UI
 - Collectibles (coins), power-ups (heal/shield/rush), lives/health, score and distance
 - Optional mobile/touch controls
 - Simple generated audio SFX via Web Audio API

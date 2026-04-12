@@ -12,7 +12,7 @@
       color: "#f94144",
       accent: "#ffe066",
       stats: { speed: 3, jump: 3, stamina: 4, strength: 5, control: 4 },
-      gameplay: { baseSpeed: 270, jumpPower: 590, maxHealth: 4, kickPower: 2, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1 }
+      gameplay: { baseSpeed: 270, jumpPower: 590, maxHealth: 4, kickPower: 2, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1, sizeScale: 1 }
     },
     {
       id: "tim",
@@ -24,7 +24,7 @@
       color: "#277da1",
       accent: "#b2f7ef",
       stats: { speed: 5, jump: 3, stamina: 5, strength: 2, control: 4 },
-      gameplay: { baseSpeed: 310, jumpPower: 610, maxHealth: 4, kickPower: 1, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1.05 }
+      gameplay: { baseSpeed: 310, jumpPower: 610, maxHealth: 4, kickPower: 1, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1.05, sizeScale: 1 }
     },
     {
       id: "ariel",
@@ -36,7 +36,7 @@
       color: "#f3722c",
       accent: "#f9f871",
       stats: { speed: 4, jump: 5, stamina: 2, strength: 2, control: 5 },
-      gameplay: { baseSpeed: 285, jumpPower: 680, maxHealth: 3, kickPower: 1, coinMagnet: 1, hitboxScale: 0.95, accelerationBonus: 1.25 }
+      gameplay: { baseSpeed: 285, jumpPower: 680, maxHealth: 3, kickPower: 1, coinMagnet: 1, hitboxScale: 0.95, accelerationBonus: 1.25, sizeScale: 0.5 }
     },
     {
       id: "liam",
@@ -48,7 +48,7 @@
       color: "#577590",
       accent: "#80ffdb",
       stats: { speed: 2, jump: 3, stamina: 4, strength: 3, control: 4 },
-      gameplay: { baseSpeed: 245, jumpPower: 600, maxHealth: 4, kickPower: 1, coinMagnet: 1.7, hitboxScale: 1, accelerationBonus: 1, techShieldChance: 0.16 }
+      gameplay: { baseSpeed: 245, jumpPower: 600, maxHealth: 4, kickPower: 1, coinMagnet: 1.7, hitboxScale: 1, accelerationBonus: 1, techShieldChance: 0.16, sizeScale: 0.5 }
     },
     {
       id: "david",
@@ -60,7 +60,7 @@
       color: "#43aa8b",
       accent: "#ffd166",
       stats: { speed: 3, jump: 3, stamina: 4, strength: 5, control: 3 },
-      gameplay: { baseSpeed: 265, jumpPower: 620, maxHealth: 4, kickPower: 2, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1 }
+      gameplay: { baseSpeed: 265, jumpPower: 620, maxHealth: 4, kickPower: 2, coinMagnet: 1, hitboxScale: 1, accelerationBonus: 1, sizeScale: 0.5 }
     },
     {
       id: "addy",
@@ -72,7 +72,7 @@
       color: "#9b5de5",
       accent: "#ff99c8",
       stats: { speed: 3, jump: 4, stamina: 2, strength: 2, control: 1 },
-      gameplay: { baseSpeed: 260, jumpPower: 640, maxHealth: 3, kickPower: 1, coinMagnet: 1.15, hitboxScale: 0.75, accelerationBonus: 0.95, chaosMode: true }
+      gameplay: { baseSpeed: 260, jumpPower: 640, maxHealth: 3, kickPower: 1, coinMagnet: 1.15, hitboxScale: 0.75, accelerationBonus: 0.95, chaosMode: true, sizeScale: 0.33 }
     }
   ];
 

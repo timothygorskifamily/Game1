@@ -4,8 +4,9 @@
   class Player {
     constructor(character, canvasHeight, groundY) {
       this.character = character;
-      this.width = 56;
-      this.baseHeight = 82;
+      this.sizeScale = character.gameplay.sizeScale || 1;
+      this.width = Math.max(18, Math.round(56 * this.sizeScale));
+      this.baseHeight = Math.max(26, Math.round(82 * this.sizeScale));
       this.height = this.baseHeight;
       this.x = 130;
       this.y = groundY - this.height;
@@ -45,7 +46,7 @@
       if (!this.isGrounded()) return;
       this.isSliding = true;
       this.slideTimer = 0.45;
-      this.height = 52;
+      this.height = Math.max(16, Math.round(this.baseHeight * 0.65));
       this.y = this.groundY - this.height;
     }
 
