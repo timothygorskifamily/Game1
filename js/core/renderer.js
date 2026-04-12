@@ -94,6 +94,62 @@
       if (this.level.biome === "snow") block(ctx, 740 - (distance * 0.03 % 900), 60, 20, 20, "#fffef5");
     }
 
+
+    drawBiomeFx(distance, groundY) {
+      const ctx = this.ctx;
+      const c = this.canvas;
+      const t = distance * 0.02;
+      if (this.level.biome === "desert") {
+        for (let i = 0; i < 24; i += 1) {
+          const x = (i * 60 + t * 40) % c.width;
+          const y = 80 + (i * 11 % 120);
+          block(ctx, x, y, 8, 1, "rgba(255,235,170,0.35)");
+        }
+      } else if (this.level.biome === "farm") {
+        for (let i = 0; i < 12; i += 1) {
+          const x = (i * 90 + t * 22) % c.width;
+          const y = 70 + Math.sin(t + i) * 10;
+          block(ctx, x, y, 6, 3, "#ffffff");
+        }
+      } else if (this.level.biome === "marsh") {
+        for (let i = 0; i < 18; i += 1) {
+          const x = (i * 70 + t * 30) % c.width;
+          const y = groundY - 8 + Math.sin(t * 2 + i) * 3;
+          block(ctx, x, y, 10, 2, "rgba(174,224,187,0.45)");
+        }
+      } else if (this.level.biome === "space") {
+        for (let i = 0; i < 6; i += 1) {
+          const x = (i * 180 + t * 14) % c.width;
+          const y = 34 + i * 26;
+          block(ctx, x, y, 14, 2, "#a8b3ff");
+        }
+      } else if (this.level.biome === "cyber") {
+        for (let i = 0; i < 10; i += 1) {
+          const x = (i * 100 + t * 26) % c.width;
+          const y = 46 + i * 18;
+          block(ctx, x, y, 20, 2, i % 2 ? "#7bf7ff" : "#f77bff");
+        }
+      } else if (this.level.biome === "beach") {
+        for (let i = 0; i < 20; i += 1) {
+          const x = (i * 52 + t * 35) % c.width;
+          const y = groundY + 4 + Math.sin(t + i) * 2;
+          block(ctx, x, y, 12, 2, "rgba(255,255,255,0.5)");
+        }
+      } else if (this.level.biome === "snow") {
+        for (let i = 0; i < 50; i += 1) {
+          const x = (i * 37 + t * 14) % c.width;
+          const y = (i * 23 + t * 28) % (groundY - 10);
+          block(ctx, x, y, 2, 2, "rgba(255,255,255,0.8)");
+        }
+      } else if (this.level.biome === "volcano") {
+        for (let i = 0; i < 26; i += 1) {
+          const x = (i * 48 + t * 20) % c.width;
+          const y = groundY - 12 - (i % 3) * 8;
+          block(ctx, x, y, 3, 3, "#ff8f3d");
+        }
+      }
+    }
+
     drawRunner(player, t) {
       const ctx = this.ctx;
       const step = Math.sin(t * 18);
@@ -140,6 +196,7 @@
       this.drawParallaxObjects(distance, groundY - 38, "far");
       this.drawParallaxObjects(distance, groundY - 20, "mid");
       this.drawParallaxObjects(distance, groundY, "near");
+      this.drawBiomeFx(distance, groundY);
 
       block(ctx, 0, groundY, c.width, c.height - groundY, this.level.backdrop.ground);
       for (let x = -30; x < c.width + 60; x += 30) block(ctx, x - (distance * 0.33 % 30), groundY + 18, 16, 2, "#f2f2f2");

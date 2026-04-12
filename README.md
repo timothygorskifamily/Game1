@@ -17,7 +17,10 @@ This version is intentionally built with **classic script loading** (no ES modul
 - Session scoreboard showing top recent run results
 - Persistent wallet, inventory, and high score using `localStorage`
 - Hype-style generated background music loop via Web Audio API
+- Always-visible bottom control bar while playing (keyboard + touch friendly)
+- Character ability/skill panel shown at the bottom during gameplay
 - Desktop and mobile/touch controls
+- Automatic mobile-device detection with responsive canvas scaling and larger touch UI
 
 ## Run locally
 
