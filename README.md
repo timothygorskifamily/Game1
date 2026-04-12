@@ -2,19 +2,17 @@
 
 A complete browser endless-runner game built with **100% HTML, CSS, and JavaScript** (no TypeScript, no game engine).
 
+## ✅ Local-run fix included
+
+This version is intentionally built with **classic script loading** (no ES module imports), so it runs by double-clicking `index.html` directly from disk (`file://`) without the CORS module error.
+
 ## Features
 
 - Start screen, character select, level select, game HUD, pause flow, game over, and win screen
-- 6 unique playable characters with custom stats and gameplay feel:
-  - Drea, Tim, Ariel, Liam, David, Addy
+- 6 unique playable characters with custom stats and gameplay feel
 - 3 polished levels with increasing difficulty and distinct visual themes
 - Auto-running side-scroller gameplay with jump, slide, and kick controls
-- Character-specific mechanics:
-  - Strong kickers (Drea/David)
-  - Fast specialist (Tim)
-  - Agile jumper (Ariel)
-  - Coin magnet + tech bonus (Liam)
-  - Tiny chaotic movement + random bonus chance (Addy)
+- Character-specific mechanics and stat-driven playstyles
 - Original code-generated visuals for characters, obstacles, power-ups, backgrounds, and UI
 - Collectibles (coins), power-ups (heal/shield/rush), lives/health, score and distance
 - Optional mobile/touch controls
@@ -23,10 +21,10 @@ A complete browser endless-runner game built with **100% HTML, CSS, and JavaScri
 
 ## Run locally
 
-### Option 1: Open directly
+### Option 1: Open directly (works now)
 Open `index.html` in a modern browser.
 
-### Option 2: Simple local server (recommended)
+### Option 2: Simple local server (recommended for dev)
 From the project root:
 
 ```bash
@@ -67,29 +65,12 @@ Then open: `http://localhost:8080`
 
 ## Customization guide
 
-### Add or edit characters
-- File: `js/data/characters.js`
-- Tune:
-  - `stats` (UI summary bars)
-  - `gameplay` values like `baseSpeed`, `jumpPower`, `maxHealth`, `kickPower`, `coinMagnet`, `hitboxScale`
-
-### Add or edit levels
-- File: `js/data/levels.js`
-- Tune:
-  - `length`, `baseSpeedBoost`, `difficultyGrowth`
-  - `obstaclePool`, `coinRate`, `powerupRate`
-  - `backdrop` colors for level visual identity
-
-### Add obstacles or power-ups
-- File: `js/data/levels.js`
-- Add entries in `OBSTACLE_DEFS` or `POWERUP_DEFS`, then include them in level pools.
-- Renderer behavior is in `js/core/renderer.js`.
-
-### Adjust gameplay systems
-- Main loop and spawn cadence: `js/core/game.js`
-- Player movement and effects: `js/entities/player.js`
-- Collision checks: `js/systems/collision.js`
-- Input mapping: `js/systems/input.js`
+- Characters: `js/data/characters.js`
+- Levels / obstacles / powerups: `js/data/levels.js`
+- Core gameplay loop and progression: `js/core/game.js`
+- Canvas visuals and character drawing: `js/core/renderer.js`
+- Player movement and status effects: `js/entities/player.js`
+- Controls: `js/systems/input.js`
 
 ## Notes
 
