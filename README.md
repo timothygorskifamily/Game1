@@ -9,7 +9,7 @@ This version is intentionally built with **classic script loading** (no ES modul
 ## Features
 
 - Pixel-art themed UI and in-game visuals with crisp retro styling
-- Dynamic procedural city background (animated sky cycle, skyline layers, kiosks, lamps, clouds)
+- Every level has a different biome background (desert, farm, marsh, city, cyber, space, forest, beach, snow, volcano)
 - Character select with 6 runners and distinct stats
 - **10 progressive levels** with increasing speed, difficulty, and obstacle mixes
 - In-game store to buy one-run boosts using coins earned in gameplay
