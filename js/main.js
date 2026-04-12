@@ -4,6 +4,7 @@
   const screens = {
     start: document.getElementById("startScreen"),
     character: document.getElementById("characterScreen"),
+    store: document.getElementById("storeScreen"),
     level: document.getElementById("levelScreen"),
     game: document.getElementById("gameScreen"),
     overlay: document.getElementById("overlayScreen")
@@ -12,15 +13,20 @@
   const hud = document.getElementById("hud");
   const characterGrid = document.getElementById("characterGrid");
   const levelGrid = document.getElementById("levelGrid");
+  const storeGrid = document.getElementById("storeGrid");
+  const walletValue = document.getElementById("walletValue");
+  const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlayText = document.getElementById("overlayText");
   const overlayPrimary = document.getElementById("overlayPrimary");
   const overlaySecondary = document.getElementById("overlaySecondary");
   const startBtn = document.getElementById("startBtn");
+  const toStoreBtn = document.getElementById("toStoreBtn");
   const toLevelBtn = document.getElementById("toLevelBtn");
   const launchBtn = document.getElementById("launchBtn");
   const backToStartBtn = document.getElementById("backToStartBtn");
+  const backToStoreBtn = document.getElementById("backToStoreBtn");
   const backToCharactersBtn = document.getElementById("backToCharactersBtn");
 
   const input = new FamilyDash.InputManager();
@@ -29,10 +35,30 @@
   const audio = new FamilyDash.AudioSystem();
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
 
+  const STORE_ITEMS = [
+    { id: "speedBoost", name: "Turbo Shoes", cost: 24, desc: "+22 start speed for one run" },
+    { id: "startShield", name: "Bubble Shield", cost: 20, desc: "Start with 6s shield" },
+    { id: "extraHeart", name: "Extra Heart", cost: 32, desc: "+1 max health this run" },
+    { id: "magnetBoost", name: "Coin Magnet", cost: 26, desc: "Stronger coin pull this run" }
+  ];
+
   let selectedCharacter = null;
   let selectedLevel = null;
   let game = null;
-  let highScore = Number(localStorage.getItem("familyDashHighScore") || 0);
+
+  let profile = {
+    highScore: Number(localStorage.getItem("familyDashHighScore") || 0),
+    wallet: Number(localStorage.getItem("familyDashWallet") || 0),
+    sessions: JSON.parse(localStorage.getItem("familyDashSessions") || "[]"),
+    inventory: JSON.parse(localStorage.getItem("familyDashInventory") || "{}")
+  };
+
+  function saveProfile() {
+    localStorage.setItem("familyDashHighScore", String(profile.highScore));
+    localStorage.setItem("familyDashWallet", String(profile.wallet));
+    localStorage.setItem("familyDashSessions", JSON.stringify(profile.sessions.slice(-25)));
+    localStorage.setItem("familyDashInventory", JSON.stringify(profile.inventory));
+  }
 
   function switchScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -41,6 +67,17 @@
 
   function statBar(scoreOutOfFive) {
     return Array.from({ length: 5 }, (_, index) => `<span class="stat-dot ${index < scoreOutOfFive ? "fill" : ""}"></span>`).join("");
+  }
+
+  function renderScoreboard() {
+    const topRecent = [...profile.sessions].sort((a, b) => b.score - a.score).slice(0, 5);
+    if (topRecent.length === 0) {
+      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
+      return;
+    }
+    scoreList.innerHTML = topRecent
+      .map((entry) => `<li>${entry.score} pts • ${entry.character} • L${entry.level} • ${entry.date}</li>`)
+      .join("");
   }
 
   function renderCharacterCards() {
@@ -54,20 +91,55 @@
         <p>${character.flavor}</p>
         <p><strong>Strengths:</strong> ${character.strengths}</p>
         <p><strong>Weakness:</strong> ${character.weakness}</p>
-        <div class="stats-row" title="Speed">${statBar(character.stats.speed)}</div>
-        <div class="stats-row" title="Jump">${statBar(character.stats.jump)}</div>
-        <div class="stats-row" title="Stamina">${statBar(character.stats.stamina)}</div>
-        <div class="stats-row" title="Strength">${statBar(character.stats.strength)}</div>
-        <div class="stats-row" title="Control">${statBar(character.stats.control)}</div>
+        <div class="stats-row">${statBar(character.stats.speed)}</div>
+        <div class="stats-row">${statBar(character.stats.jump)}</div>
+        <div class="stats-row">${statBar(character.stats.stamina)}</div>
+        <div class="stats-row">${statBar(character.stats.strength)}</div>
+        <div class="stats-row">${statBar(character.stats.control)}</div>
       `;
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
         [...characterGrid.children].forEach((child) => child.classList.remove("selected"));
         card.classList.add("selected");
-        toLevelBtn.disabled = false;
+        toStoreBtn.disabled = false;
       });
       characterGrid.appendChild(card);
     });
+  }
+
+  function renderStore() {
+    walletValue.textContent = profile.wallet;
+    storeGrid.innerHTML = "";
+    STORE_ITEMS.forEach((item) => {
+      const owned = profile.inventory[item.id] || 0;
+      const card = document.createElement("article");
+      card.className = "card";
+      card.innerHTML = `<h3>${item.name}</h3><p>${item.desc}</p><p><strong>Cost:</strong> ${item.cost} coins</p><p><strong>Owned:</strong> ${owned}</p>`;
+      const buy = document.createElement("button");
+      buy.textContent = `Buy ${item.name}`;
+      buy.disabled = profile.wallet < item.cost;
+      buy.addEventListener("click", () => {
+        if (profile.wallet < item.cost) return;
+        profile.wallet -= item.cost;
+        profile.inventory[item.id] = (profile.inventory[item.id] || 0) + 1;
+        saveProfile();
+        renderStore();
+      });
+      card.appendChild(buy);
+      storeGrid.appendChild(card);
+    });
+  }
+
+  function consumeRunModifiers() {
+    const mods = {};
+    ["speedBoost", "startShield", "extraHeart", "magnetBoost"].forEach((id) => {
+      if ((profile.inventory[id] || 0) > 0) {
+        mods[id] = true;
+        profile.inventory[id] -= 1;
+      }
+    });
+    saveProfile();
+    return mods;
   }
 
   function renderLevelCards() {
@@ -79,7 +151,7 @@
         <h3>Level ${level.id}: ${level.name}</h3>
         <p>${level.description}</p>
         <p><strong>Distance:</strong> ${level.length}m</p>
-        <p><strong>Difficulty growth:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
+        <p><strong>Difficulty:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
       `;
       card.addEventListener("click", () => {
         selectedLevel = level.id;
@@ -94,7 +166,7 @@
   function updateHud(data) {
     hud.innerHTML = `
       <div class="hud-card"><strong>Character:</strong> ${FamilyDash.getCharacterById(selectedCharacter).name}</div>
-      <div class="hud-card"><strong>Level:</strong> ${data.level}</div>
+      <div class="hud-card"><strong>Level:</strong> ${data.level}/10</div>
       <div class="hud-card"><strong>Health:</strong> ${"❤️".repeat(Math.max(0, data.health))}${"🖤".repeat(Math.max(0, data.maxHealth - data.health))}</div>
       <div class="hud-card"><strong>Score:</strong> ${data.score}</div>
       <div class="hud-card"><strong>Coins:</strong> ${data.coins}</div>
@@ -102,7 +174,7 @@
       <div class="hud-card"><strong>Shield:</strong> ${data.shield > 0 ? `${data.shield.toFixed(1)}s` : "--"}</div>
       <div class="hud-card"><strong>Rush:</strong> ${data.rush > 0 ? `${data.rush.toFixed(1)}s` : "--"}</div>
       <div class="hud-card"><strong>Status:</strong> ${data.status}</div>
-      <div class="hud-card"><strong>Best:</strong> ${highScore}</div>
+      <div class="hud-card"><strong>Best:</strong> ${profile.highScore}</div>
     `;
   }
 
@@ -122,6 +194,7 @@
     if (!character || !level) return;
 
     if (game) game.stop();
+    const runModifiers = consumeRunModifiers();
 
     game = new FamilyDash.RunnerGame({
       canvas,
@@ -130,16 +203,24 @@
       audio,
       onHud: updateHud,
       onEnd: ({ outcome, score, coins, distance }) => {
-        highScore = Math.max(highScore, score);
-        localStorage.setItem("familyDashHighScore", String(highScore));
-        const details = `${character.name} ran ${Math.floor(distance)}m, scored ${score}, and collected ${coins} coins.`;
+        profile.wallet += coins;
+        profile.highScore = Math.max(profile.highScore, score);
+        profile.sessions.push({
+          score,
+          character: character.name,
+          level: selectedLevel,
+          date: new Date().toLocaleDateString()
+        });
+        saveProfile();
+        renderScoreboard();
 
+        const details = `${character.name} ran ${Math.floor(distance)}m, scored ${score}, collected ${coins} coins. Wallet: ${profile.wallet}.`;
         if (outcome === "win") {
           showOverlay(
             "Level Complete! 🎉",
-            `${details} Great run!`,
+            `${details} Keep climbing all 10 levels!`,
             selectedLevel < FamilyDash.LEVELS.length ? "Next Level" : "Play Again",
-            "Character Select",
+            "Store",
             () => {
               if (selectedLevel < FamilyDash.LEVELS.length) {
                 selectedLevel += 1;
@@ -148,16 +229,22 @@
                 switchScreen("character");
               }
             },
-            () => switchScreen("character")
+            () => {
+              renderStore();
+              switchScreen("store");
+            }
           );
         } else {
           showOverlay(
             "Game Over 💥",
-            `${details} Tiny chaos wins this round.`,
+            `${details} Try a store boost before retrying.`,
             "Retry",
-            "Character Select",
+            "Store",
             () => startRun(),
-            () => switchScreen("character")
+            () => {
+              renderStore();
+              switchScreen("store");
+            }
           );
         }
       }
@@ -165,19 +252,40 @@
 
     switchScreen("game");
     updateHud({ health: character.gameplay.maxHealth, maxHealth: character.gameplay.maxHealth, score: 0, coins: 0, distance: 0, level: level.id, status: "running", shield: 0, rush: 0 });
-    game.start(character, level);
+    game.start(character, level, runModifiers);
+  }
+
+  function activateAudio() {
+    audio.startMusic();
   }
 
   startBtn.addEventListener("click", () => {
+    activateAudio();
+    renderScoreboard();
     renderCharacterCards();
     switchScreen("character");
   });
 
-  backToStartBtn.addEventListener("click", () => switchScreen("start"));
+  backToStartBtn.addEventListener("click", () => {
+    renderScoreboard();
+    switchScreen("start");
+  });
+
+  toStoreBtn.addEventListener("click", () => {
+    renderStore();
+    switchScreen("store");
+  });
+
   toLevelBtn.addEventListener("click", () => {
     renderLevelCards();
     switchScreen("level");
   });
+
+  backToStoreBtn.addEventListener("click", () => {
+    renderStore();
+    switchScreen("store");
+  });
+
   backToCharactersBtn.addEventListener("click", () => switchScreen("character"));
   launchBtn.addEventListener("click", startRun);
 
@@ -187,21 +295,23 @@
       if (game.state === "paused") {
         showOverlay(
           "Paused",
-          "Take a breath. Snacks are safe... for now.",
+          "Take a breath. Music keeps you hyped.",
           "Resume",
-          "Character Select",
+          "Store",
           () => {
             switchScreen("game");
             game.pause();
           },
           () => {
             game.stop();
-            switchScreen("character");
+            renderStore();
+            switchScreen("store");
           }
         );
       }
     }
   });
 
+  renderScoreboard();
   switchScreen("start");
 })();

@@ -1,44 +1,34 @@
 (function () {
   const FamilyDash = (window.FamilyDash = window.FamilyDash || {});
 
-  FamilyDash.LEVELS = [
-    {
-      id: 1,
-      name: "Sunny Suburbs Sprint",
-      description: "Intro lane with cones and toy boxes.",
-      length: 2200,
-      baseSpeedBoost: 0,
-      difficultyGrowth: 0.11,
-      backdrop: { sky: "#9dd9ff", hill: "#73b8f2", city: "#b2d8f5", ground: "#8ed081" },
-      obstaclePool: ["cone", "toyBox"],
-      coinRate: 0.6,
-      powerupRate: 0.18
-    },
-    {
-      id: 2,
-      name: "Neon Park Dash",
-      description: "Faster pace, skate ramps, and rogue drones.",
-      length: 2800,
-      baseSpeedBoost: 22,
-      difficultyGrowth: 0.18,
-      backdrop: { sky: "#8cc4ff", hill: "#8b9fff", city: "#9a9dd8", ground: "#5fa36d" },
-      obstaclePool: ["cone", "ramp", "drone"],
-      coinRate: 0.7,
-      powerupRate: 0.22
-    },
-    {
-      id: 3,
-      name: "Storm Carnival Rush",
-      description: "Chaotic mixed obstacles and fast tempo finale.",
-      length: 3400,
-      baseSpeedBoost: 45,
-      difficultyGrowth: 0.24,
-      backdrop: { sky: "#6a86b8", hill: "#566f9f", city: "#7280a9", ground: "#4f7b5d" },
-      obstaclePool: ["toyBox", "ramp", "drone", "barrel"],
-      coinRate: 0.82,
-      powerupRate: 0.28
-    }
+  const themes = [
+    ["Sunrise Suburbs", "#9dd9ff", "#8ed081"],
+    ["Neon Block", "#8cc4ff", "#5fa36d"],
+    ["Old Town", "#7bb2e6", "#688f68"],
+    ["Bridge District", "#6ea7df", "#5d8866"],
+    ["Metro Night", "#5f93d1", "#557f63"],
+    ["Rainline Avenue", "#4f82c1", "#4f745c"],
+    ["Skyline Core", "#4578b8", "#4a6c58"],
+    ["Terminal Run", "#3d6cab", "#456555"],
+    ["Hyper Loop", "#355f9d", "#415e52"],
+    ["Final Flux", "#2d538e", "#3c574e"]
   ];
+
+  FamilyDash.LEVELS = themes.map((t, index) => {
+    const id = index + 1;
+    return {
+      id,
+      name: t[0],
+      description: `City stage ${id} with faster flow and tougher traffic patterns.`,
+      length: 2000 + id * 420,
+      baseSpeedBoost: (id - 1) * 10,
+      difficultyGrowth: 0.09 + id * 0.015,
+      backdrop: { sky: t[1], hill: "#5d78a1", city: "#4f678f", ground: t[2] },
+      obstaclePool: id < 3 ? ["cone", "toyBox"] : id < 6 ? ["cone", "toyBox", "ramp", "drone"] : ["cone", "toyBox", "ramp", "drone", "barrel"],
+      coinRate: Math.min(0.95, 0.58 + id * 0.035),
+      powerupRate: Math.min(0.5, 0.16 + id * 0.02)
+    };
+  });
 
   FamilyDash.OBSTACLE_DEFS = {
     cone: { width: 36, height: 48, damage: 1, kickable: true, color: "#ff8f3f" },
@@ -51,6 +41,8 @@
   FamilyDash.POWERUP_DEFS = {
     heal: { color: "#8cff9d", label: "Juice", effect: "heal" },
     shield: { color: "#8ce0ff", label: "Shield", effect: "shield" },
-    rush: { color: "#ffe78b", label: "Rush", effect: "rush" }
+    rush: { color: "#ffe78b", label: "Rush", effect: "rush" },
+    boost: { color: "#ffb86b", label: "Boost", effect: "boost" },
+    coinBurst: { color: "#f8ff7a", label: "Coin+", effect: "coinBurst" }
   };
 })();

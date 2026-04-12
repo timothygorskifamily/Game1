@@ -14,10 +14,15 @@
       this.rafId = null;
     }
 
-    start(character, level) {
+    start(character, level, runModifiers) {
       this.level = level;
       this.groundY = this.canvas.height - 74;
       this.player = new FamilyDash.Player(character, this.canvas.height, this.groundY);
+      this.runModifiers = runModifiers || {};
+      if (this.runModifiers.startShield) this.player.shieldTimer = 6;
+      if (this.runModifiers.extraHeart) { this.player.maxHealth += 1; this.player.health += 1; }
+      if (this.runModifiers.speedBoost) this.player.speed += 22;
+      if (this.runModifiers.magnetBoost) this.player.magnetBonus = 0.45;
       this.renderer.setLevel(level);
       this.state = "running";
       this.distance = 0;
@@ -138,7 +143,8 @@
         this.spawnTimers.powerup = 5 + Math.random() * 4;
       }
 
-      const magnet = p.character.gameplay.coinMagnet || 1;
+      const magnet = (p.character.gameplay.coinMagnet || 1) + (p.magnetBonus || 0);
+      const coinBurstBoost = p.coinBurstTimer > 0 ? 1.8 : 1;
       this.obstacles.forEach((obj) => { obj.x -= speed * delta; });
       this.coins.forEach((coin) => {
         coin.x -= speed * delta;
@@ -147,8 +153,8 @@
           const dy = p.y + p.height / 2 - (coin.y + coin.radius);
           const dist = Math.hypot(dx, dy);
           if (dist < 180 * magnet) {
-            coin.x += dx * delta * 2.4;
-            coin.y += dy * delta * 2.4;
+            coin.x += dx * delta * (2.4 * coinBurstBoost);
+            coin.y += dy * delta * (2.4 * coinBurstBoost);
           }
         }
       });
@@ -202,6 +208,7 @@
       this.coins = this.coins.filter((coin) => {
         if (!FamilyDash.intersects(playerBox, coin)) return true;
         let coinValue = 1;
+        if (this.player.coinBurstTimer > 0) coinValue += 1;
         if (this.player.character.id === "liam") coinValue += 1;
         if (this.player.character.id === "addy" && Math.random() < 0.1) coinValue += 2;
         this.coinsCollected += coinValue;

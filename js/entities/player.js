@@ -19,6 +19,8 @@
       this.shieldTimer = 0;
       this.rushTimer = 0;
       this.invincibleFrames = 0;
+      this.coinBurstTimer = 0;
+      this.magnetBonus = 0;
       this.canvasHeight = canvasHeight;
       this.speed = character.gameplay.baseSpeed;
       this.jumpPower = character.gameplay.jumpPower;
@@ -63,6 +65,8 @@
       if (effect === "heal") this.health = Math.min(this.maxHealth, this.health + 1);
       if (effect === "shield") this.shieldTimer = 5;
       if (effect === "rush") this.rushTimer = 4;
+      if (effect === "boost") this.rushTimer = Math.max(this.rushTimer, 7);
+      if (effect === "coinBurst") this.coinBurstTimer = 7;
     }
 
     update(delta, input) {
@@ -88,6 +92,7 @@
       this.shieldTimer = Math.max(0, this.shieldTimer - delta);
       this.rushTimer = Math.max(0, this.rushTimer - delta);
       this.invincibleFrames = Math.max(0, this.invincibleFrames - delta);
+      this.coinBurstTimer = Math.max(0, this.coinBurstTimer - delta);
     }
 
     effectiveSpeed(levelSpeed) {

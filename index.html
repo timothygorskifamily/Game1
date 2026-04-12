@@ -16,11 +16,11 @@
       <main>
         <section id="startScreen" class="panel active">
           <h2>Start</h2>
-          <p>
-            A playful endless runner with 3 handcrafted levels and unique family heroes.
-          </p>
+          <p>A pixel-city runner with 10 levels, shop upgrades, and session leaderboard.</p>
           <button id="startBtn" class="primary">Play</button>
           <div class="hint">Controls: Space / ↑ jump, ↓ slide, K kick, P pause.</div>
+          <h3>Top Recent Session Scores</h3>
+          <ol id="recentScores" class="score-list"></ol>
         </section>
 
         <section id="characterScreen" class="panel">
@@ -28,15 +28,25 @@
           <div id="characterGrid" class="character-grid"></div>
           <div class="actions">
             <button id="backToStartBtn">Back</button>
-            <button id="toLevelBtn" class="primary" disabled>Choose Level</button>
+            <button id="toStoreBtn" class="primary" disabled>Store</button>
+          </div>
+        </section>
+
+        <section id="storeScreen" class="panel">
+          <h2>Store</h2>
+          <p>Wallet: <strong><span id="walletValue">0</span> coins</strong></p>
+          <div id="storeGrid" class="level-grid"></div>
+          <div class="actions">
+            <button id="backToCharactersBtn">Back</button>
+            <button id="toLevelBtn" class="primary">Choose Level</button>
           </div>
         </section>
 
         <section id="levelScreen" class="panel">
-          <h2>Choose Level</h2>
+          <h2>Choose Level (1-10)</h2>
           <div id="levelGrid" class="level-grid"></div>
           <div class="actions">
-            <button id="backToCharactersBtn">Back</button>
+            <button id="backToStoreBtn">Back</button>
             <button id="launchBtn" class="primary" disabled>Launch Run</button>
           </div>
         </section>

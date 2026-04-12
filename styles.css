@@ -133,3 +133,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (max-width: 800px) {
   .mobile-controls { display: grid; }
 }
+
+
+.score-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  background: #0d1726;
+  border: 2px solid #274362;
+  min-height: 120px;
+}
+
+.score-list li {
+  padding: 0.25rem 0;
+  font-size: 0.82rem;
+}
