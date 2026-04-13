@@ -4,7 +4,7 @@
   class InputManager {
     constructor() {
       this.keys = new Set();
-      this.actions = { jumpPressed: false, slide: false, kickPressed: false, pausePressed: false };
+      this.actions = { jumpPressed: false, slide: false, pausePressed: false };
     }
 
     bind() {
@@ -12,7 +12,6 @@
         if (["Space", "ArrowUp", "ArrowDown"].includes(event.code)) event.preventDefault();
         this.keys.add(event.code);
         if (event.code === "Space" || event.code === "ArrowUp") this.actions.jumpPressed = true;
-        if (event.code === "KeyK") this.actions.kickPressed = true;
         if (event.code === "KeyP" || event.code === "Escape") this.actions.pausePressed = true;
       });
 
@@ -29,7 +28,6 @@
           event.preventDefault();
           if (action === "jump") this.actions.jumpPressed = true;
           if (action === "slide") this.actions.slide = true;
-          if (action === "kick") this.actions.kickPressed = true;
           if (action === "pause") this.actions.pausePressed = true;
         });
         button.addEventListener("pointerup", () => {

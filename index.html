@@ -18,7 +18,7 @@
           <h2>Start</h2>
           <p>A pixel-city runner with 10 levels, shop upgrades, and session leaderboard.</p>
           <button id="startBtn" class="primary">Play</button>
-          <div class="hint">Controls: Space / ↑ jump, ↓ slide, K kick, P pause.</div>
+          <div class="hint">Controls: Space / ↑ jump, ↓ slide, P pause.</div>
           <h3>Top Recent Session Scores</h3>
           <ol id="recentScores" class="score-list"></ol>
         </section>
@@ -54,12 +54,10 @@
         <section id="gameScreen" class="panel game-panel">
           <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
           <div id="hud" class="hud"></div>
-          <div class="actions"><button id="pauseToggle">Pause</button></div>
           <div class="mobile-controls">
             <button data-action="jump">Jump</button>
             <button data-action="slide">Slide</button>
-            <button data-action="kick">Kick</button>
-            <button data-action="pause">Pause</button>
+                        <button data-action="pause">Pause</button>
           </div>
         </section>
 

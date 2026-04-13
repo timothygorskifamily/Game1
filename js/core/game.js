@@ -9,6 +9,7 @@
       this.audio = config.audio;
       this.onEnd = config.onEnd;
       this.onHud = config.onHud;
+      this.onPause = config.onPause || function () {};
       this.state = "idle";
       this.lastFrame = 0;
       this.rafId = null;
@@ -23,6 +24,9 @@
       if (this.runModifiers.extraHeart) { this.player.maxHealth += 1; this.player.health += 1; }
       if (this.runModifiers.speedBoost) this.player.speed += 22;
       if (this.runModifiers.magnetBoost) this.player.magnetBonus = 0.45;
+      this.scoreMultiplier = this.runModifiers.scoreBooster ? 1.5 : 1;
+      this.coinMultiplier = this.runModifiers.coinDoubler ? 2 : 1;
+      if (this.runModifiers.phaseStart) this.player.phaseTimer = 4;
       this.renderer.setLevel(level);
       this.state = "running";
       this.distance = 0;
@@ -105,6 +109,7 @@
       this.input.update();
       if (this.input.consumeAction("pausePressed")) {
         this.pause();
+        if (this.state === "paused") this.onPause();
         return;
       }
       if (this.state !== "running") return;
@@ -112,17 +117,12 @@
       const p = this.player;
       if (this.input.consumeAction("jumpPressed") && p.jump()) this.audio.jump();
       if (this.input.actions.slide && p.isGrounded() && !p.isSliding) p.slide();
-      if (this.input.consumeAction("kickPressed")) {
-        p.kick();
-        this.audio.kick();
-      }
-
       p.update(delta, this.input);
 
       const speed = this.currentSpeed();
       const travel = speed * delta;
       this.distance += travel * 0.1;
-      this.score += travel * 0.06;
+      this.score += travel * 0.06 * this.scoreMultiplier;
       this.animationClock += delta;
 
       this.spawnTimers.obstacle -= delta;
@@ -193,10 +193,6 @@
       const playerBox = this.player.hitbox;
       this.obstacles = this.obstacles.filter((obstacle) => {
         if (!FamilyDash.intersects(playerBox, obstacle)) return true;
-        if (this.player.kickTimer > 0 && obstacle.kickable && this.player.character.gameplay.kickPower >= 2) {
-          this.score += 80;
-          return false;
-        }
         if (this.player.character.id === "liam" && Math.random() < (this.player.character.gameplay.techShieldChance || 0)) {
           return false;
         }
@@ -212,7 +208,8 @@
         if (this.player.character.id === "liam") coinValue += 1;
         if (this.player.character.id === "addy" && Math.random() < 0.1) coinValue += 2;
         this.coinsCollected += coinValue;
-        this.score += coinValue * 20;
+        coinValue = Math.round(coinValue * this.coinMultiplier);
+        this.score += coinValue * 20 * this.scoreMultiplier;
         this.audio.coin();
         return false;
       });

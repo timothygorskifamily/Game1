@@ -15,11 +15,11 @@
       this.gravity = 1600;
       this.isSliding = false;
       this.slideTimer = 0;
-      this.kickTimer = 0;
       this.shieldTimer = 0;
       this.rushTimer = 0;
       this.invincibleFrames = 0;
       this.coinBurstTimer = 0;
+      this.phaseTimer = 0;
       this.magnetBonus = 0;
       this.canvasHeight = canvasHeight;
       this.speed = character.gameplay.baseSpeed;
@@ -52,10 +52,9 @@
       this.y = this.groundY - this.height;
     }
 
-    kick() { this.kickTimer = 0.25; }
 
     applyDamage(amount) {
-      if (this.invincibleFrames > 0 || this.shieldTimer > 0) return false;
+      if (this.invincibleFrames > 0 || this.shieldTimer > 0 || this.phaseTimer > 0) return false;
       this.health -= amount;
       this.invincibleFrames = 0.9;
       return true;
@@ -67,6 +66,9 @@
       if (effect === "rush") this.rushTimer = 4;
       if (effect === "boost") this.rushTimer = Math.max(this.rushTimer, 7);
       if (effect === "coinBurst") this.coinBurstTimer = 7;
+      if (effect === "phase") this.phaseTimer = 4;
+      if (effect === "megaHeal") this.health = Math.min(this.maxHealth, this.health + 2);
+      if (effect === "magnet") this.magnetBonus = Math.max(this.magnetBonus, 0.8);
     }
 
     update(delta, input) {
@@ -88,11 +90,12 @@
         this.chaosWobble += delta * 20;
         this.y += Math.sin(this.chaosWobble) * 0.8;
       }
-      this.kickTimer = Math.max(0, this.kickTimer - delta);
       this.shieldTimer = Math.max(0, this.shieldTimer - delta);
       this.rushTimer = Math.max(0, this.rushTimer - delta);
       this.invincibleFrames = Math.max(0, this.invincibleFrames - delta);
       this.coinBurstTimer = Math.max(0, this.coinBurstTimer - delta);
+      this.phaseTimer = Math.max(0, this.phaseTimer - delta);
+      if (this.magnetBonus > 0) this.magnetBonus = Math.max(0, this.magnetBonus - delta * 0.08);
     }
 
     effectiveSpeed(levelSpeed) {

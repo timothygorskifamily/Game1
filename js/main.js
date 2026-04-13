@@ -28,7 +28,6 @@
   const backToStartBtn = document.getElementById("backToStartBtn");
   const backToStoreBtn = document.getElementById("backToStoreBtn");
   const backToCharactersBtn = document.getElementById("backToCharactersBtn");
-  const pauseToggleBtn = document.getElementById("pauseToggle");
 
   const input = new FamilyDash.InputManager();
   input.bind();
@@ -40,7 +39,10 @@
     { id: "speedBoost", name: "Turbo Shoes", cost: 24, desc: "+22 start speed for one run" },
     { id: "startShield", name: "Bubble Shield", cost: 20, desc: "Start with 6s shield" },
     { id: "extraHeart", name: "Extra Heart", cost: 32, desc: "+1 max health this run" },
-    { id: "magnetBoost", name: "Coin Magnet", cost: 26, desc: "Stronger coin pull this run" }
+    { id: "magnetBoost", name: "Coin Magnet", cost: 26, desc: "Stronger coin pull this run" },
+    { id: "scoreBooster", name: "Score Juice", cost: 28, desc: "1.5x score this run" },
+    { id: "coinDoubler", name: "Coin Doubler", cost: 34, desc: "2x coin value this run" },
+    { id: "phaseStart", name: "Phase Start", cost: 30, desc: "Start run with temporary phase" }
   ];
 
   let selectedCharacter = null;
@@ -66,14 +68,19 @@
     screens[name].classList.add("active");
   }
 
-  function statText(character) {
-    return `
-      <p><strong>Speed:</strong> ${character.stats.speed}/5</p>
-      <p><strong>Jump:</strong> ${character.stats.jump}/5</p>
-      <p><strong>Stamina:</strong> ${character.stats.stamina}/5</p>
-      <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
-      <p><strong>Control:</strong> ${character.stats.control}/5</p>
-    `;
+  function statBar(scoreOutOfFive) {
+    return Array.from({ length: 5 }, (_, index) => `<span class="stat-dot ${index < scoreOutOfFive ? "fill" : ""}"></span>`).join("");
+  }
+
+  function renderScoreboard() {
+    const topRecent = [...profile.sessions].sort((a, b) => b.score - a.score).slice(0, 5);
+    if (topRecent.length === 0) {
+      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
+      return;
+    }
+    scoreList.innerHTML = topRecent
+      .map((entry) => `<li>${entry.score} pts • ${entry.character} • L${entry.level} • ${entry.date}</li>`)
+      .join("");
   }
 
   function renderCharacterCards() {
@@ -87,7 +94,16 @@
         <p>${character.flavor}</p>
         <p><strong>Strengths:</strong> ${character.strengths}</p>
         <p><strong>Weakness:</strong> ${character.weakness}</p>
-        ${statText(character)}
+        <p><strong>Speed:</strong> ${character.stats.speed}/5</p>
+        <div class="stats-row">${statBar(character.stats.speed)}</div>
+        <p><strong>Jump:</strong> ${character.stats.jump}/5</p>
+        <div class="stats-row">${statBar(character.stats.jump)}</div>
+        <p><strong>Stamina:</strong> ${character.stats.stamina}/5</p>
+        <div class="stats-row">${statBar(character.stats.stamina)}</div>
+        <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
+        <div class="stats-row">${statBar(character.stats.strength)}</div>
+        <p><strong>Control:</strong> ${character.stats.control}/5</p>
+        <div class="stats-row">${statBar(character.stats.control)}</div>
       `;
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
@@ -124,7 +140,7 @@
 
   function consumeRunModifiers() {
     const mods = {};
-    ["speedBoost", "startShield", "extraHeart", "magnetBoost"].forEach((id) => {
+    ["speedBoost", "startShield", "extraHeart", "magnetBoost", "scoreBooster", "coinDoubler", "phaseStart"].forEach((id) => {
       if ((profile.inventory[id] || 0) > 0) {
         mods[id] = true;
         profile.inventory[id] -= 1;
@@ -170,6 +186,25 @@
     `;
   }
 
+
+  function openPauseOverlay() {
+    showOverlay(
+      "Paused",
+      "Take a breath. Tap Resume to continue.",
+      "Resume",
+      "Store",
+      () => {
+        switchScreen("game");
+        game.pause();
+      },
+      () => {
+        game.stop();
+        renderStore();
+        switchScreen("store");
+      }
+    );
+  }
+
   function showOverlay(title, message, primaryLabel, secondaryLabel, onPrimary, onSecondary) {
     overlayTitle.textContent = title;
     overlayText.textContent = message;
@@ -194,6 +229,7 @@
       renderer,
       audio,
       onHud: updateHud,
+      onPause: openPauseOverlay,
       onEnd: ({ outcome, score, coins, distance }) => {
         profile.wallet += coins;
         profile.highScore = Math.max(profile.highScore, score);
@@ -243,7 +279,6 @@
     });
 
     switchScreen("game");
-    pauseToggleBtn.textContent = "Pause";
     updateHud({ health: character.gameplay.maxHealth, maxHealth: character.gameplay.maxHealth, score: 0, coins: 0, distance: 0, level: level.id, status: "running", shield: 0, rush: 0 });
     game.start(character, level, runModifiers);
   }
@@ -282,36 +317,10 @@
   backToCharactersBtn.addEventListener("click", () => switchScreen("character"));
   launchBtn.addEventListener("click", startRun);
 
-
-  function togglePauseFromButton() {
-    if (!game || !screens.game.classList.contains("active")) return;
-    game.pause();
-    pauseToggleBtn.textContent = game.state === "paused" ? "Resume" : "Pause";
-  }
-
-  pauseToggleBtn.addEventListener("click", togglePauseFromButton);
-
   window.addEventListener("keydown", (event) => {
-    if ((event.code === "KeyP" || event.code === "Escape") && screens.game.classList.contains("active") && game) {
+    if ((event.code === "KeyP" || event.code === "Escape") && screens.game.classList.contains("active") && game && game.state === "paused") {
+      switchScreen("game");
       game.pause();
-      if (game.state === "paused") {
-        showOverlay(
-          "Paused",
-          "Take a breath. Music keeps you hyped.",
-          "Resume",
-          "Store",
-          () => {
-            switchScreen("game");
-    pauseToggleBtn.textContent = "Pause";
-            game.pause();
-          },
-          () => {
-            game.stop();
-            renderStore();
-            switchScreen("store");
-          }
-        );
-      }
     }
   });
 

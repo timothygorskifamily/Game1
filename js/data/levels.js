@@ -44,6 +44,9 @@
     shield: { color: "#8ce0ff", label: "Shield", effect: "shield" },
     rush: { color: "#ffe78b", label: "Rush", effect: "rush" },
     boost: { color: "#ffb86b", label: "Boost", effect: "boost" },
-    coinBurst: { color: "#f8ff7a", label: "Coin+", effect: "coinBurst" }
+    coinBurst: { color: "#f8ff7a", label: "Coin+", effect: "coinBurst" },
+    megaHeal: { color: "#ff9f9f", label: "HP++", effect: "megaHeal" },
+    magnet: { color: "#9bffdc", label: "Mag", effect: "magnet" },
+    phase: { color: "#d5b0ff", label: "Phase", effect: "phase" }
   };
 })();

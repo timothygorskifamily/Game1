@@ -9,15 +9,15 @@ This version is intentionally built with **classic script loading** (no ES modul
 ## Features
 
 - Pixel-art themed UI and in-game visuals with crisp retro styling
-- Distinct per-level biome backgrounds with custom scene art and movement
+- Distinct per-level biome backgrounds with constantly changing district paths (homes, parks, ponds, playgrounds, streets, stores)
 - Character select with 6 runners and distinct stats
 - **10 progressive levels** with unique biome backgrounds (desert, farm, marsh, city, space, volcano, snow, beach, jungle, cyber) plus increasing speed/difficulty
 - In-game store to buy one-run boosts using coins earned in gameplay
-- Boost item dynamics during runs (rush, boost, coin burst, shield, heal)
+- Boost item dynamics during runs (rush, boost, coin burst, mega-heal, magnet, phase, shield, heal)
 - Session scoreboard showing top recent run results
 - Persistent wallet, inventory, and high score using `localStorage`
 - Hype-style generated background music loop via Web Audio API
-- Desktop and mobile/touch controls
+- Desktop and mobile/touch controls with pause + resume overlay flow
 
 ## Run locally
 
@@ -34,9 +34,7 @@ Then open: `http://localhost:8080`
 
 - `Space` or `ArrowUp` → Jump
 - `ArrowDown` → Slide
-- `K` → Kick
 - `P` or `Esc` → Pause / resume
-- On-screen `Pause/Resume` button in the HUD area
 
 ## Customization guide
 
