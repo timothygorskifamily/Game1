@@ -83,10 +83,6 @@
     screens[name].classList.add("active");
   }
 
-  function statBar(scoreOutOfFive) {
-    return Array.from({ length: 5 }, (_, index) => `<span class="stat-dot ${index < scoreOutOfFive ? "fill" : ""}"></span>`).join("");
-  }
-
   function renderScoreboard() {
     if (!scoreList) return;
     const valid = profile.sessions.filter((s) => s && Number.isFinite(Number(s.score)));
@@ -112,15 +108,10 @@
         <p><strong>Strengths:</strong> ${character.strengths}</p>
         <p><strong>Weakness:</strong> ${character.weakness}</p>
         <p><strong>Speed:</strong> ${character.stats.speed}/5</p>
-        <div class="stats-row">${statBar(character.stats.speed)}</div>
         <p><strong>Jump:</strong> ${character.stats.jump}/5</p>
-        <div class="stats-row">${statBar(character.stats.jump)}</div>
         <p><strong>Stamina:</strong> ${character.stats.stamina}/5</p>
-        <div class="stats-row">${statBar(character.stats.stamina)}</div>
         <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
-        <div class="stats-row">${statBar(character.stats.strength)}</div>
         <p><strong>Control:</strong> ${character.stats.control}/5</p>
-        <div class="stats-row">${statBar(character.stats.control)}</div>
       `;
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
@@ -207,7 +198,7 @@
   function openPauseOverlay() {
     showOverlay(
       "Paused",
-      "Take a breath. Tap Resume to continue.",
+      "Take a breath. Tap Resume or press P / Escape to continue.",
       "Resume",
       "Store",
       () => {
