@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Dash: Tiny Menace Run</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="game-header">
+        <h1>🏃 Family Dash: Tiny Menace Run</h1>
+        <p>Pick your runner. Dodge chaos. Collect spark-coins. Save snacks.</p>
+      </header>
+
+      <main>
+        <section id="startScreen" class="panel active">
+          <h2>Start</h2>
+          <p>A pixel-city runner with 10 levels, shop upgrades, and session leaderboard.</p>
+          <button id="startBtn" class="primary">Play</button>
+          <div class="hint">Controls: Space / ↑ jump, ↓ slide, P pause.</div>
+          <h3>Top Recent Session Scores</h3>
+          <ol id="recentScores" class="score-list"></ol>
+        </section>
+
+        <section id="characterScreen" class="panel">
+          <h2>Choose Your Character</h2>
+          <div id="characterGrid" class="character-grid"></div>
+          <div class="actions">
+            <button id="backToStartBtn">Back</button>
+            <button id="toStoreBtn" class="primary" disabled>Store</button>
+          </div>
+        </section>
+
+        <section id="storeScreen" class="panel">
+          <h2>Store</h2>
+          <p>Wallet: <strong><span id="walletValue">0</span> coins</strong></p>
+          <div id="storeGrid" class="level-grid"></div>
+          <div class="actions">
+            <button id="backToCharactersBtn">Back</button>
+            <button id="toLevelBtn" class="primary">Choose Level</button>
+          </div>
+        </section>
+
+        <section id="levelScreen" class="panel">
+          <h2>Choose Level (1-10)</h2>
+          <div id="levelGrid" class="level-grid"></div>
+          <div class="actions">
+            <button id="backToStoreBtn">Back</button>
+            <button id="launchBtn" class="primary" disabled>Launch Run</button>
+          </div>
+        </section>
+
+        <section id="gameScreen" class="panel game-panel">
+          <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
+          <div id="hud" class="hud"></div>
+          <div class="mobile-controls">
+            <button data-action="jump">Jump</button>
+            <button data-action="slide">Slide</button>
+                        <button data-action="pause">Pause</button>
+          </div>
+        </section>
+
+        <section id="overlayScreen" class="panel">
+          <h2 id="overlayTitle"></h2>
+          <p id="overlayText"></p>
+          <div class="actions">
+            <button id="overlayPrimary" class="primary"></button>
+            <button id="overlaySecondary"></button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/data/characters.js"></script>
+    <script src="js/data/levels.js"></script>
+    <script src="js/systems/collision.js"></script>
+    <script src="js/systems/input.js"></script>
+    <script src="js/systems/audio.js"></script>
+    <script src="js/entities/player.js"></script>
+    <script src="js/core/renderer.js"></script>
+    <script src="js/core/game.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>
