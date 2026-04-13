@@ -2,26 +2,26 @@
   const FamilyDash = (window.FamilyDash = window.FamilyDash || {});
 
   const themes = [
-    { name: "Dune Dash", biome: "desert", sky: "#f8d48a", ground: "#d6a15f" },
-    { name: "Barnstorm Run", biome: "farm", sky: "#9cd5ff", ground: "#7cb35e" },
-    { name: "Mire Sprint", biome: "marsh", sky: "#9db7a6", ground: "#567a5f" },
-    { name: "Urban Neon", biome: "city", sky: "#7ea9de", ground: "#4b637f" },
-    { name: "Cyber Strip", biome: "cyber", sky: "#6b5bba", ground: "#2a2b5c" },
-    { name: "Moon Drift", biome: "space", sky: "#161b38", ground: "#4f4d63" },
-    { name: "Pine Rush", biome: "forest", sky: "#7bb2d6", ground: "#4f7f54" },
-    { name: "Shoreline Bolt", biome: "beach", sky: "#8fd9ff", ground: "#e2cb7d" },
-    { name: "Frozen Charge", biome: "snow", sky: "#d4ebff", ground: "#d4e4ef" },
-    { name: "Molten Finale", biome: "volcano", sky: "#5a3a3a", ground: "#5a4632" }
+    { name: "Desert Dash", biome: "desert", ground: "#d9b36c", sky: "#f7d9a6" },
+    { name: "Farm Run", biome: "farm", ground: "#88b65a", sky: "#bfe5ff" },
+    { name: "Marsh Sprint", biome: "marsh", ground: "#4f7a4b", sky: "#9cc6a6" },
+    { name: "City Rush", biome: "city", ground: "#5d6774", sky: "#8eb5e2" },
+    { name: "Space Drift", biome: "space", ground: "#3c4163", sky: "#10162f" },
+    { name: "Volcano Trail", biome: "volcano", ground: "#5b3f32", sky: "#704447" },
+    { name: "Snow Glide", biome: "snow", ground: "#cfe3f5", sky: "#dff3ff" },
+    { name: "Beach Bolt", biome: "beach", ground: "#e5cb87", sky: "#85d4ff" },
+    { name: "Jungle Charge", biome: "jungle", ground: "#4d7a38", sky: "#86c97d" },
+    { name: "Cyber Night", biome: "cyber", ground: "#344260", sky: "#18203c" }
   ];
 
   FamilyDash.LEVELS = themes.map((t, index) => {
     const id = index + 1;
     return {
       id,
-      biome: t.biome,
       name: t.name,
-      description: `${t.biome.toUpperCase()} zone ${id} with unique scenery and pacing.`,
-      length: 2000 + id * 420,
+      biome: t.biome,
+      description: `${t.name} features unique scenery and tougher patterns.`,
+      length: 2100 + id * 420,
       baseSpeedBoost: (id - 1) * 10,
       difficultyGrowth: 0.09 + id * 0.015,
       backdrop: { sky: t.sky, hill: "#5d78a1", city: "#4f678f", ground: t.ground },

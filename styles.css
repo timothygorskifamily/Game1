@@ -125,30 +125,13 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .mobile-controls {
   margin-top: 0.8rem;
-  display: grid;
+  display: none;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.4rem;
-  background: rgba(10, 22, 36, 0.75);
-  border: 2px solid #365b85;
-  padding: 0.4rem;
-}
-
-.ability-panel {
-  margin-top: 0.5rem;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 0.35rem;
-}
-
-.ability-card {
-  background: #101d2f;
-  border: 2px solid #33577f;
-  padding: 0.35rem 0.45rem;
-  font-size: 0.8rem;
 }
 
 @media (max-width: 800px) {
-  .mobile-controls { grid-template-columns: repeat(2, 1fr); }
+  .mobile-controls { display: grid; }
 }
 
 
@@ -163,52 +146,4 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .score-list li {
   padding: 0.25rem 0;
   font-size: 0.82rem;
-}
-
-.mobile-tip {
-  margin-top: 0.5rem;
-  color: #ffe082;
-  font-size: 0.82rem;
-}
-
-body.mobile-device .app-shell {
-  padding: 0.5rem;
-}
-
-body.mobile-device .panel {
-  padding: 0.75rem;
-}
-
-body.mobile-device .actions {
-  flex-wrap: wrap;
-}
-
-body.mobile-device button {
-  min-height: 46px;
-  font-size: 0.88rem;
-}
-
-body.mobile-device .mobile-controls {
-  display: grid;
-  position: sticky;
-  bottom: 0;
-  background: rgba(10, 22, 36, 0.9);
-  border: 2px solid #365b85;
-  padding: 0.4rem;
-}
-
-body.mobile-device .mobile-controls button {
-  min-height: 54px;
-  font-size: 0.9rem;
-}
-
-body.mobile-device .hud {
-  grid-template-columns: repeat(2, minmax(130px, 1fr));
-}
-
-@media (max-width: 560px) {
-  body.mobile-device .character-grid,
-  body.mobile-device .level-grid {
-    grid-template-columns: 1fr;
-  }
 }

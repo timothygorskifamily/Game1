@@ -14,210 +14,176 @@
 
     setLevel(level) { this.level = level; }
 
-    drawParallaxObjects(distance, groundY, kind) {
+    drawSky(base) {
+      block(this.ctx, 0, 0, this.canvas.width, this.canvas.height, base);
+    }
+
+    drawRouteSegments(distance, groundY, palette, biomeSeed) {
       const ctx = this.ctx;
-      const c = this.canvas;
-      const layerSpeed = kind === "near" ? 0.28 : kind === "mid" ? 0.17 : 0.09;
-      const offset = distance * layerSpeed;
-      for (let i = -2; i < 20; i += 1) {
-        const x = i * 110 - (offset % 110);
-        if (this.level.biome === "desert") {
-          block(ctx, x, groundY - 30 - (i % 2) * 12, 80, 30, kind === "far" ? "#d8a460" : "#c58f4f");
-          if (kind !== "far") block(ctx, x + 30, groundY - 62, 6, 32, "#3e8b4f");
-        } else if (this.level.biome === "farm") {
-          block(ctx, x, groundY - 28, 70, 28, "#b5534f");
-          block(ctx, x + 8, groundY - 40, 16, 12, "#f5d98b");
-          block(ctx, x + 28, groundY - 48, 4, 20, "#e0c174");
-        } else if (this.level.biome === "marsh") {
-          block(ctx, x, groundY - 14, 60, 14, "#5d7f58");
-          block(ctx, x + 12, groundY - 44, 3, 30, "#4f5a41");
-          block(ctx, x + 18, groundY - 38, 3, 24, "#4f5a41");
-        } else if (this.level.biome === "space") {
-          block(ctx, x, groundY - 20, 66, 20, "#6c6c81");
-          block(ctx, x + 22, groundY - 30, 20, 10, "#8e8ea2");
-        } else if (this.level.biome === "beach") {
-          block(ctx, x + 8, groundY - 48, 6, 48, "#8b5a2b");
-          block(ctx, x - 4, groundY - 62, 24, 16, "#2ea86f");
-          block(ctx, x + 8, groundY - 72, 22, 14, "#2ea86f");
-        } else if (this.level.biome === "snow") {
-          block(ctx, x, groundY - 18, 74, 18, "#c7ddeb");
-          block(ctx, x + 18, groundY - 48, 6, 30, "#8fb6cf");
-          block(ctx, x + 10, groundY - 60, 22, 12, "#e8f3ff");
-        } else if (this.level.biome === "volcano") {
-          block(ctx, x, groundY - 34, 88, 34, kind === "far" ? "#3a2c2a" : "#2f2321");
-          block(ctx, x + 34, groundY - 40, 10, 6, "#ff7b3d");
-        } else if (this.level.biome === "forest") {
-          block(ctx, x + 20, groundY - 50, 8, 50, "#6d4a2f");
-          block(ctx, x + 6, groundY - 74, 36, 24, "#2b8d4f");
-        } else if (this.level.biome === "cyber") {
-          block(ctx, x, groundY - 44, 64, 44, "#23274f");
-          block(ctx, x + 4, groundY - 40, 56, 4, i % 2 ? "#70f7ff" : "#f970ff");
-        } else {
-          block(ctx, x, groundY - 56, 72, 56, kind === "far" ? "#4c5f82" : "#384c71");
-          block(ctx, x + 6, groundY - 44, 8, 10, "#ffd980");
-          block(ctx, x + 22, groundY - 44, 8, 10, "#ffd980");
-        }
-      }
-      if (this.level.biome === "space") {
-        for (let s = 0; s < 80; s += 1) {
-          const sx = (hash(s) * c.width + distance * 0.06 * (s % 3 + 1)) % c.width;
-          const sy = hash(s * 2.1) * (groundY - 60);
-          block(ctx, sx, sy, 2, 2, "#f0f6ff");
-        }
+      const tile = 90;
+      const start = Math.floor((distance - 200) / tile);
+      const end = Math.floor((distance + this.canvas.width + 200) / tile);
+
+      for (let i = start; i <= end; i += 1) {
+        const x = i * tile - distance;
+        const t = hash((i + 1) * (biomeSeed + 0.3) + this.level.id * 17);
+        const variant = Math.floor(t * 7);
+
+        // base block for neighborhood transition feel
+        block(ctx, x, groundY - 110, tile - 2, 96, palette.strip[Math.floor(hash(i * 2.1) * palette.strip.length)]);
+
+        if (variant === 0) this.drawHouse(x, groundY, palette, i);
+        if (variant === 1) this.drawStore(x, groundY, palette, i);
+        if (variant === 2) this.drawPark(x, groundY, palette, i);
+        if (variant === 3) this.drawPond(x, groundY, palette, i);
+        if (variant === 4) this.drawPlayground(x, groundY, palette, i);
+        if (variant === 5) this.drawStreet(x, groundY, palette, i);
+        if (variant === 6) this.drawGardenLot(x, groundY, palette, i);
       }
     }
 
-    drawSky(distance) {
-      const ctx = this.ctx;
-      const c = this.canvas;
-      const grad = ctx.createLinearGradient(0, 0, 0, c.height);
-      if (this.level.biome === "space") {
-        grad.addColorStop(0, "#0d1022");
-        grad.addColorStop(1, "#23274e");
-      } else if (this.level.biome === "volcano") {
-        grad.addColorStop(0, "#4d2b2b");
-        grad.addColorStop(1, "#7a3e2e");
-      } else if (this.level.biome === "snow") {
-        grad.addColorStop(0, "#e9f5ff");
-        grad.addColorStop(1, "#c5def0");
-      } else {
-        grad.addColorStop(0, this.level.backdrop.sky);
-        grad.addColorStop(1, this.level.backdrop.ground);
-      }
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, c.width, c.height);
-
-      if (this.level.biome === "desert") block(ctx, 760 - (distance * 0.04 % 900), 56, 24, 24, "#ffd56e");
-      if (this.level.biome === "farm") block(ctx, 740 - (distance * 0.03 % 900), 68, 22, 22, "#ffe8a0");
-      if (this.level.biome === "marsh") block(ctx, 760 - (distance * 0.02 % 900), 72, 26, 14, "#d9decf");
-      if (this.level.biome === "beach") block(ctx, 740 - (distance * 0.03 % 900), 60, 24, 24, "#ffe27f");
-      if (this.level.biome === "snow") block(ctx, 740 - (distance * 0.03 % 900), 60, 20, 20, "#fffef5");
+    drawHouse(x, groundY, p, seed) {
+      const w = 38 + Math.floor(hash(seed) * 26);
+      const h = 36 + Math.floor(hash(seed * 2) * 24);
+      block(this.ctx, x + 8, groundY - 14 - h, w, h, p.house);
+      block(this.ctx, x + 4, groundY - 18 - h, w + 8, 10, p.roof);
+      block(this.ctx, x + 14, groundY - h + 2, 8, 8, p.window);
+      block(this.ctx, x + w - 2, groundY - h + 2, 8, 8, p.window);
+      block(this.ctx, x + (w / 2), groundY - 14 - 18, 10, 18, p.door);
     }
 
-
-    drawBiomeFx(distance, groundY) {
-      const ctx = this.ctx;
-      const c = this.canvas;
-      const t = distance * 0.02;
-      if (this.level.biome === "desert") {
-        for (let i = 0; i < 24; i += 1) {
-          const x = (i * 60 + t * 40) % c.width;
-          const y = 80 + (i * 11 % 120);
-          block(ctx, x, y, 8, 1, "rgba(255,235,170,0.35)");
-        }
-      } else if (this.level.biome === "farm") {
-        for (let i = 0; i < 12; i += 1) {
-          const x = (i * 90 + t * 22) % c.width;
-          const y = 70 + Math.sin(t + i) * 10;
-          block(ctx, x, y, 6, 3, "#ffffff");
-        }
-      } else if (this.level.biome === "marsh") {
-        for (let i = 0; i < 18; i += 1) {
-          const x = (i * 70 + t * 30) % c.width;
-          const y = groundY - 8 + Math.sin(t * 2 + i) * 3;
-          block(ctx, x, y, 10, 2, "rgba(174,224,187,0.45)");
-        }
-      } else if (this.level.biome === "space") {
-        for (let i = 0; i < 6; i += 1) {
-          const x = (i * 180 + t * 14) % c.width;
-          const y = 34 + i * 26;
-          block(ctx, x, y, 14, 2, "#a8b3ff");
-        }
-      } else if (this.level.biome === "cyber") {
-        for (let i = 0; i < 10; i += 1) {
-          const x = (i * 100 + t * 26) % c.width;
-          const y = 46 + i * 18;
-          block(ctx, x, y, 20, 2, i % 2 ? "#7bf7ff" : "#f77bff");
-        }
-      } else if (this.level.biome === "beach") {
-        for (let i = 0; i < 20; i += 1) {
-          const x = (i * 52 + t * 35) % c.width;
-          const y = groundY + 4 + Math.sin(t + i) * 2;
-          block(ctx, x, y, 12, 2, "rgba(255,255,255,0.5)");
-        }
-      } else if (this.level.biome === "snow") {
-        for (let i = 0; i < 50; i += 1) {
-          const x = (i * 37 + t * 14) % c.width;
-          const y = (i * 23 + t * 28) % (groundY - 10);
-          block(ctx, x, y, 2, 2, "rgba(255,255,255,0.8)");
-        }
-      } else if (this.level.biome === "volcano") {
-        for (let i = 0; i < 26; i += 1) {
-          const x = (i * 48 + t * 20) % c.width;
-          const y = groundY - 12 - (i % 3) * 8;
-          block(ctx, x, y, 3, 3, "#ff8f3d");
-        }
-      }
+    drawStore(x, groundY, p, seed) {
+      const w = 62 + Math.floor(hash(seed * 1.4) * 18);
+      block(this.ctx, x + 6, groundY - 68, w, 54, p.store);
+      block(this.ctx, x + 8, groundY - 76, w - 4, 8, p.neon[Math.floor(hash(seed * 5) * p.neon.length)]);
+      block(this.ctx, x + 12, groundY - 54, 18, 16, p.window);
+      block(this.ctx, x + 36, groundY - 54, 18, 16, p.window);
+      block(this.ctx, x + 56, groundY - 54, 18, 16, p.window);
+      block(this.ctx, x + 32, groundY - 36, 14, 22, p.door);
     }
 
-    drawRunner(player, t) {
-      const ctx = this.ctx;
-      const step = Math.sin(t * 18);
-      const lean = Math.max(-1, Math.min(2, Math.sin(t * 7) * 2));
+    drawPark(x, groundY, p, seed) {
+      block(this.ctx, x + 4, groundY - 50, 78, 36, p.park);
+      for (let t = 0; t < 3; t += 1) {
+        const tx = x + 14 + t * 20;
+        block(this.ctx, tx, groundY - 62, 6, 12, p.trunk);
+        block(this.ctx, tx - 6, groundY - 74, 18, 14, p.tree);
+      }
+      block(this.ctx, x + 10, groundY - 24, 60, 3, p.path);
+    }
+
+    drawPond(x, groundY, p) {
+      block(this.ctx, x + 8, groundY - 42, 74, 26, p.pond);
+      block(this.ctx, x + 14, groundY - 36, 54, 14, p.pond2);
+      block(this.ctx, x + 2, groundY - 20, 86, 4, p.path);
+    }
+
+    drawPlayground(x, groundY, p) {
+      block(this.ctx, x + 4, groundY - 50, 80, 36, p.park);
+      block(this.ctx, x + 14, groundY - 56, 6, 42, p.trunk);
+      block(this.ctx, x + 26, groundY - 54, 30, 4, p.neon[0]);
+      block(this.ctx, x + 56, groundY - 58, 16, 6, p.neon[1]);
+      block(this.ctx, x + 58, groundY - 52, 3, 20, p.trunk);
+      block(this.ctx, x + 68, groundY - 52, 3, 20, p.trunk);
+    }
+
+    drawStreet(x, groundY, p, seed) {
+      block(this.ctx, x + 2, groundY - 50, 86, 36, p.street);
+      block(this.ctx, x + 40, groundY - 70, 6, 56, p.trunk);
+      block(this.ctx, x + 36, groundY - 74, 14, 6, p.lamp);
+      block(this.ctx, x + 8, groundY - 30, 20, 3, p.path);
+      block(this.ctx, x + 56, groundY - 30, 20, 3, p.path);
+      if (hash(seed * 8.2) > 0.5) block(this.ctx, x + 24, groundY - 46, 16, 8, p.neon[2] || p.neon[0]);
+    }
+
+    drawGardenLot(x, groundY, p, seed) {
+      block(this.ctx, x + 4, groundY - 52, 80, 38, p.park);
+      for (let i = 0; i < 5; i += 1) {
+        const gx = x + 10 + i * 14;
+        block(this.ctx, gx, groundY - 28, 8, 6, p.flower[Math.floor(hash(seed + i) * p.flower.length)]);
+      }
+      block(this.ctx, x + 8, groundY - 20, 72, 2, p.path);
+    }
+
+    paletteForBiome() {
+      const b = this.level.biome;
+      const palettes = {
+        desert: { sky: "#f7d9a6", strip: ["#eac78a", "#e4bf7f"], house: "#d5a96f", roof: "#a56f3f", window: "#8ec4d6", door: "#6e462a", store: "#c79060", neon: ["#ffbf69", "#ffe066"], park: "#c7a669", trunk: "#7c532f", tree: "#b08953", path: "#9f7a4d", pond: "#89c8db", pond2: "#68adbe", street: "#be9a62", lamp: "#ffe0a2", flower: ["#f4d35e", "#ee964b"] },
+        farm: { sky: "#bfe5ff", strip: ["#8fbe5e", "#7fb24e"], house: "#f0e5c9", roof: "#ca5a4f", window: "#9ad2ff", door: "#875f3c", store: "#f2cf96", neon: ["#ffd166", "#7bdff2", "#f7a072"], park: "#7eb45a", trunk: "#6e4a2f", tree: "#4f9747", path: "#c9b98c", pond: "#86c8ef", pond2: "#5ca8da", street: "#9f8a6d", lamp: "#ffe8ac", flower: ["#ff7b7b", "#ffd166", "#90be6d"] },
+        marsh: { sky: "#9cc6a6", strip: ["#5b8a61", "#4b7a54"], house: "#7b8a72", roof: "#4b5a4c", window: "#9ccfe0", door: "#42503a", store: "#718263", neon: ["#9bf6ff", "#caffbf"], park: "#5d8f65", trunk: "#4d3b2a", tree: "#6da06f", path: "#7d8a6f", pond: "#678f8c", pond2: "#4b7471", street: "#657a64", lamp: "#d8f3dc", flower: ["#b7e4c7", "#95d5b2"] },
+        city: { sky: "#8eb5e2", strip: ["#59677d", "#4f5c72"], house: "#9da9bd", roof: "#6f7786", window: "#d6e0ff", door: "#4f5666", store: "#7f8ba1", neon: ["#31f3ff", "#ff54d9", "#ffd166"], park: "#708f70", trunk: "#574a3b", tree: "#4f7f4f", path: "#aab2be", pond: "#6ea1bf", pond2: "#58829b", street: "#4b5568", lamp: "#fff3b0", flower: ["#f28482", "#84a59d"] },
+        space: { sky: "#10162f", strip: ["#2d3150", "#373b61"], house: "#6d74a3", roof: "#9aa4d4", window: "#d6ddff", door: "#4a4f76", store: "#61699b", neon: ["#9bf6ff", "#cdb4db", "#ffd6a5"], park: "#424a7d", trunk: "#7b86b4", tree: "#9aa8d1", path: "#8089bd", pond: "#5d78b2", pond2: "#4e6697", street: "#4f567f", lamp: "#e2e7ff", flower: ["#bde0fe", "#ffc8dd"] },
+        volcano: { sky: "#704447", strip: ["#75453d", "#653a34"], house: "#8f6652", roof: "#4b2d29", window: "#ffb38a", door: "#5b3b2f", store: "#7b5847", neon: ["#ff6b3d", "#ffd166"], park: "#7a5a3f", trunk: "#422a23", tree: "#a96741", path: "#9c6f53", pond: "#8f4f3a", pond2: "#6f3b2a", street: "#6e4a3b", lamp: "#ffe0a2", flower: ["#ff7f51", "#f4a261"] },
+        snow: { sky: "#dff3ff", strip: ["#d6e9f7", "#cde1f2"], house: "#f4f8ff", roof: "#a9bfd3", window: "#8ec9ff", door: "#869db2", store: "#e4eef9", neon: ["#9bf6ff", "#bde0fe"], park: "#d8e9f5", trunk: "#8d9aa7", tree: "#b7d0dc", path: "#f8fbff", pond: "#9fd2ea", pond2: "#82bdd9", street: "#b4c7d6", lamp: "#fff7c2", flower: ["#ffffff", "#d9edff"] },
+        beach: { sky: "#85d4ff", strip: ["#e7cc8b", "#e0c27c"], house: "#ffe8b1", roof: "#f29e4c", window: "#8ed8ff", door: "#9f6a3b", store: "#ffd8a8", neon: ["#ff99c8", "#90dbf4", "#f9c74f"], park: "#d9c07d", trunk: "#8d613f", tree: "#4dbf72", path: "#f0e1b6", pond: "#57c6e1", pond2: "#3fa9c9", street: "#d4b87a", lamp: "#ffe39f", flower: ["#ffb4a2", "#ffd166"] },
+        jungle: { sky: "#86c97d", strip: ["#4f8b3f", "#417833"], house: "#84a85a", roof: "#3f5a2f", window: "#a8d5ba", door: "#4f3a28", store: "#6f8f47", neon: ["#f1fa8c", "#9bf6ff"], park: "#4d7a38", trunk: "#5d3e2f", tree: "#2f7f3c", path: "#6c8f59", pond: "#5da8a1", pond2: "#46867f", street: "#5b7d44", lamp: "#fff0a8", flower: ["#ffd166", "#ff7b7b", "#caffbf"] },
+        cyber: { sky: "#18203c", strip: ["#334260", "#2a3752"], house: "#506187", roof: "#1f2a44", window: "#b2f7ef", door: "#2f3c5a", store: "#435578", neon: ["#31f3ff", "#ff54d9", "#80ffdb"], park: "#40536f", trunk: "#1e2a40", tree: "#58779a", path: "#667da3", pond: "#415f9a", pond2: "#354d80", street: "#2f3f5c", lamp: "#d9f2ff", flower: ["#cdb4db", "#bde0fe"] }
+      };
+      return palettes[b] || palettes.city;
+    }
+
+    drawBiomeBackground(distance, groundY) {
+      const p = this.paletteForBiome();
+      this.drawSky(p.sky);
+      this.drawRouteSegments(distance * 0.22, groundY, p, this.level.id * 2.17);
+      this.drawRouteSegments(distance * 0.34 + 300, groundY + 10, p, this.level.id * 3.41);
+    }
+
+    drawRunner(player, animationClock) {
+      const step = Math.sin(animationClock * 18);
+      const bob = Math.sin(animationClock * 16) * 1.2;
       const w = player.width;
       const h = player.height;
       const x = player.x;
-      const y = player.y + Math.sin(t * 16) * 1.2;
+      const y = player.y + bob;
       const bodyW = Math.max(6, Math.round(w * 0.5));
       const bodyH = Math.max(10, Math.round(h * 0.45));
       const head = Math.max(5, Math.round(h * 0.22));
       const legLen = Math.max(8, Math.round(h * 0.36));
       const armLen = Math.max(6, Math.round(h * 0.28));
-      const bodyX = x + Math.round((w - bodyW) / 2) + lean;
+      const bodyX = x + Math.round((w - bodyW) / 2);
       const bodyY = y + head;
+      const legY = bodyY + bodyH;
+      const armY = bodyY + 4;
 
-      block(ctx, bodyX + 1, bodyY + bodyH + legLen, bodyW - 2, 2, "rgba(0,0,0,0.28)");
-      block(ctx, bodyX, bodyY, bodyW, bodyH, player.character.color);
-      block(ctx, bodyX + 1, y, head, head, "#ffd9b3");
-      block(ctx, bodyX + 1, bodyY + Math.round(bodyH * 0.45), Math.max(2, Math.round(bodyW * 0.7)), 3, player.character.accent);
+      block(this.ctx, bodyX, bodyY, bodyW, bodyH, player.character.color);
+      block(this.ctx, bodyX + 1, y, head, head, "#ffd9b3");
+      block(this.ctx, bodyX + 1, bodyY + Math.round(bodyH * 0.45), Math.max(2, Math.round(bodyW * 0.7)), 3, player.character.accent);
 
-      const swing = Math.round(step * 4);
-      block(ctx, bodyX + 2, bodyY + bodyH, 3, legLen + swing, "#1b1b2f");
-      block(ctx, bodyX + bodyW - 5, bodyY + bodyH, 3, legLen - swing, "#1b1b2f");
-      block(ctx, bodyX - 3, bodyY + 4, 3, armLen - Math.round(step * 3), "#1b1b2f");
-      block(ctx, bodyX + bodyW, bodyY + 4, 3, armLen + Math.round(step * 3), "#1b1b2f");
-
-      if (player.kickTimer > 0) block(ctx, x + w + 2, bodyY + bodyH + 5, 16, 3, "#ffe48a");
-      if (player.shieldTimer > 0) {
-        ctx.strokeStyle = "#8ce0ff";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x - 5, y - 4, w + 10, h + 10);
-      }
+      const legSwing = Math.round(step * 4);
+      const armSwing = Math.round(step * 3);
+      block(this.ctx, bodyX + 2, legY, 3, legLen + legSwing, "#1b1b2f");
+      block(this.ctx, bodyX + bodyW - 5, legY, 3, legLen - legSwing, "#1b1b2f");
+      block(this.ctx, bodyX - 3, armY, 3, armLen - armSwing, "#1b1b2f");
+      block(this.ctx, bodyX + bodyW, armY, 3, armLen + armSwing, "#1b1b2f");
     }
 
     render(state) {
-      const ctx = this.ctx;
       const c = this.canvas;
       const distance = state.distance;
       const groundY = state.groundY;
+      this.ctx.imageSmoothingEnabled = false;
 
-      ctx.imageSmoothingEnabled = false;
-      this.drawSky(distance);
-      this.drawParallaxObjects(distance, groundY - 38, "far");
-      this.drawParallaxObjects(distance, groundY - 20, "mid");
-      this.drawParallaxObjects(distance, groundY, "near");
-      this.drawBiomeFx(distance, groundY);
-
-      block(ctx, 0, groundY, c.width, c.height - groundY, this.level.backdrop.ground);
-      for (let x = -30; x < c.width + 60; x += 30) block(ctx, x - (distance * 0.33 % 30), groundY + 18, 16, 2, "#f2f2f2");
+      this.drawBiomeBackground(distance, groundY);
+      block(this.ctx, 0, groundY, c.width, c.height - groundY, this.level.backdrop.ground);
 
       state.coins.forEach((coin) => {
-        block(ctx, coin.x, coin.y, coin.width, coin.height, "#ffd447");
-        block(ctx, coin.x + 4, coin.y + 4, coin.width - 8, coin.height - 8, "#f6b500");
+        block(this.ctx, coin.x, coin.y, coin.width, coin.height, "#ffd447");
+        block(this.ctx, coin.x + 4, coin.y + 4, coin.width - 8, coin.height - 8, "#f6b500");
       });
       state.powerups.forEach((powerup) => {
-        block(ctx, powerup.x, powerup.y, powerup.width, powerup.height, powerup.color);
-        block(ctx, powerup.x + 7, powerup.y + 7, 10, 10, "#14223f");
+        block(this.ctx, powerup.x, powerup.y, powerup.width, powerup.height, powerup.color);
+        block(this.ctx, powerup.x + 7, powerup.y + 7, 10, 10, "#14223f");
       });
       state.obstacles.forEach((obstacle) => {
-        block(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color);
-        block(ctx, obstacle.x + 2, obstacle.y + 2, obstacle.width - 4, 3, "rgba(255,255,255,0.3)");
+        block(this.ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color);
+        block(this.ctx, obstacle.x + 2, obstacle.y + 2, obstacle.width - 4, 3, "rgba(255,255,255,0.3)");
       });
 
       this.drawRunner(state.player, state.animationClock);
       const progress = Math.min(1, state.distance / this.level.length);
-      block(ctx, 20, 14, c.width - 40, 12, "#1f2a44");
-      block(ctx, 20, 14, (c.width - 40) * progress, 12, "#6ef3b5");
+      block(this.ctx, 20, 14, c.width - 40, 12, "#1f2a44");
+      block(this.ctx, 20, 14, (c.width - 40) * progress, 12, "#6ef3b5");
     }
   }
 

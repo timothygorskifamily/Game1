@@ -17,7 +17,6 @@
   const walletValue = document.getElementById("walletValue");
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
-  const abilityPanel = document.getElementById("abilityPanel");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlayText = document.getElementById("overlayText");
   const overlayPrimary = document.getElementById("overlayPrimary");
@@ -29,17 +28,13 @@
   const backToStartBtn = document.getElementById("backToStartBtn");
   const backToStoreBtn = document.getElementById("backToStoreBtn");
   const backToCharactersBtn = document.getElementById("backToCharactersBtn");
+  const pauseToggleBtn = document.getElementById("pauseToggle");
 
   const input = new FamilyDash.InputManager();
   input.bind();
   input.attachMobileControls(document.querySelector(".mobile-controls"));
   const audio = new FamilyDash.AudioSystem();
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
-
-
-  const isMobileDevice = /Android|iPhone|iPad|iPod|Mobile|IEMobile|Opera Mini/i.test(navigator.userAgent)
-    || window.matchMedia("(pointer: coarse)").matches
-    || ("ontouchstart" in window);
 
   const STORE_ITEMS = [
     { id: "speedBoost", name: "Turbo Shoes", cost: 24, desc: "+22 start speed for one run" },
@@ -49,37 +44,6 @@
   ];
 
   let selectedCharacter = null;
-
-  function configureMobileMode() {
-    if (!isMobileDevice) return;
-    document.body.classList.add("mobile-device");
-    const startScreen = document.getElementById("startScreen");
-    const mobileTip = document.createElement("p");
-    mobileTip.className = "mobile-tip";
-    mobileTip.textContent = "Mobile mode detected: large buttons + touch controls enabled.";
-    startScreen.appendChild(mobileTip);
-
-    const resizeCanvas = () => {
-      const ratio = 16 / 7;
-      const viewportW = Math.min(window.innerWidth - 24, 960);
-      const viewportH = Math.min(window.innerHeight * 0.5, 460);
-      let cssW = viewportW;
-      let cssH = cssW / ratio;
-      if (cssH > viewportH) {
-        cssH = viewportH;
-        cssW = cssH * ratio;
-      }
-      const dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-      canvas.width = Math.round(cssW * dpr);
-      canvas.height = Math.round(cssH * dpr);
-      canvas.style.width = `${Math.round(cssW)}px`;
-      canvas.style.height = `${Math.round(cssH)}px`;
-    };
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-    window.addEventListener("orientationchange", resizeCanvas);
-  }
   let selectedLevel = null;
   let game = null;
 
@@ -102,19 +66,14 @@
     screens[name].classList.add("active");
   }
 
-  function statBar(scoreOutOfFive) {
-    return Array.from({ length: 5 }, (_, index) => `<span class="stat-dot ${index < scoreOutOfFive ? "fill" : ""}"></span>`).join("");
-  }
-
-  function renderScoreboard() {
-    const topRecent = [...profile.sessions].sort((a, b) => b.score - a.score).slice(0, 5);
-    if (topRecent.length === 0) {
-      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
-      return;
-    }
-    scoreList.innerHTML = topRecent
-      .map((entry) => `<li>${entry.score} pts • ${entry.character} • L${entry.level} • ${entry.date}</li>`)
-      .join("");
+  function statText(character) {
+    return `
+      <p><strong>Speed:</strong> ${character.stats.speed}/5</p>
+      <p><strong>Jump:</strong> ${character.stats.jump}/5</p>
+      <p><strong>Stamina:</strong> ${character.stats.stamina}/5</p>
+      <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
+      <p><strong>Control:</strong> ${character.stats.control}/5</p>
+    `;
   }
 
   function renderCharacterCards() {
@@ -128,11 +87,7 @@
         <p>${character.flavor}</p>
         <p><strong>Strengths:</strong> ${character.strengths}</p>
         <p><strong>Weakness:</strong> ${character.weakness}</p>
-        <div class="stats-row">${statBar(character.stats.speed)}</div>
-        <div class="stats-row">${statBar(character.stats.jump)}</div>
-        <div class="stats-row">${statBar(character.stats.stamina)}</div>
-        <div class="stats-row">${statBar(character.stats.strength)}</div>
-        <div class="stats-row">${statBar(character.stats.control)}</div>
+        ${statText(character)}
       `;
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
@@ -200,21 +155,7 @@
     });
   }
 
-
-  function renderAbilityPanel(character, runtime) {
-    if (!character) return;
-    const active = runtime ? `Shield: ${runtime.shield > 0 ? runtime.shield.toFixed(1) + "s" : "--"} | Rush: ${runtime.rush > 0 ? runtime.rush.toFixed(1) + "s" : "--"}` : "Shield: -- | Rush: --";
-    abilityPanel.innerHTML = `
-      <div class="ability-card"><strong>${character.name}</strong> • ${character.role}</div>
-      <div class="ability-card"><strong>Strengths:</strong> ${character.strengths}</div>
-      <div class="ability-card"><strong>Weakness:</strong> ${character.weakness}</div>
-      <div class="ability-card"><strong>Active Effects:</strong> ${active}</div>
-    `;
-  }
-
   function updateHud(data) {
-    const currentCharacter = FamilyDash.getCharacterById(selectedCharacter);
-    renderAbilityPanel(currentCharacter, data);
     hud.innerHTML = `
       <div class="hud-card"><strong>Character:</strong> ${FamilyDash.getCharacterById(selectedCharacter).name}</div>
       <div class="hud-card"><strong>Level:</strong> ${data.level}/10</div>
@@ -302,7 +243,7 @@
     });
 
     switchScreen("game");
-    renderAbilityPanel(character, null);
+    pauseToggleBtn.textContent = "Pause";
     updateHud({ health: character.gameplay.maxHealth, maxHealth: character.gameplay.maxHealth, score: 0, coins: 0, distance: 0, level: level.id, status: "running", shield: 0, rush: 0 });
     game.start(character, level, runModifiers);
   }
@@ -341,6 +282,15 @@
   backToCharactersBtn.addEventListener("click", () => switchScreen("character"));
   launchBtn.addEventListener("click", startRun);
 
+
+  function togglePauseFromButton() {
+    if (!game || !screens.game.classList.contains("active")) return;
+    game.pause();
+    pauseToggleBtn.textContent = game.state === "paused" ? "Resume" : "Pause";
+  }
+
+  pauseToggleBtn.addEventListener("click", togglePauseFromButton);
+
   window.addEventListener("keydown", (event) => {
     if ((event.code === "KeyP" || event.code === "Escape") && screens.game.classList.contains("active") && game) {
       game.pause();
@@ -352,6 +302,7 @@
           "Store",
           () => {
             switchScreen("game");
+    pauseToggleBtn.textContent = "Pause";
             game.pause();
           },
           () => {
@@ -364,7 +315,6 @@
     }
   });
 
-  configureMobileMode();
   renderScoreboard();
   switchScreen("start");
 })();

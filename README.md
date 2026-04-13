@@ -9,18 +9,15 @@ This version is intentionally built with **classic script loading** (no ES modul
 ## Features
 
 - Pixel-art themed UI and in-game visuals with crisp retro styling
-- Every level has a different biome background (desert, farm, marsh, city, cyber, space, forest, beach, snow, volcano)
+- Distinct per-level biome backgrounds with custom scene art and movement
 - Character select with 6 runners and distinct stats
-- **10 progressive levels** with increasing speed, difficulty, and obstacle mixes
+- **10 progressive levels** with unique biome backgrounds (desert, farm, marsh, city, space, volcano, snow, beach, jungle, cyber) plus increasing speed/difficulty
 - In-game store to buy one-run boosts using coins earned in gameplay
 - Boost item dynamics during runs (rush, boost, coin burst, shield, heal)
 - Session scoreboard showing top recent run results
 - Persistent wallet, inventory, and high score using `localStorage`
 - Hype-style generated background music loop via Web Audio API
-- Always-visible bottom control bar while playing (keyboard + touch friendly)
-- Character ability/skill panel shown at the bottom during gameplay
 - Desktop and mobile/touch controls
-- Automatic mobile-device detection with responsive canvas scaling and larger touch UI
 
 ## Run locally
 
@@ -39,13 +36,14 @@ Then open: `http://localhost:8080`
 - `ArrowDown` → Slide
 - `K` → Kick
 - `P` or `Esc` → Pause / resume
+- On-screen `Pause/Resume` button in the HUD area
 
 ## Customization guide
 
 - Characters and sizes: `js/data/characters.js`
 - Levels (1-10), obstacle mix, powerups: `js/data/levels.js`
 - Runner feel, collisions, scoring and spawning: `js/core/game.js`
-- Dynamic city visuals and pixel runner animation: `js/core/renderer.js`
+- Biome background renderer and pixel runner animation: `js/core/renderer.js`
 - Store, scoreboard, and UI flow: `js/main.js`
 
 ## Notes
