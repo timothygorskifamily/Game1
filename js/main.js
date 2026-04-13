@@ -49,12 +49,27 @@
   let selectedLevel = null;
   let game = null;
 
+
+  function readJSON(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw);
+      return parsed == null ? fallback : parsed;
+    } catch (_err) {
+      return fallback;
+    }
+  }
+
   let profile = {
     highScore: Number(localStorage.getItem("familyDashHighScore") || 0),
     wallet: Number(localStorage.getItem("familyDashWallet") || 0),
-    sessions: JSON.parse(localStorage.getItem("familyDashSessions") || "[]"),
-    inventory: JSON.parse(localStorage.getItem("familyDashInventory") || "{}")
+    sessions: readJSON("familyDashSessions", []),
+    inventory: readJSON("familyDashInventory", {})
   };
+
+  if (!Array.isArray(profile.sessions)) profile.sessions = [];
+  if (typeof profile.inventory !== "object" || Array.isArray(profile.inventory)) profile.inventory = {};
 
   function saveProfile() {
     localStorage.setItem("familyDashHighScore", String(profile.highScore));
@@ -73,13 +88,15 @@
   }
 
   function renderScoreboard() {
-    const topRecent = [...profile.sessions].sort((a, b) => b.score - a.score).slice(0, 5);
+    if (!scoreList) return;
+    const valid = profile.sessions.filter((s) => s && Number.isFinite(Number(s.score)));
+    const topRecent = [...valid].sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 8);
     if (topRecent.length === 0) {
       scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
       return;
     }
     scoreList.innerHTML = topRecent
-      .map((entry) => `<li>${entry.score} pts • ${entry.character} • L${entry.level} • ${entry.date}</li>`)
+      .map((entry, idx) => `<li>#${idx + 1} ${entry.score} pts • ${entry.character || "Unknown"} • L${entry.level || "?"} • ${entry.date || "today"}</li>`)
       .join("");
   }
 
@@ -324,6 +341,11 @@
     }
   });
 
+  if (profile.sessions.length) {
+    const best = profile.sessions.reduce((m, s) => Math.max(m, Number(s.score) || 0), profile.highScore || 0);
+    profile.highScore = best;
+    saveProfile();
+  }
   renderScoreboard();
   switchScreen("start");
 })();
