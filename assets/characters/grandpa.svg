@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Grandpa portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with a blue sweater, khaki pants, and a calm expression.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#92a07a"/>
+      <stop offset="0.62" stop-color="#d4a055"/>
+      <stop offset="1" stop-color="#6d553b"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#2f3228"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="40" cy="41" r="19" fill="#8ea062" opacity="0.45"/>
+  <circle cx="120" cy="37" r="24" fill="#dc9e49" opacity="0.52"/>
+  <rect x="8" y="118" width="144" height="34" fill="#6f7f4c"/>
+  <path d="M30 146c7-31 24-49 50-49 27 0 45 19 50 49z" fill="#8297b4"/>
+  <path d="M53 104h54l6 42H47z" fill="#7d94b2"/>
+  <path d="M57 109h46" stroke="#9aaaca" stroke-width="3"/>
+  <path d="M57 119h46" stroke="#90a0c0" stroke-width="3"/>
+  <path d="M57 129h46" stroke="#90a0c0" stroke-width="3"/>
+  <path d="M63 98h34l6 17H57z" fill="#efe3cb"/>
+  <circle cx="80" cy="58" r="29" fill="#efc8ab"/>
+  <path d="M52 55c3-18 15-31 30-31 15 0 27 11 30 29l-8 2c-3-11-11-19-22-19-12 0-20 7-23 21z" fill="#ded2c6"/>
+  <path d="M60 42c6-8 14-12 22-12 9 0 16 4 22 12" fill="none" stroke="#f0e4d8" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="69" cy="58" r="3.2" fill="#35261f"/>
+  <circle cx="92" cy="58" r="3.2" fill="#35261f"/>
+  <path d="M71 74c5 3 12 3 17 0" fill="none" stroke="#9a5b46" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M62 106c5 6 11 9 18 9 8 0 14-3 19-9" fill="none" stroke="#ddbaa0" stroke-width="4" stroke-linecap="round"/>
+</svg>

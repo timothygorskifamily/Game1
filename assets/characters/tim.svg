@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Tim portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with brown hair, a beard, and a camel jacket.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8f9a74"/>
+      <stop offset="0.65" stop-color="#b48e54"/>
+      <stop offset="1" stop-color="#6d5436"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#2d3327"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="38" cy="44" r="19" fill="#8c9957" opacity="0.5"/>
+  <circle cx="118" cy="36" r="24" fill="#d59f46" opacity="0.55"/>
+  <circle cx="132" cy="61" r="15" fill="#a56f35" opacity="0.45"/>
+  <rect x="8" y="118" width="144" height="34" fill="#728450"/>
+  <path d="M28 146c6-31 25-48 52-48 28 0 47 18 52 48z" fill="#a8743f"/>
+  <path d="M52 107c6-10 16-15 28-15 12 0 23 4 30 15l-10 39H60z" fill="#c08a52"/>
+  <path d="M63 98h34l6 17H57z" fill="#f2eee9"/>
+  <path d="M63 114h34l7 32H56z" fill="#d4d0ca"/>
+  <circle cx="80" cy="58" r="29" fill="#efc7aa"/>
+  <path d="M50 53c3-22 17-36 33-36 18 0 31 11 35 34l-10 2c-4-11-11-22-26-22-13 0-22 9-25 24z" fill="#7a5437"/>
+  <path d="M60 74c5 12 12 18 20 18 8 0 16-5 21-18l8 5c-6 16-16 25-29 25-12 0-22-8-28-24z" fill="#7a5437"/>
+  <circle cx="69" cy="59" r="3.6" fill="#31231c"/>
+  <circle cx="92" cy="59" r="3.6" fill="#31231c"/>
+  <path d="M71 73c5 3 13 3 18 0" fill="none" stroke="#925846" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M72 87c3 2 10 2 15 0" fill="none" stroke="#5f4030" stroke-width="4" stroke-linecap="round"/>
+  <path d="M61 109c5 7 11 11 19 11 9 0 15-4 20-11" fill="none" stroke="#caa78a" stroke-width="4" stroke-linecap="round"/>
+</svg>

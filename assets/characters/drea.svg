@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Drea portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with dark hair, a white headband, and a denim jacket.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8aa06f"/>
+      <stop offset="0.65" stop-color="#b28f52"/>
+      <stop offset="1" stop-color="#7d5e38"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#30412d"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="46" cy="40" r="22" fill="#dca34a" opacity="0.55"/>
+  <circle cx="112" cy="38" r="26" fill="#e2b85f" opacity="0.55"/>
+  <circle cx="130" cy="60" r="16" fill="#8ea05c" opacity="0.5"/>
+  <rect x="8" y="116" width="144" height="36" rx="0" fill="#6a7d4b"/>
+  <path d="M30 145c6-28 22-47 50-47 30 0 46 18 50 47z" fill="#6b7f96"/>
+  <path d="M48 110c7-10 18-16 32-16 14 0 26 5 33 16l-11 35H58z" fill="#7f93ac"/>
+  <path d="M66 99h28l8 17H58z" fill="#d6a18a"/>
+  <circle cx="80" cy="60" r="30" fill="#f0c7aa"/>
+  <path d="M48 57c2-24 18-39 34-39 19 0 33 16 35 40l-10-2c-3-12-12-25-25-25-13 0-22 11-24 26z" fill="#201717"/>
+  <path d="M48 63c4 28 12 39 26 49l-7 15c-20-11-31-31-32-57z" fill="#201717"/>
+  <path d="M112 61c-2 27-10 38-24 49l6 17c22-10 31-32 31-58z" fill="#201717"/>
+  <path d="M55 30c6-8 15-13 25-13 11 0 21 4 28 13l-7 7c-6-5-12-8-21-8-8 0-15 2-20 8z" fill="#f5f2eb"/>
+  <circle cx="69" cy="61" r="3.6" fill="#2d201d"/>
+  <circle cx="92" cy="61" r="3.6" fill="#2d201d"/>
+  <path d="M71 78c5 4 13 4 18 0" fill="none" stroke="#9c5a44" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M78 67h4" stroke="#e0ab95" stroke-width="3" stroke-linecap="round"/>
+  <path d="M61 109c4 8 10 13 19 13 9 0 16-5 21-13" fill="none" stroke="#dca78f" stroke-width="4" stroke-linecap="round"/>
+  <path d="M72 113h17" stroke="#d9b98f" stroke-width="3" stroke-linecap="round"/>
+</svg>

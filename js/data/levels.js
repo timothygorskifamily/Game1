@@ -16,6 +16,9 @@
 
   FamilyDash.LEVELS = themes.map((t, index) => {
     const id = index + 1;
+    const starterPool = ["cone", "toyBox", "pile", "sign"];
+    const midPool = ["cone", "toyBox", "pile", "sign", "ramp", "bench", "drone"];
+    const latePool = ["cone", "toyBox", "pile", "sign", "ramp", "bench", "drone", "barrel", "crystal"];
     return {
       id,
       name: t.name,
@@ -25,7 +28,7 @@
       baseSpeedBoost: (id - 1) * 10,
       difficultyGrowth: 0.09 + id * 0.015,
       backdrop: { sky: t.sky, hill: "#5d78a1", city: "#4f678f", ground: t.ground },
-      obstaclePool: id < 3 ? ["cone", "toyBox"] : id < 6 ? ["cone", "toyBox", "ramp", "drone"] : ["cone", "toyBox", "ramp", "drone", "barrel"],
+      obstaclePool: id < 3 ? starterPool : id < 6 ? midPool : latePool,
       coinRate: Math.min(0.95, 0.58 + id * 0.035),
       powerupRate: Math.min(0.5, 0.16 + id * 0.02)
     };
@@ -34,9 +37,13 @@
   FamilyDash.OBSTACLE_DEFS = {
     cone: { width: 36, height: 48, damage: 1, kickable: true, color: "#ff8f3f" },
     toyBox: { width: 54, height: 46, damage: 1, kickable: true, color: "#f25f5c" },
+    pile: { width: 52, height: 30, damage: 1, kickable: true, color: "#7d6848" },
+    sign: { width: 34, height: 56, damage: 1, kickable: false, color: "#e1c46b" },
     ramp: { width: 60, height: 62, damage: 1, kickable: false, color: "#5872a8" },
+    bench: { width: 68, height: 34, damage: 1, kickable: false, color: "#7a5b45" },
     drone: { width: 54, height: 32, damage: 1, kickable: false, color: "#383f70", flying: true },
-    barrel: { width: 40, height: 56, damage: 2, kickable: true, color: "#854d27" }
+    barrel: { width: 40, height: 56, damage: 2, kickable: true, color: "#854d27" },
+    crystal: { width: 46, height: 54, damage: 2, kickable: false, color: "#83a0d8" }
   };
 
   FamilyDash.POWERUP_DEFS = {

@@ -63,6 +63,7 @@ button:hover { transform: translate(-1px, -1px); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .hint { margin-top: 0.6rem; color: var(--muted); }
+.character-screen-note { margin: 0.35rem 0 0; color: var(--muted); font-size: 0.92rem; }
 
 .character-grid,
 .level-grid {
@@ -82,6 +83,86 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .card h3 { margin: 0 0 0.2rem; }
 .card p { margin: 0.2rem 0; color: #e7f0ff; font-size: 0.9rem; }
 
+.character-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.character-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.difficulty-badge {
+  display: inline-block;
+  padding: 0.18rem 0.45rem;
+  border: 2px solid #102238;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.difficulty-badge[data-tone="starter"] {
+  background: #73f29f;
+  color: #12311d;
+}
+
+.difficulty-badge[data-tone="easy"] {
+  background: #9be28c;
+  color: #173019;
+}
+
+.difficulty-badge[data-tone="medium"] {
+  background: #ffd166;
+  color: #37290b;
+}
+
+.difficulty-badge[data-tone="hard"] {
+  background: #ff9f68;
+  color: #3c1f0e;
+}
+
+.difficulty-badge[data-tone="expert"] {
+  background: #ef476f;
+  color: #fff1f5;
+}
+
+.difficulty-rank {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.character-portrait-frame {
+  padding: 0.3rem;
+  border: 2px solid #122131;
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.22), transparent 28%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(5, 10, 18, 0.4));
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.06);
+}
+
+.character-portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 2px solid rgba(10, 17, 26, 0.9);
+  background: #132132;
+  image-rendering: pixelated;
+}
+
+.character-card .character-role {
+  color: var(--accent);
+}
+
+.character-card .character-difficulty {
+  color: #fff4c2;
+}
+
 .stats-row {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -95,7 +176,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .stat-dot.fill { background: var(--accent2); }
 
-.actions { display: flex; gap: 0.5rem; }
+.actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
 .game-panel { position: relative; padding: 0.75rem; }
 
@@ -107,6 +188,94 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   border: 4px solid #111;
   background: #9ed9ff;
   image-rendering: pixelated;
+}
+
+.game-support {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) 1fr;
+  gap: 0.6rem;
+  align-items: stretch;
+}
+
+.pc-controls,
+.soundtrack-banner {
+  background: #102238;
+  border: 2px solid #35577f;
+  padding: 0.7rem 0.8rem;
+}
+
+.pc-controls h3,
+.soundtrack-banner strong {
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.pc-controls-summary {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.12rem 0.38rem;
+  background: #08111a;
+  border: 2px solid #35577f;
+  box-shadow: 2px 2px 0 #000;
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1.2;
+}
+
+.soundtrack-banner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-size: 0.92rem;
+}
+
+.overlay-name-prompt {
+  margin: 0.9rem 0;
+  padding: 0.8rem;
+  border: 2px solid #35577f;
+  background: #102238;
+}
+
+.overlay-name-prompt label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.overlay-name-prompt input {
+  width: 100%;
+  padding: 0.65rem 0.7rem;
+  border: 2px solid #1d2f45;
+  background: #f4f4f4;
+  color: #0f1d2f;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.overlay-name-prompt input:focus {
+  outline: 3px solid var(--accent2);
+  outline-offset: 1px;
+}
+
+.overlay-name-hint {
+  margin: 0.55rem 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .hud {
@@ -131,6 +300,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 @media (max-width: 800px) {
+  .game-support { grid-template-columns: 1fr; }
+  .pc-controls { display: none; }
   .mobile-controls { display: grid; }
 }
 

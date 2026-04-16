@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Grandma portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with a coral jacket, silver hair, and dark plaid trousers.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#97a37a"/>
+      <stop offset="0.62" stop-color="#d8a251"/>
+      <stop offset="1" stop-color="#70543a"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#343126"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="40" cy="41" r="20" fill="#91a262" opacity="0.46"/>
+  <circle cx="118" cy="37" r="24" fill="#dfa44d" opacity="0.54"/>
+  <rect x="8" y="118" width="144" height="34" fill="#6f804c"/>
+  <path d="M30 146c7-30 24-48 50-48 28 0 45 18 50 48z" fill="#f07f5e"/>
+  <path d="M53 104h54l6 42H47z" fill="#ef8966"/>
+  <path d="M62 98h36l6 16H56z" fill="#e74f45"/>
+  <circle cx="80" cy="60" r="29" fill="#efc8ab"/>
+  <path d="M51 58c3-20 16-34 32-34 16 0 28 12 31 31l-9 2c-3-11-10-20-23-20-13 0-21 9-24 22z" fill="#d6d0cb"/>
+  <path d="M52 63c8 10 18 16 28 16 11 0 21-5 29-15l7 8c-10 14-22 22-36 22-13 0-26-7-36-21z" fill="#c8c0bb"/>
+  <path d="M53 56c3-11 14-20 27-20 13 0 23 8 27 20" fill="none" stroke="#e8e2de" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="69" cy="60" r="3.3" fill="#35261f"/>
+  <circle cx="92" cy="60" r="3.3" fill="#35261f"/>
+  <path d="M70 76c6 4 13 4 18 0" fill="none" stroke="#9c5c46" stroke-width="3.4" stroke-linecap="round"/>
+  <path d="M60 112h40" stroke="#f5c9b2" stroke-width="4"/>
+  <path d="M57 122h46" stroke="#4e2f33" stroke-width="3"/>
+  <path d="M57 130h46" stroke="#4e2f33" stroke-width="3"/>
+</svg>

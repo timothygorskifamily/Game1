@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">Ariel portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with long brown hair, a denim jacket, and a mustard skirt.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#99a174"/>
+      <stop offset="0.62" stop-color="#d3a24b"/>
+      <stop offset="1" stop-color="#736143"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#2f3527"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="34" cy="41" r="18" fill="#8f8f57" opacity="0.45"/>
+  <circle cx="118" cy="36" r="24" fill="#dfa94a" opacity="0.58"/>
+  <circle cx="136" cy="60" r="16" fill="#c5843b" opacity="0.45"/>
+  <rect x="8" y="118" width="144" height="34" fill="#70804a"/>
+  <path d="M30 146c7-29 26-48 50-48 28 0 47 19 50 48z" fill="#bd9438"/>
+  <path d="M48 106c7-9 18-14 32-14 15 0 27 5 33 14l-11 23H58z" fill="#7a92ad"/>
+  <path d="M58 100h44l6 15H52z" fill="#dbe3ee"/>
+  <circle cx="80" cy="60" r="29" fill="#efc7a8"/>
+  <path d="M46 60c4-24 19-39 35-39 18 0 31 14 34 36l-9 2c-3-14-12-25-25-25-13 0-22 10-26 27z" fill="#5a3c2b"/>
+  <path d="M50 65c9 12 19 19 34 19 14 0 26-6 36-20l6 10c-11 18-27 28-42 28-16 0-31-10-41-27z" fill="#5a3c2b"/>
+  <path d="M97 54c21 8 31 20 38 34l-12 3c-4-10-14-20-29-28z" fill="#6a4735"/>
+  <circle cx="69" cy="60" r="3.5" fill="#36251e"/>
+  <circle cx="91" cy="60" r="3.5" fill="#36251e"/>
+  <path d="M70 76c5 4 12 4 17 0" fill="none" stroke="#9b5b45" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M63 109c5 6 11 10 18 10 8 0 15-3 21-10" fill="none" stroke="#e1bba1" stroke-width="4" stroke-linecap="round"/>
+</svg>

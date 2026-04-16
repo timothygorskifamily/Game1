@@ -17,6 +17,60 @@
     ctx.fill();
     ctx.restore();
   }
+  function pixelLine(ctx, x1, y1, x2, y2, size, color) {
+    const thickness = Math.max(1, px(size));
+    const steps = Math.max(1, Math.ceil(Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1))));
+    for (let i = 0; i <= steps; i += 1) {
+      const t = i / steps;
+      block(
+        ctx,
+        x1 + (x2 - x1) * t - thickness / 2,
+        y1 + (y2 - y1) * t - thickness / 2,
+        thickness,
+        thickness,
+        color
+      );
+    }
+  }
+  function wedge(ctx, x, y, w, h, color, reverse) {
+    const step = 2;
+    for (let i = 0; i < w; i += step) {
+      const ratio = reverse ? i / Math.max(1, w - step) : 1 - i / Math.max(1, w - step);
+      const columnHeight = Math.max(2, Math.round(h * ratio));
+      block(ctx, x + i, y + h - columnHeight, step, columnHeight, color);
+    }
+  }
+  function hexToRgb(color) {
+    const raw = String(color || "").trim();
+    const rgbMatch = raw.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/i);
+    if (rgbMatch) {
+      return {
+        r: parseInt(rgbMatch[1], 10),
+        g: parseInt(rgbMatch[2], 10),
+        b: parseInt(rgbMatch[3], 10)
+      };
+    }
+    const value = raw.replace("#", "");
+    if (value.length !== 6) return { r: 255, g: 255, b: 255 };
+    return {
+      r: parseInt(value.slice(0, 2), 16),
+      g: parseInt(value.slice(2, 4), 16),
+      b: parseInt(value.slice(4, 6), 16)
+    };
+  }
+  function mixColor(a, b, t) {
+    const colorA = hexToRgb(a);
+    const colorB = hexToRgb(b);
+    const mix = Math.max(0, Math.min(1, t));
+    const r = Math.round(colorA.r + (colorB.r - colorA.r) * mix);
+    const g = Math.round(colorA.g + (colorB.g - colorA.g) * mix);
+    const bValue = Math.round(colorA.b + (colorB.b - colorA.b) * mix);
+    return `rgb(${r}, ${g}, ${bValue})`;
+  }
+  function alphaColor(color, alpha) {
+    const { r, g, b } = hexToRgb(color);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
 
   const PALETTES = {
     desert: { skyA: "#ffb16b", skyB: "#ffd39c", skyC: "#fff0ca", ground: "#d9b36c", groundAlt: "#c79251", propA: "#d8a065", propB: "#8f542d", detail: "#f2d29b", glow: "#ffebaf", water: "#6dc5d4" },
@@ -44,6 +98,119 @@
     cyber: ["alley", "market", "transit", "garden", "towers"]
   };
 
+  const OBSTACLE_THEMES = {
+    desert: {
+      cone: { style: "cactus", base: "#5f7d4d", accent: "#d9b36c", trim: "#f2d29b" },
+      toyBox: { style: "crate", base: "#ad7a44", accent: "#e8c07c", trim: "#6d4727" },
+      ramp: { style: "dune", base: "#d7b062", accent: "#f3d7a0", trim: "#b98f52" },
+      drone: { style: "scarab", base: "#7b532e", accent: "#f2d29b", trim: "#4c321d" },
+      barrel: { style: "jar", base: "#9d6a3a", accent: "#f1d5a3", trim: "#6b4322" },
+      pile: { style: "tumbleweed", base: "#b98c53", accent: "#e6bf84", trim: "#7a5830" },
+      sign: { style: "trailsign", base: "#8c663c", accent: "#f3d7a0", trim: "#5b3d20" },
+      bench: { style: "stonebench", base: "#b58d63", accent: "#e8c89d", trim: "#7e5d3c" },
+      crystal: { style: "sandstone", base: "#cf9f64", accent: "#f7d8a2", trim: "#a8733e" }
+    },
+    farm: {
+      cone: { style: "pumpkin", base: "#d67c2d", accent: "#f5c26b", trim: "#5f7b2d" },
+      toyBox: { style: "hay", base: "#d8be65", accent: "#fff0a7", trim: "#9f7b2f" },
+      ramp: { style: "fence", base: "#c18b58", accent: "#f3d8ae", trim: "#7f532e" },
+      drone: { style: "crow", base: "#2a3130", accent: "#f0d775", trim: "#161b1a" },
+      barrel: { style: "milk", base: "#d9e3ed", accent: "#8aa4c1", trim: "#6d7f92" },
+      pile: { style: "producepile", base: "#ca7b43", accent: "#f0ca63", trim: "#5c8d39" },
+      sign: { style: "farmsign", base: "#b47b45", accent: "#f7e2b4", trim: "#6a4425" },
+      bench: { style: "cart", base: "#a57244", accent: "#d8b27b", trim: "#6b492b" },
+      crystal: { style: "cornshock", base: "#d6c56b", accent: "#fff1a8", trim: "#8f6d2f" }
+    },
+    marsh: {
+      cone: { style: "stump", base: "#725237", accent: "#9f7b56", trim: "#d8c29b" },
+      toyBox: { style: "crate", base: "#7d5d43", accent: "#a88b64", trim: "#4f3c2c" },
+      ramp: { style: "boardwalk", base: "#82684f", accent: "#b29875", trim: "#4d3f31" },
+      drone: { style: "dragonfly", base: "#577986", accent: "#dff6ff", trim: "#30454d" },
+      barrel: { style: "barrel", base: "#6d5038", accent: "#8d6d4b", trim: "#3f2d21" },
+      pile: { style: "reedstack", base: "#718d59", accent: "#b4cb79", trim: "#486047" },
+      sign: { style: "warningsign", base: "#6f5d45", accent: "#d9df89", trim: "#33463a" },
+      bench: { style: "dockbench", base: "#705c48", accent: "#a28b6c", trim: "#43352a" },
+      crystal: { style: "cattails", base: "#6e8a4d", accent: "#4b341f", trim: "#b5cc80" }
+    },
+    city: {
+      cone: { style: "cone", base: "#ff8f3f", accent: "#fff0d8", trim: "#2e3b57" },
+      toyBox: { style: "toolbox", base: "#c04d49", accent: "#f3c35f", trim: "#6f2328" },
+      ramp: { style: "barricade", base: "#f4d26b", accent: "#cf5c50", trim: "#374862" },
+      drone: { style: "drone", base: "#505a82", accent: "#d7e3ff", trim: "#242d45" },
+      barrel: { style: "trashcan", base: "#5f6f83", accent: "#bac7d6", trim: "#304052" },
+      pile: { style: "debrispile", base: "#686f75", accent: "#9aa5ae", trim: "#394149" },
+      sign: { style: "streetsign", base: "#4671b4", accent: "#d9efff", trim: "#253146" },
+      bench: { style: "bench", base: "#555f6b", accent: "#8e99a7", trim: "#2c3541" },
+      crystal: { style: "hydrant", base: "#d85147", accent: "#ffd97b", trim: "#8d2e2b" }
+    },
+    space: {
+      cone: { style: "moonrock", base: "#777fae", accent: "#cfd8ff", trim: "#4c5377" },
+      toyBox: { style: "crate", base: "#5b618b", accent: "#96a3df", trim: "#2f3451" },
+      ramp: { style: "launchpad", base: "#5c678f", accent: "#d5dcff", trim: "#2d3353" },
+      drone: { style: "probe", base: "#8a95c8", accent: "#ff9fd4", trim: "#41476d" },
+      barrel: { style: "canister", base: "#6973a0", accent: "#d6deff", trim: "#39405f" },
+      pile: { style: "meteorcluster", base: "#7178a8", accent: "#b9c8ff", trim: "#41476a" },
+      sign: { style: "beacon", base: "#6a78b8", accent: "#ffd5f4", trim: "#d8e2ff" },
+      bench: { style: "console", base: "#44527e", accent: "#95a9ee", trim: "#d1dcff" },
+      crystal: { style: "crystal", base: "#98a9ff", accent: "#ebf1ff", trim: "#ff9fd4" }
+    },
+    volcano: {
+      cone: { style: "lavarock", base: "#6c3f37", accent: "#ff9a5f", trim: "#35201e" },
+      toyBox: { style: "crate", base: "#784d3c", accent: "#b88866", trim: "#41261f" },
+      ramp: { style: "basalt", base: "#46343a", accent: "#ff8b52", trim: "#271c20" },
+      drone: { style: "emberbat", base: "#5d2424", accent: "#ffb36f", trim: "#281212" },
+      barrel: { style: "magma", base: "#5a2f27", accent: "#ff7b47", trim: "#2e1613" },
+      pile: { style: "rubblepile", base: "#5a413b", accent: "#8c6654", trim: "#ff8151" },
+      sign: { style: "hazardsign", base: "#503231", accent: "#ffb166", trim: "#ff6e4b" },
+      bench: { style: "basaltbench", base: "#443439", accent: "#725456", trim: "#ff8b52" },
+      crystal: { style: "magmaflare", base: "#6f342d", accent: "#ff8d55", trim: "#ffd38b" }
+    },
+    snow: {
+      cone: { style: "snowman", base: "#f1f8ff", accent: "#89a9c7", trim: "#ffffff" },
+      toyBox: { style: "gift", base: "#9ab7d1", accent: "#f7fbff", trim: "#d26b6b" },
+      ramp: { style: "snowdrift", base: "#ebf6ff", accent: "#ffffff", trim: "#9bc0da" },
+      drone: { style: "owl", base: "#dde6ef", accent: "#f9fdff", trim: "#8b9cad" },
+      barrel: { style: "log", base: "#8b6b49", accent: "#c7ab88", trim: "#4f3825" },
+      pile: { style: "snowpile", base: "#eef8ff", accent: "#ffffff", trim: "#9fc0d8" },
+      sign: { style: "skimarker", base: "#a4bfd8", accent: "#ffffff", trim: "#ce5f65" },
+      bench: { style: "sled", base: "#b7784c", accent: "#eec799", trim: "#714727" },
+      crystal: { style: "iceshard", base: "#b4d9f8", accent: "#ffffff", trim: "#7ea9c8" }
+    },
+    beach: {
+      cone: { style: "sandcastle", base: "#e2c07a", accent: "#fff1b2", trim: "#b28f56" },
+      toyBox: { style: "cooler", base: "#52a9c7", accent: "#f1f8ff", trim: "#2e6276" },
+      ramp: { style: "driftwood", base: "#9f7652", accent: "#d2b08a", trim: "#6b4a31" },
+      drone: { style: "gull", base: "#f5fbff", accent: "#ffd36b", trim: "#91a7b9" },
+      barrel: { style: "buoy", base: "#ff6d5f", accent: "#fff4de", trim: "#c74e45" },
+      pile: { style: "shellpile", base: "#ddb88a", accent: "#fff4d9", trim: "#b18e6a" },
+      sign: { style: "beachsign", base: "#8f6b48", accent: "#fff4d0", trim: "#3f7b97" },
+      bench: { style: "lounger", base: "#d5a765", accent: "#fff0c6", trim: "#8c633c" },
+      crystal: { style: "coral", base: "#ff8d79", accent: "#ffd4b8", trim: "#c76369" }
+    },
+    jungle: {
+      cone: { style: "stump", base: "#6b5330", accent: "#98764d", trim: "#d8c28e" },
+      toyBox: { style: "crate", base: "#7c6037", accent: "#b89561", trim: "#45331f" },
+      ramp: { style: "root", base: "#6f4f30", accent: "#8f7444", trim: "#3f2c1b" },
+      drone: { style: "parrot", base: "#3f8e55", accent: "#ffd65f", trim: "#1c4a27" },
+      barrel: { style: "totem", base: "#8a613b", accent: "#d5b276", trim: "#50351d" },
+      pile: { style: "fernclump", base: "#4b7c42", accent: "#80c76b", trim: "#24452b" },
+      sign: { style: "campmarker", base: "#785a36", accent: "#d9c88a", trim: "#365f2c" },
+      bench: { style: "fallenlog", base: "#6d512f", accent: "#9b774d", trim: "#3f2b1a" },
+      crystal: { style: "idol", base: "#7c6642", accent: "#c3a86d", trim: "#37562b" }
+    },
+    cyber: {
+      cone: { style: "bollard", base: "#2a4066", accent: "#31f3ff", trim: "#ff61d8" },
+      toyBox: { style: "neoncrate", base: "#1f2c50", accent: "#31f3ff", trim: "#ff61d8" },
+      ramp: { style: "datawedge", base: "#243153", accent: "#31f3ff", trim: "#ff61d8" },
+      drone: { style: "hoverbot", base: "#1e3356", accent: "#31f3ff", trim: "#ff61d8" },
+      barrel: { style: "battery", base: "#243861", accent: "#31f3ff", trim: "#ff61d8" },
+      pile: { style: "scrappile", base: "#263452", accent: "#3ce7ff", trim: "#ff61d8" },
+      sign: { style: "holosign", base: "#23355e", accent: "#31f3ff", trim: "#ff61d8" },
+      bench: { style: "glitchrail", base: "#202d4c", accent: "#31f3ff", trim: "#ff61d8" },
+      crystal: { style: "datacrystal", base: "#29416b", accent: "#7ff9ff", trim: "#ff61d8" }
+    }
+  };
+
   class Renderer {
     constructor(canvas, level) {
       this.canvas = canvas;
@@ -55,6 +222,16 @@
 
     palette(biome) {
       return PALETTES[biome] || PALETTES.city;
+    }
+
+    contrastProfile(biome) {
+      if (biome === "desert" || biome === "farm" || biome === "snow" || biome === "beach") {
+        return { bright: true, dense: false, washMid: 0.12, washBottom: 0.28, bandAlpha: 0.2, laneLift: 0.08, laneMid: 0.15, laneBottom: 0.24, edgeAlpha: 0.08, horizonAlpha: 0.18 };
+      }
+      if (biome === "marsh" || biome === "jungle") {
+        return { bright: false, dense: true, washMid: 0.06, washBottom: 0.18, bandAlpha: 0.1, laneLift: 0.04, laneMid: 0.11, laneBottom: 0.18, edgeAlpha: 0.06, horizonAlpha: 0.12 };
+      }
+      return { bright: false, dense: false, washMid: 0.08, washBottom: 0.2, bandAlpha: 0.11, laneLift: 0.04, laneMid: 0.12, laneBottom: 0.18, edgeAlpha: 0.05, horizonAlpha: 0.14 };
     }
 
     sceneForWorld(biome, worldX) {
@@ -240,6 +417,31 @@
         }
         return;
       }
+    }
+
+    drawDepthWash(biome, groundY) {
+      const ctx = this.ctx;
+      const p = this.palette(biome);
+      const c = this.canvas;
+      const profile = this.contrastProfile(biome);
+      const washTop = Math.max(0, groundY - 230);
+      const wash = ctx.createLinearGradient(0, washTop, 0, groundY + 12);
+      const skyTone = profile.bright ? mixColor(p.skyC, "#ffffff", 0.32) : mixColor(p.skyB, "#f7fbff", 0.18);
+      const horizonTone = profile.bright ? mixColor(p.ground, "#eef4ff", 0.24) : mixColor(p.groundAlt, "#0f1726", 0.24);
+
+      wash.addColorStop(0, "rgba(0,0,0,0)");
+      wash.addColorStop(0.48, alphaColor(skyTone, profile.washMid));
+      wash.addColorStop(0.8, alphaColor(horizonTone, profile.washBottom * 0.58));
+      wash.addColorStop(1, alphaColor(horizonTone, profile.washBottom));
+      ctx.fillStyle = wash;
+      ctx.fillRect(0, washTop, c.width, c.height - washTop);
+
+      const vignette = ctx.createLinearGradient(0, 0, 0, groundY);
+      vignette.addColorStop(0, alphaColor(mixColor(p.skyA, "#0b1220", 0.35), profile.dense ? 0.05 : 0.08));
+      vignette.addColorStop(0.26, "rgba(0,0,0,0)");
+      vignette.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = vignette;
+      ctx.fillRect(0, 0, c.width, groundY);
     }
 
     drawDistrictObject(x, y, scene, seed, biome) {
@@ -618,34 +820,554 @@
       }
     }
 
+    drawPlayfieldFocus(player, biome, groundY) {
+      const ctx = this.ctx;
+      const c = this.canvas;
+      const p = this.palette(biome);
+      const profile = this.contrastProfile(biome);
+      const centerX = player.x + player.width * 0.56;
+      const halfWidth = Math.max(170, player.width * 5.4);
+      const bandTone = profile.bright
+        ? mixColor(p.groundAlt, "#0e1727", 0.56)
+        : mixColor(p.groundAlt, "#0d1524", 0.34);
+
+      const focus = ctx.createLinearGradient(centerX - halfWidth, 0, centerX + halfWidth, 0);
+      focus.addColorStop(0, "rgba(0,0,0,0)");
+      focus.addColorStop(0.16, alphaColor(bandTone, profile.bandAlpha * 0.42));
+      focus.addColorStop(0.5, alphaColor(bandTone, profile.bandAlpha));
+      focus.addColorStop(0.84, alphaColor(bandTone, profile.bandAlpha * 0.42));
+      focus.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = focus;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      const sideShade = ctx.createLinearGradient(0, 0, c.width, 0);
+      sideShade.addColorStop(0, alphaColor("#08111d", profile.edgeAlpha));
+      sideShade.addColorStop(0.14, "rgba(0,0,0,0)");
+      sideShade.addColorStop(0.86, "rgba(0,0,0,0)");
+      sideShade.addColorStop(1, alphaColor("#08111d", profile.edgeAlpha));
+      ctx.fillStyle = sideShade;
+      ctx.fillRect(0, 0, c.width, c.height);
+
+      const laneTop = Math.max(groundY - 118, 0);
+      const lane = ctx.createLinearGradient(0, laneTop, 0, c.height);
+      lane.addColorStop(0, "rgba(0,0,0,0)");
+      lane.addColorStop(0.18, alphaColor(mixColor(p.detail, "#f8fbff", 0.22), profile.laneLift));
+      lane.addColorStop(0.52, alphaColor(mixColor(p.groundAlt, "#162033", 0.42), profile.laneMid));
+      lane.addColorStop(1, alphaColor(mixColor(p.groundAlt, "#0f1726", 0.56), profile.laneBottom));
+      ctx.fillStyle = lane;
+      ctx.fillRect(0, laneTop, c.width, c.height - laneTop);
+
+      block(ctx, 0, groundY - 2, c.width, 1, alphaColor(mixColor(p.detail, "#ffffff", 0.22), profile.horizonAlpha * 0.45));
+      block(ctx, 0, groundY + 8, c.width, 2, profile.bright ? alphaColor("#ffffff", profile.horizonAlpha) : alphaColor(p.detail, profile.horizonAlpha));
+    }
+
     drawRunner(player, animationClock) {
       const ctx = this.ctx;
-      const step = Math.sin(animationClock * 18);
-      const bob = Math.sin(animationClock * 16) * 1.2;
+      const grounded = typeof player.isGrounded === "function" ? player.isGrounded() : true;
+      const runCycle = animationClock * (grounded ? 13 : 9);
+      const stride = grounded ? Math.sin(runCycle) : 0.18;
+      const strideLift = grounded ? Math.cos(runCycle) : -0.35;
+      const bob = grounded ? Math.sin(runCycle * 2) * 0.45 : Math.min(0, player.velocityY * 0.006);
       const w = player.width;
       const h = player.height;
       const x = player.x;
       const y = player.y + bob;
-      const bodyW = Math.max(6, Math.round(w * 0.5));
-      const bodyH = Math.max(10, Math.round(h * 0.45));
-      const head = Math.max(5, Math.round(h * 0.22));
-      const legLen = Math.max(8, Math.round(h * 0.36));
-      const armLen = Math.max(6, Math.round(h * 0.28));
-      const bodyX = x + Math.round((w - bodyW) / 2);
-      const bodyY = y + head;
-      const legY = bodyY + bodyH;
-      const armY = bodyY + 4;
 
-      block(ctx, bodyX, bodyY, bodyW, bodyH, player.character.color);
-      block(ctx, bodyX + 1, y, head, head, "#ffd9b3");
-      block(ctx, bodyX + 1, bodyY + Math.round(bodyH * 0.45), Math.max(2, Math.round(bodyW * 0.7)), 3, player.character.accent);
+      if (player.isSliding) {
+        const slideY = y + Math.round(h * 0.62);
+        const headSize = Math.max(5, Math.round(h * 0.2));
+        const chestX = x + Math.round(w * 0.34);
+        const chestY = slideY - Math.round(h * 0.16);
+        const headX = x + Math.round(w * 0.68);
+        const headY = slideY - headSize - 1;
 
-      const legSwing = Math.round(step * 4);
-      const armSwing = Math.round(step * 3);
-      block(ctx, bodyX + 2, legY, 3, legLen + legSwing, "#1b1b2f");
-      block(ctx, bodyX + bodyW - 5, legY, 3, legLen - legSwing, "#1b1b2f");
-      block(ctx, bodyX - 3, armY, 3, armLen - armSwing, "#1b1b2f");
-      block(ctx, bodyX + bodyW, armY, 3, armLen + armSwing, "#1b1b2f");
+        pixelLine(ctx, x + Math.round(w * 0.18), slideY + 1, chestX - 2, slideY + 2, 3, "#1b1b2f");
+        pixelLine(ctx, x + Math.round(w * 0.24), slideY - 1, x + Math.round(w * 0.1), slideY + Math.round(h * 0.06), 2, "#1b1b2f");
+        pixelLine(ctx, chestX, chestY, x + Math.round(w * 0.68), slideY - 1, 5, player.character.color);
+        block(ctx, x + Math.round(w * 0.42), slideY - Math.round(h * 0.08), Math.max(6, Math.round(w * 0.2)), 3, player.character.accent);
+        pixelLine(ctx, x + Math.round(w * 0.58), slideY - 3, x + Math.round(w * 0.78), slideY + Math.round(h * 0.08), 2, "#1b1b2f");
+        block(ctx, headX - Math.round(headSize * 0.55), headY, headSize, headSize, "#ffd9b3");
+        block(ctx, headX - Math.round(headSize * 0.55), headY, headSize, 2, "#3d2f2a");
+        return;
+      }
+
+      const head = Math.max(5, Math.round(h * 0.2));
+      const torsoHeight = Math.max(11, Math.round(h * 0.34));
+      const legLen = Math.max(10, Math.round(h * 0.23));
+      const armLen = Math.max(7, Math.round(h * 0.2));
+      const hipX = x + Math.round(w * 0.42);
+      const hipY = y + head + torsoHeight;
+      const shoulderX = hipX + Math.round(w * 0.08) + Math.round(Math.max(0, strideLift) * 1.5);
+      const shoulderY = y + head + 2;
+      const headX = shoulderX - Math.round(head * 0.2);
+      const headY = y;
+      const torsoThickness = Math.max(5, Math.round(w * 0.15));
+      const limbSize = Math.max(2, Math.round(w * 0.06));
+      const shoeSize = Math.max(3, limbSize + 1);
+
+      const rearArmElbowX = shoulderX - Math.round(3 + stride * 3);
+      const rearArmElbowY = shoulderY + Math.round(armLen * 0.45);
+      const rearArmHandX = rearArmElbowX + Math.round(-2 - stride * 3);
+      const rearArmHandY = rearArmElbowY + Math.round(armLen * 0.55);
+      const frontArmElbowX = shoulderX + Math.round(4 - stride * 3);
+      const frontArmElbowY = shoulderY + Math.round(armLen * 0.42);
+      const frontArmHandX = frontArmElbowX + Math.round(5 - stride * 4);
+      const frontArmHandY = frontArmElbowY + Math.round(armLen * 0.52);
+
+      const rearKneeX = hipX - Math.round(4 + stride * 4);
+      const rearKneeY = hipY + Math.round(legLen * (0.42 + Math.max(0, stride) * 0.15));
+      const rearFootX = rearKneeX - Math.round(4 + stride * 3);
+      const rearFootY = y + h - Math.round(Math.max(0, strideLift) * 2);
+      const frontKneeX = hipX + Math.round(4 + stride * 3);
+      const frontKneeY = hipY + Math.round(legLen * (0.38 - Math.min(0, stride) * 0.1));
+      const frontFootX = frontKneeX + Math.round(5 + stride * 4);
+      const frontFootY = y + h - Math.round(Math.max(0, -strideLift) * 2);
+
+      pixelLine(ctx, shoulderX - 1, shoulderY + 1, rearArmElbowX, rearArmElbowY, limbSize, "#1b1b2f");
+      pixelLine(ctx, rearArmElbowX, rearArmElbowY, rearArmHandX, rearArmHandY, limbSize, "#1b1b2f");
+      pixelLine(ctx, hipX - 1, hipY, rearKneeX, rearKneeY, limbSize + 1, "#1b1b2f");
+      pixelLine(ctx, rearKneeX, rearKneeY, rearFootX, rearFootY, limbSize + 1, "#1b1b2f");
+      block(ctx, rearFootX - 1, rearFootY - 1, shoeSize + 1, shoeSize - 1, "#131320");
+
+      pixelLine(ctx, shoulderX, shoulderY, hipX, hipY, torsoThickness, player.character.color);
+      block(ctx, shoulderX - 3, shoulderY - 2, torsoThickness + 1, Math.max(5, Math.round(h * 0.08)), player.character.color);
+      block(ctx, hipX - 3, hipY - 2, torsoThickness + 1, Math.max(5, Math.round(h * 0.08)), player.character.color);
+      pixelLine(
+        ctx,
+        shoulderX - 1,
+        shoulderY + Math.round(torsoHeight * 0.42),
+        hipX + 1,
+        shoulderY + Math.round(torsoHeight * 0.46),
+        Math.max(2, Math.round(limbSize * 0.9)),
+        player.character.accent
+      );
+
+      block(ctx, headX - Math.round(head * 0.45), headY, head, head, "#ffd9b3");
+      block(ctx, headX - Math.round(head * 0.45), headY, head, 2, "#3d2f2a");
+      block(ctx, headX + Math.round(head * 0.25), headY + Math.round(head * 0.45), 2, 2, "#2a1a12");
+
+      pixelLine(ctx, shoulderX + 1, shoulderY + 1, frontArmElbowX, frontArmElbowY, limbSize, "#1b1b2f");
+      pixelLine(ctx, frontArmElbowX, frontArmElbowY, frontArmHandX, frontArmHandY, limbSize, "#1b1b2f");
+      pixelLine(ctx, hipX + 1, hipY, frontKneeX, frontKneeY, limbSize + 1, "#1b1b2f");
+      pixelLine(ctx, frontKneeX, frontKneeY, frontFootX, frontFootY, limbSize + 1, "#1b1b2f");
+      block(ctx, frontFootX - 1, frontFootY - 1, shoeSize + 1, shoeSize - 1, "#131320");
+    }
+
+    obstacleTheme(biome, obstacle) {
+      const theme = (OBSTACLE_THEMES[biome] && OBSTACLE_THEMES[biome][obstacle.type]) || null;
+      if (theme) return theme;
+      return { style: obstacle.type, base: obstacle.color, accent: "#f0f4ff", trim: "#1f2740" };
+    }
+
+    drawCoin(coin, animationClock) {
+      const ctx = this.ctx;
+      const phase = Math.abs(Math.sin(animationClock * 10 + coin.x * 0.04));
+      const rimWidth = Math.max(6, Math.round(coin.width * (0.35 + phase * 0.65)));
+      const rimX = coin.x + Math.round((coin.width - rimWidth) / 2);
+      const rimColor = phase > 0.7 ? "#fff1a8" : "#ffd447";
+      block(ctx, rimX, coin.y, rimWidth, coin.height, rimColor);
+      block(ctx, rimX + 2, coin.y + 2, Math.max(2, rimWidth - 4), coin.height - 4, "#f6b500");
+      block(ctx, rimX + Math.max(1, Math.round(rimWidth * 0.18)), coin.y + 3, 2, coin.height - 6, "#fff6c9");
+      if (rimWidth <= 8) {
+        block(ctx, rimX + Math.floor(rimWidth / 2), coin.y + 2, 1, coin.height - 4, "#c98500");
+      }
+      block(ctx, coin.x - 2, coin.y + 3, 2, 2, "rgba(255,248,198,0.8)");
+      block(ctx, coin.x + coin.width, coin.y + coin.height - 4, 2, 2, "rgba(255,248,198,0.65)");
+    }
+
+    drawObstacle(obstacle, biome, animationClock) {
+      const ctx = this.ctx;
+      const x = obstacle.x;
+      const y = obstacle.y;
+      const w = obstacle.width;
+      const h = obstacle.height;
+      const variant = obstacle.variant || 0;
+      const phase = Math.sin(animationClock * 8 + variant * 1.4);
+      const theme = this.obstacleTheme(biome, obstacle);
+
+      block(ctx, x + 3, y + h - 3, Math.max(6, w - 6), 3, "rgba(0,0,0,0.18)");
+
+      switch (theme.style) {
+        case "cactus":
+          block(ctx, x + Math.round(w * 0.42), y + 6, Math.max(6, Math.round(w * 0.16)), h - 8, theme.base);
+          block(ctx, x + Math.round(w * 0.26), y + Math.round(h * 0.34), Math.max(4, Math.round(w * 0.16)), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.58), y + Math.round(h * 0.22) + variant * 5, Math.max(4, Math.round(w * 0.16)), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.34), 4, 12, theme.base);
+          block(ctx, x + Math.round(w * 0.72), y + Math.round(h * 0.22) + variant * 5, 4, 12, theme.base);
+          block(ctx, x + Math.round(w * 0.46), y + 12, 2, h - 18, theme.trim);
+          break;
+        case "pumpkin":
+          circle(ctx, x + w / 2, y + h * 0.62, Math.max(8, w * 0.3), theme.base, 1);
+          circle(ctx, x + w * 0.36, y + h * 0.64, Math.max(7, w * 0.22), theme.base, 1);
+          circle(ctx, x + w * 0.64, y + h * 0.64, Math.max(7, w * 0.22), theme.base, 1);
+          block(ctx, x + Math.round(w * 0.46), y + 4, 5, 9, theme.trim);
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.36), 2, Math.round(h * 0.38), theme.accent);
+          block(ctx, x + Math.round(w * 0.49), y + Math.round(h * 0.32), 2, Math.round(h * 0.42), theme.accent);
+          block(ctx, x + Math.round(w * 0.68), y + Math.round(h * 0.36), 2, Math.round(h * 0.38), theme.accent);
+          break;
+        case "stump":
+          block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.18), Math.round(w * 0.56), h - Math.round(h * 0.18), theme.base);
+          block(ctx, x + Math.round(w * 0.16), y + Math.round(h * 0.1), Math.round(w * 0.68), 8, theme.accent);
+          block(ctx, x + Math.round(w * 0.3), y + Math.round(h * 0.12), Math.round(w * 0.4), 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.48), 3, Math.round(h * 0.22), theme.trim);
+          break;
+        case "cone":
+          wedge(ctx, x + Math.round(w * 0.14), y + 4, Math.round(w * 0.72), h - 10, theme.base, variant % 2 === 1);
+          block(ctx, x + Math.round(w * 0.2), y + h - 6, Math.round(w * 0.6), 6, theme.trim);
+          block(ctx, x + Math.round(w * 0.34), y + Math.round(h * 0.28), Math.round(w * 0.2), 5, theme.accent);
+          block(ctx, x + Math.round(w * 0.3), y + Math.round(h * 0.52), Math.round(w * 0.26), 5, theme.accent);
+          break;
+        case "moonrock":
+        case "lavarock":
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.34), Math.round(w * 0.54), Math.round(h * 0.5), theme.base);
+          block(ctx, x + Math.round(w * 0.05), y + Math.round(h * 0.52), Math.round(w * 0.32), Math.round(h * 0.26), theme.base);
+          block(ctx, x + Math.round(w * 0.56), y + Math.round(h * 0.18), Math.round(w * 0.24), Math.round(h * 0.4), theme.base);
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.4), Math.round(w * 0.16), 4, theme.accent);
+          if (theme.style === "lavarock") block(ctx, x + Math.round(w * 0.4), y + Math.round(h * 0.58), Math.round(w * 0.22), 4, theme.accent);
+          break;
+        case "snowman":
+          circle(ctx, x + w * 0.5, y + h * 0.7, Math.max(7, w * 0.22), theme.base, 1);
+          circle(ctx, x + w * 0.5, y + h * 0.38, Math.max(5, w * 0.16), theme.base, 1);
+          block(ctx, x + Math.round(w * 0.46), y + Math.round(h * 0.13), 5, 5, theme.trim);
+          block(ctx, x + Math.round(w * 0.4), y + Math.round(h * 0.48), Math.round(w * 0.2), 3, theme.accent);
+          break;
+        case "sandcastle":
+          block(ctx, x + Math.round(w * 0.12), y + Math.round(h * 0.46), Math.round(w * 0.76), Math.round(h * 0.38), theme.base);
+          block(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.26), Math.round(w * 0.18), Math.round(h * 0.2), theme.base);
+          block(ctx, x + Math.round(w * 0.68), y + Math.round(h * 0.22), Math.round(w * 0.18), Math.round(h * 0.24), theme.base);
+          block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.22), 2, 8, theme.trim);
+          block(ctx, x + Math.round(w * 0.7), y + Math.round(h * 0.16), 2, 10, theme.trim);
+          break;
+        case "bollard":
+          block(ctx, x + Math.round(w * 0.36), y + 6, Math.round(w * 0.28), h - 10, theme.base);
+          block(ctx, x + Math.round(w * 0.32), y + 10, Math.round(w * 0.36), 4, theme.accent);
+          block(ctx, x + Math.round(w * 0.32), y + Math.round(h * 0.46), Math.round(w * 0.36), 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.25), y + h - 6, Math.round(w * 0.5), 6, theme.base);
+          break;
+        case "tumbleweed":
+        case "debrispile":
+        case "meteorcluster":
+        case "rubblepile":
+        case "shellpile":
+        case "scrappile":
+          block(ctx, x + Math.round(w * 0.12), y + Math.round(h * 0.56), Math.round(w * 0.76), Math.round(h * 0.18), theme.base);
+          circle(ctx, x + w * 0.3, y + h * 0.62, Math.max(6, w * 0.16), theme.base, 1);
+          circle(ctx, x + w * 0.5, y + h * 0.54, Math.max(8, w * 0.22), theme.base, 1);
+          circle(ctx, x + w * 0.72, y + h * 0.64, Math.max(6, w * 0.15), theme.base, 1);
+          if (theme.style === "tumbleweed") {
+            pixelLine(ctx, x + w * 0.22, y + h * 0.58, x + w * 0.76, y + h * 0.66, 2, theme.trim);
+            pixelLine(ctx, x + w * 0.28, y + h * 0.74, x + w * 0.68, y + h * 0.42, 2, theme.trim);
+            pixelLine(ctx, x + w * 0.24, y + h * 0.48, x + w * 0.74, y + h * 0.74, 2, theme.accent);
+          } else if (theme.style === "shellpile") {
+            circle(ctx, x + w * 0.34, y + h * 0.54, Math.max(3, w * 0.07), theme.accent, 1);
+            circle(ctx, x + w * 0.58, y + h * 0.48, Math.max(4, w * 0.08), theme.accent, 1);
+            block(ctx, x + Math.round(w * 0.46), y + Math.round(h * 0.68), Math.round(w * 0.18), 3, theme.trim);
+          } else if (theme.style === "scrappile" || theme.style === "debrispile") {
+            block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.5), Math.round(w * 0.18), 6, theme.accent);
+            block(ctx, x + Math.round(w * 0.46), y + Math.round(h * 0.42), Math.round(w * 0.14), 8, theme.trim);
+            block(ctx, x + Math.round(w * 0.64), y + Math.round(h * 0.58), Math.round(w * 0.12), 5, theme.accent);
+          } else {
+            block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.48), Math.round(w * 0.16), 4, theme.accent);
+            block(ctx, x + Math.round(w * 0.48), y + Math.round(h * 0.4), Math.round(w * 0.18), 4, theme.trim);
+            if (theme.style === "rubblepile") {
+              block(ctx, x + Math.round(w * 0.62), y + Math.round(h * 0.58), Math.round(w * 0.12), 3, theme.accent);
+            }
+          }
+          break;
+        case "producepile":
+        case "fernclump":
+          block(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.6), Math.round(w * 0.72), Math.round(h * 0.14), theme.base);
+          circle(ctx, x + w * 0.3, y + h * 0.62, Math.max(6, w * 0.14), theme.base, 1);
+          circle(ctx, x + w * 0.52, y + h * 0.54, Math.max(7, w * 0.18), theme.accent, 1);
+          circle(ctx, x + w * 0.72, y + h * 0.64, Math.max(6, w * 0.13), theme.base, 1);
+          if (theme.style === "producepile") {
+            block(ctx, x + Math.round(w * 0.26), y + Math.round(h * 0.4), 3, 8, theme.trim);
+            block(ctx, x + Math.round(w * 0.5), y + Math.round(h * 0.34), 3, 8, theme.trim);
+            block(ctx, x + Math.round(w * 0.66), y + Math.round(h * 0.48), 3, 7, theme.trim);
+          } else {
+            wedge(ctx, x + Math.round(w * 0.16), y + Math.round(h * 0.2), Math.round(w * 0.22), Math.round(h * 0.48), theme.base, false);
+            wedge(ctx, x + Math.round(w * 0.36), y + Math.round(h * 0.08), Math.round(w * 0.24), Math.round(h * 0.58), theme.accent, variant % 2 === 0);
+            wedge(ctx, x + Math.round(w * 0.6), y + Math.round(h * 0.24), Math.round(w * 0.2), Math.round(h * 0.42), theme.base, true);
+          }
+          break;
+        case "reedstack":
+          for (let i = 0; i < 5; i += 1) {
+            const stalkX = x + Math.round(w * (0.18 + i * 0.12));
+            const stalkHeight = Math.round(h * (0.48 + (i % 2) * 0.12));
+            block(ctx, stalkX, y + h - stalkHeight - 4, 4, stalkHeight, theme.base);
+            block(ctx, stalkX - 1, y + h - stalkHeight - 8, 6, 5, theme.accent);
+          }
+          block(ctx, x + Math.round(w * 0.16), y + Math.round(h * 0.54), Math.round(w * 0.68), 5, theme.trim);
+          break;
+        case "snowpile":
+          circle(ctx, x + w * 0.34, y + h * 0.68, Math.max(8, w * 0.18), theme.base, 1);
+          circle(ctx, x + w * 0.56, y + h * 0.58, Math.max(10, w * 0.24), theme.base, 1);
+          circle(ctx, x + w * 0.76, y + h * 0.7, Math.max(7, w * 0.15), theme.base, 1);
+          block(ctx, x + Math.round(w * 0.24), y + Math.round(h * 0.62), Math.round(w * 0.46), 4, theme.accent);
+          block(ctx, x + Math.round(w * 0.42), y + Math.round(h * 0.44), Math.round(w * 0.16), 3, theme.trim);
+          break;
+        case "trailsign":
+        case "farmsign":
+        case "warningsign":
+        case "streetsign":
+        case "beacon":
+        case "hazardsign":
+        case "skimarker":
+        case "beachsign":
+        case "campmarker":
+        case "holosign": {
+          const postX = x + Math.round(w * 0.46);
+          const postTop = theme.style === "beacon" ? y + 10 : y + Math.round(h * 0.26);
+          block(ctx, postX, postTop, 4, h - (postTop - y), theme.trim);
+          if (theme.style === "beacon") {
+            circle(ctx, x + w * 0.5, y + h * 0.26, Math.max(5, w * 0.14), theme.accent, 1);
+            block(ctx, x + Math.round(w * 0.3), y + Math.round(h * 0.42), Math.round(w * 0.4), 6, theme.base);
+            block(ctx, x + Math.round(w * 0.38), y + Math.round(h * 0.5), Math.round(w * 0.24), 4, theme.accent);
+            break;
+          }
+          if (theme.style === "skimarker") {
+            block(ctx, x + Math.round(w * 0.32), y + Math.round(h * 0.16), Math.round(w * 0.32), Math.round(h * 0.42), theme.base);
+            block(ctx, x + Math.round(w * 0.38), y + Math.round(h * 0.22), Math.round(w * 0.18), Math.round(h * 0.3), theme.accent);
+            block(ctx, x + Math.round(w * 0.3), y + Math.round(h * 0.62), Math.round(w * 0.4), 4, theme.trim);
+            break;
+          }
+          const boardY = y + Math.round(h * 0.18);
+          const boardH = Math.round(h * 0.2);
+          block(ctx, x + Math.round(w * 0.14), boardY, Math.round(w * 0.72), boardH, theme.base);
+          block(ctx, x + Math.round(w * 0.2), boardY + 3, Math.round(w * 0.6), Math.max(4, boardH - 6), theme.accent);
+          if (theme.style === "streetsign") {
+            block(ctx, x + Math.round(w * 0.24), y + Math.round(h * 0.42), Math.round(w * 0.52), 6, theme.base);
+            block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.46), Math.round(w * 0.44), 3, theme.accent);
+          } else if (theme.style === "warningsign" || theme.style === "hazardsign") {
+            block(ctx, x + Math.round(w * 0.2), boardY + 4, Math.round(w * 0.12), 3, theme.trim);
+            block(ctx, x + Math.round(w * 0.42), boardY + 8, Math.round(w * 0.12), 3, theme.trim);
+            block(ctx, x + Math.round(w * 0.64), boardY + 12, Math.round(w * 0.12), 3, theme.trim);
+          } else if (theme.style === "holosign") {
+            ctx.save();
+            ctx.globalAlpha = 0.35;
+            block(ctx, x + Math.round(w * 0.1), boardY - 4, Math.round(w * 0.8), boardH + 8, theme.accent);
+            ctx.restore();
+            block(ctx, x + Math.round(w * 0.26), boardY + 6, Math.round(w * 0.48), 2, theme.trim);
+          } else {
+            block(ctx, x + Math.round(w * 0.26), boardY + 7, Math.round(w * 0.18), 3, theme.trim);
+            block(ctx, x + Math.round(w * 0.52), boardY + 7, Math.round(w * 0.18), 3, theme.trim);
+          }
+          break;
+        }
+        case "stonebench":
+        case "dockbench":
+        case "bench":
+        case "basaltbench":
+          block(ctx, x + Math.round(w * 0.12), y + Math.round(h * 0.38), Math.round(w * 0.76), 7, theme.base);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.24), Math.round(w * 0.64), 5, theme.accent);
+          block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.44), 5, Math.round(h * 0.32), theme.trim);
+          block(ctx, x + Math.round(w * 0.7), y + Math.round(h * 0.44), 5, Math.round(h * 0.32), theme.trim);
+          break;
+        case "cart":
+          block(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.34), Math.round(w * 0.68), Math.round(h * 0.2), theme.base);
+          block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.22), Math.round(w * 0.48), 5, theme.accent);
+          circle(ctx, x + w * 0.28, y + h * 0.78, Math.max(5, w * 0.08), theme.trim, 1);
+          circle(ctx, x + w * 0.72, y + h * 0.78, Math.max(5, w * 0.08), theme.trim, 1);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.5), Math.round(w * 0.12), 4, theme.trim);
+          break;
+        case "console":
+        case "glitchrail":
+          block(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.28), Math.round(w * 0.72), Math.round(h * 0.18), theme.base);
+          block(ctx, x + Math.round(w * 0.2), y + Math.round(h * 0.34), Math.round(w * 0.6), Math.round(h * 0.08), theme.accent);
+          block(ctx, x + Math.round(w * 0.2), y + Math.round(h * 0.5), 5, Math.round(h * 0.26), theme.trim);
+          block(ctx, x + Math.round(w * 0.74), y + Math.round(h * 0.5), 5, Math.round(h * 0.26), theme.trim);
+          if (theme.style === "glitchrail") {
+            ctx.save();
+            ctx.globalAlpha = 0.35;
+            block(ctx, x + Math.round(w * 0.1), y + Math.round(h * 0.22), Math.round(w * 0.8), Math.round(h * 0.3), theme.accent);
+            ctx.restore();
+          } else {
+            block(ctx, x + Math.round(w * 0.32), y + Math.round(h * 0.18), Math.round(w * 0.18), 5, theme.trim);
+            block(ctx, x + Math.round(w * 0.56), y + Math.round(h * 0.18), Math.round(w * 0.1), 5, theme.trim);
+          }
+          break;
+        case "sled":
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.28), Math.round(w * 0.44), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.16), Math.round(w * 0.22), 5, theme.accent);
+          pixelLine(ctx, x + w * 0.16, y + h * 0.74, x + w * 0.78, y + h * 0.74, 2, theme.trim);
+          pixelLine(ctx, x + w * 0.18, y + h * 0.68, x + w * 0.74, y + h * 0.68, 2, theme.trim);
+          block(ctx, x + Math.round(w * 0.74), y + Math.round(h * 0.68), Math.round(w * 0.08), 3, theme.trim);
+          break;
+        case "lounger":
+          wedge(ctx, x + Math.round(w * 0.2), y + Math.round(h * 0.16), Math.round(w * 0.32), Math.round(h * 0.38), theme.accent, true);
+          block(ctx, x + Math.round(w * 0.26), y + Math.round(h * 0.46), Math.round(w * 0.46), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.56), 5, Math.round(h * 0.18), theme.trim);
+          block(ctx, x + Math.round(w * 0.68), y + Math.round(h * 0.56), 5, Math.round(h * 0.18), theme.trim);
+          break;
+        case "fallenlog":
+          block(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.34), Math.round(w * 0.72), Math.round(h * 0.28), theme.base);
+          circle(ctx, x + w * 0.18, y + h * 0.48, Math.max(5, h * 0.14), theme.accent, 1);
+          circle(ctx, x + w * 0.82, y + h * 0.48, Math.max(5, h * 0.14), theme.accent, 1);
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.42), Math.round(w * 0.44), 3, theme.trim);
+          block(ctx, x + Math.round(w * 0.34), y + Math.round(h * 0.52), Math.round(w * 0.28), 3, theme.trim);
+          break;
+        case "sandstone":
+        case "crystal":
+        case "magmaflare":
+        case "iceshard":
+        case "datacrystal":
+          wedge(ctx, x + Math.round(w * 0.14), y + Math.round(h * 0.34), Math.round(w * 0.18), Math.round(h * 0.44), theme.base, false);
+          wedge(ctx, x + Math.round(w * 0.38), y + 5, Math.round(w * 0.24), h - 7, theme.accent, variant % 2 === 1);
+          wedge(ctx, x + Math.round(w * 0.66), y + Math.round(h * 0.24), Math.round(w * 0.16), Math.round(h * 0.54), theme.base, true);
+          block(ctx, x + Math.round(w * 0.46), y + Math.round(h * 0.18), 3, Math.round(h * 0.5), theme.trim);
+          if (theme.style === "magmaflare" || theme.style === "datacrystal") {
+            ctx.save();
+            ctx.globalAlpha = 0.28;
+            block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.12), Math.round(w * 0.42), Math.round(h * 0.58), theme.trim);
+            ctx.restore();
+          }
+          break;
+        case "cornshock":
+          for (let i = 0; i < 4; i += 1) {
+            const stalkX = x + Math.round(w * (0.18 + i * 0.14));
+            const stalkTop = y + Math.round(h * (0.14 + (i % 2) * 0.08));
+            block(ctx, stalkX, stalkTop, 4, h - (stalkTop - y) - 4, theme.base);
+            pixelLine(ctx, stalkX, y + h * 0.48, stalkX - 7, y + h * 0.66, 2, theme.accent);
+            pixelLine(ctx, stalkX + 3, y + h * 0.42, stalkX + 9, y + h * 0.58, 2, theme.accent);
+          }
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.58), Math.round(w * 0.54), 4, theme.trim);
+          break;
+        case "cattails":
+          for (let i = 0; i < 3; i += 1) {
+            const stalkX = x + Math.round(w * (0.26 + i * 0.16));
+            const stalkTop = y + Math.round(h * (0.18 + (i % 2) * 0.06));
+            block(ctx, stalkX, stalkTop, 4, h - (stalkTop - y) - 4, theme.base);
+            block(ctx, stalkX - 1, stalkTop - 8, 6, 10, theme.accent);
+            pixelLine(ctx, stalkX, y + h * 0.56, stalkX - 8, y + h * 0.74, 2, theme.trim);
+          }
+          break;
+        case "hydrant":
+          block(ctx, x + Math.round(w * 0.34), y + Math.round(h * 0.18), Math.round(w * 0.32), Math.round(h * 0.54), theme.base);
+          block(ctx, x + Math.round(w * 0.26), y + Math.round(h * 0.26), Math.round(w * 0.48), 6, theme.accent);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.38), Math.round(w * 0.2), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.62), y + Math.round(h * 0.38), Math.round(w * 0.2), 6, theme.base);
+          block(ctx, x + Math.round(w * 0.24), y + Math.round(h * 0.68), Math.round(w * 0.52), 6, theme.trim);
+          break;
+        case "coral":
+          block(ctx, x + Math.round(w * 0.34), y + Math.round(h * 0.48), Math.round(w * 0.18), Math.round(h * 0.24), theme.base);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.26), 5, Math.round(h * 0.3), theme.base);
+          block(ctx, x + Math.round(w * 0.52), y + Math.round(h * 0.14), 5, Math.round(h * 0.38), theme.accent);
+          block(ctx, x + Math.round(w * 0.68), y + Math.round(h * 0.34), 5, Math.round(h * 0.2), theme.base);
+          block(ctx, x + Math.round(w * 0.18), y + Math.round(h * 0.22), Math.round(w * 0.14), 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.52), y + Math.round(h * 0.1), Math.round(w * 0.16), 4, theme.trim);
+          break;
+        case "idol":
+          block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.12), Math.round(w * 0.44), Math.round(h * 0.64), theme.base);
+          block(ctx, x + Math.round(w * 0.34), y + Math.round(h * 0.2), Math.round(w * 0.32), Math.round(h * 0.18), theme.accent);
+          block(ctx, x + Math.round(w * 0.38), y + Math.round(h * 0.28), 4, 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.56), y + Math.round(h * 0.28), 4, 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.42), y + Math.round(h * 0.44), Math.round(w * 0.16), 4, theme.trim);
+          block(ctx, x + Math.round(w * 0.24), y + Math.round(h * 0.72), Math.round(w * 0.52), 5, theme.trim);
+          break;
+        case "crate":
+        case "toolbox":
+        case "neoncrate":
+        case "hay":
+        case "cooler":
+        case "gift":
+          block(ctx, x + 2, y + 4, w - 4, h - 6, theme.base);
+          block(ctx, x + 4, y + 6, w - 8, Math.max(4, h - 14), theme.accent);
+          if (theme.style === "hay") {
+            block(ctx, x + 6, y + Math.round(h * 0.3), w - 12, 2, theme.trim);
+            block(ctx, x + 6, y + Math.round(h * 0.55), w - 12, 2, theme.trim);
+          } else if (theme.style === "cooler") {
+            block(ctx, x + 6, y + 6, w - 12, 6, theme.trim);
+            block(ctx, x + Math.round(w * 0.34), y + 1, Math.round(w * 0.32), 4, theme.trim);
+          } else if (theme.style === "gift") {
+            block(ctx, x + Math.round(w * 0.45), y + 4, 4, h - 6, theme.trim);
+            block(ctx, x + 2, y + Math.round(h * 0.46), w - 4, 4, theme.trim);
+          } else if (theme.style === "toolbox") {
+            block(ctx, x + Math.round(w * 0.28), y + 1, Math.round(w * 0.44), 5, theme.trim);
+          } else {
+            block(ctx, x + 5, y + 8, w - 10, 3, theme.trim);
+            block(ctx, x + 5, y + h - 10, w - 10, 3, theme.trim);
+            block(ctx, x + Math.round(w * 0.28), y + 6, 3, h - 10, theme.trim);
+            block(ctx, x + Math.round(w * 0.68), y + 6, 3, h - 10, theme.trim);
+          }
+          break;
+        case "dune":
+        case "fence":
+        case "boardwalk":
+        case "barricade":
+        case "launchpad":
+        case "basalt":
+        case "snowdrift":
+        case "driftwood":
+        case "root":
+        case "datawedge":
+          wedge(ctx, x + 2, y + 2, w - 4, h - 2, theme.base, variant % 2 === 1);
+          if (theme.style === "barricade") {
+            block(ctx, x + 6, y + Math.round(h * 0.28), w - 12, 4, theme.accent);
+            block(ctx, x + 10, y + Math.round(h * 0.5), w - 20, 4, theme.trim);
+          } else if (theme.style === "fence" || theme.style === "boardwalk") {
+            block(ctx, x + 6, y + Math.round(h * 0.3), w - 12, 3, theme.accent);
+            block(ctx, x + 8, y + Math.round(h * 0.54), w - 16, 3, theme.trim);
+          } else if (theme.style === "launchpad" || theme.style === "datawedge") {
+            block(ctx, x + 6, y + Math.round(h * 0.22), w - 12, 3, theme.accent);
+            block(ctx, x + 10, y + Math.round(h * 0.46), w - 20, 3, theme.trim);
+          } else {
+            block(ctx, x + 8, y + Math.round(h * 0.34), w - 16, 3, theme.accent);
+          }
+          break;
+        case "scarab":
+        case "crow":
+        case "dragonfly":
+        case "drone":
+        case "probe":
+        case "emberbat":
+        case "owl":
+        case "gull":
+        case "parrot":
+        case "hoverbot": {
+          const bodyY = y + Math.round(h * 0.34);
+          const wingLift = Math.round((phase + 1) * 2);
+          block(ctx, x + Math.round(w * 0.28), bodyY, Math.round(w * 0.44), Math.round(h * 0.26), theme.base);
+          block(ctx, x + Math.round(w * 0.18), bodyY + 3 - wingLift, Math.round(w * 0.18), 4 + wingLift, theme.accent);
+          block(ctx, x + Math.round(w * 0.64), bodyY + 3 - wingLift, Math.round(w * 0.18), 4 + wingLift, theme.accent);
+          if (theme.style === "drone" || theme.style === "hoverbot" || theme.style === "probe") {
+            block(ctx, x + Math.round(w * 0.22), y + Math.round(h * 0.2), Math.round(w * 0.56), 2, theme.trim);
+            block(ctx, x + Math.round(w * 0.3), y + Math.round(h * 0.14), 3, 6, theme.trim);
+            block(ctx, x + Math.round(w * 0.66), y + Math.round(h * 0.14), 3, 6, theme.trim);
+          } else {
+            block(ctx, x + Math.round(w * 0.44), bodyY - 4, 5, 5, theme.trim);
+          }
+          break;
+        }
+        case "jar":
+        case "milk":
+        case "barrel":
+        case "trashcan":
+        case "canister":
+        case "magma":
+        case "log":
+        case "buoy":
+        case "totem":
+        case "battery":
+          block(ctx, x + Math.round(w * 0.2), y + 4, Math.round(w * 0.6), h - 6, theme.base);
+          block(ctx, x + Math.round(w * 0.24), y + 8, Math.round(w * 0.52), h - 14, theme.accent);
+          if (theme.style === "log") {
+            block(ctx, x + Math.round(w * 0.2), y + 4, Math.round(w * 0.6), 4, theme.trim);
+            block(ctx, x + Math.round(w * 0.2), y + h - 6, Math.round(w * 0.6), 4, theme.trim);
+          } else if (theme.style === "buoy" || theme.style === "battery" || theme.style === "magma") {
+            block(ctx, x + Math.round(w * 0.2), y + Math.round(h * 0.34), Math.round(w * 0.6), 4, theme.trim);
+            block(ctx, x + Math.round(w * 0.2), y + Math.round(h * 0.62), Math.round(w * 0.6), 4, theme.trim);
+          } else if (theme.style === "totem") {
+            block(ctx, x + Math.round(w * 0.36), y + 10, 4, h - 18, theme.trim);
+            block(ctx, x + Math.round(w * 0.28), y + Math.round(h * 0.22), Math.round(w * 0.28), 4, theme.trim);
+          } else {
+            block(ctx, x + Math.round(w * 0.2), y + 10, Math.round(w * 0.6), 4, theme.trim);
+            block(ctx, x + Math.round(w * 0.2), y + h - 10, Math.round(w * 0.6), 4, theme.trim);
+          }
+          break;
+        default:
+          block(ctx, x, y, w, h, theme.base);
+          block(ctx, x + 2, y + 2, w - 4, 3, "rgba(255,255,255,0.3)");
+      }
     }
 
     render(state) {
@@ -661,19 +1383,15 @@
       this.drawBackdropBands(distance, biome, groundY);
       this.drawDynamicPath(distance, biome, groundY);
       this.drawAtmosphere(distance, biome, groundY);
+      this.drawDepthWash(biome, groundY);
+      this.drawPlayfieldFocus(state.player, biome, groundY);
 
-      state.coins.forEach((coin) => {
-        block(ctx, coin.x, coin.y, coin.width, coin.height, "#ffd447");
-        block(ctx, coin.x + 4, coin.y + 4, coin.width - 8, coin.height - 8, "#f6b500");
-      });
+      state.coins.forEach((coin) => this.drawCoin(coin, state.animationClock));
       state.powerups.forEach((powerup) => {
         block(ctx, powerup.x, powerup.y, powerup.width, powerup.height, powerup.color);
         block(ctx, powerup.x + 7, powerup.y + 7, 10, 10, "#14223f");
       });
-      state.obstacles.forEach((obstacle) => {
-        block(ctx, obstacle.x, obstacle.y, obstacle.width, obstacle.height, obstacle.color);
-        block(ctx, obstacle.x + 2, obstacle.y + 2, obstacle.width - 4, 3, "rgba(255,255,255,0.3)");
-      });
+      state.obstacles.forEach((obstacle) => this.drawObstacle(obstacle, biome, state.animationClock));
 
       this.drawRunner(state.player, state.animationClock);
       const progress = Math.min(1, state.distance / this.level.length);

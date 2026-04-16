@@ -17,12 +17,18 @@
   const walletValue = document.getElementById("walletValue");
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
+  const musicTrackName = document.getElementById("musicTrackName");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlayText = document.getElementById("overlayText");
+  const overlayNamePrompt = document.getElementById("overlayNamePrompt");
+  const overlayNameInput = document.getElementById("overlayNameInput");
+  const overlayNameHint = document.getElementById("overlayNameHint");
   const overlayPrimary = document.getElementById("overlayPrimary");
   const overlaySecondary = document.getElementById("overlaySecondary");
+  const overlayTertiary = document.getElementById("overlayTertiary");
   const startBtn = document.getElementById("startBtn");
   const toStoreBtn = document.getElementById("toStoreBtn");
+  const toLevelFromCharacterBtn = document.getElementById("toLevelFromCharacterBtn");
   const toLevelBtn = document.getElementById("toLevelBtn");
   const launchBtn = document.getElementById("launchBtn");
   const backToStartBtn = document.getElementById("backToStartBtn");
@@ -33,6 +39,10 @@
   input.bind();
   input.attachMobileControls(document.querySelector(".mobile-controls"));
   const audio = new FamilyDash.AudioSystem();
+  audio.setTrackChangeListener((track) => {
+    if (!musicTrackName || !track) return;
+    musicTrackName.textContent = track.name;
+  });
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
 
   const STORE_ITEMS = [
@@ -48,6 +58,7 @@
   let selectedCharacter = null;
   let selectedLevel = null;
   let game = null;
+  let levelBackTarget = "store";
 
 
   function readJSON(key, fallback) {
@@ -64,16 +75,19 @@
   let profile = {
     highScore: Number(localStorage.getItem("familyDashHighScore") || 0),
     wallet: Number(localStorage.getItem("familyDashWallet") || 0),
+    playerName: localStorage.getItem("familyDashPlayerName") || "",
     sessions: readJSON("familyDashSessions", []),
     inventory: readJSON("familyDashInventory", {})
   };
 
   if (!Array.isArray(profile.sessions)) profile.sessions = [];
   if (typeof profile.inventory !== "object" || Array.isArray(profile.inventory)) profile.inventory = {};
+  if (typeof profile.playerName !== "string") profile.playerName = "";
 
   function saveProfile() {
     localStorage.setItem("familyDashHighScore", String(profile.highScore));
     localStorage.setItem("familyDashWallet", String(profile.wallet));
+    localStorage.setItem("familyDashPlayerName", profile.playerName);
     localStorage.setItem("familyDashSessions", JSON.stringify(profile.sessions.slice(-25)));
     localStorage.setItem("familyDashInventory", JSON.stringify(profile.inventory));
   }
@@ -94,16 +108,67 @@
     scoreList.innerHTML = topRecent
       .map((entry, idx) => `<li>#${idx + 1} ${entry.score} pts • ${entry.character || "Unknown"} • L${entry.level || "?"} • ${entry.date || "today"}</li>`)
       .join("");
+    scoreList.innerHTML = topRecent
+      .map((entry, idx) => {
+        const playerName = escapeHtml(entry.playerName || "Player");
+        const characterName = escapeHtml(entry.character || "Unknown");
+        const dateLabel = escapeHtml(entry.date || "today");
+        return `<li>#${idx + 1} ${playerName} - ${entry.score} pts - ${characterName} - L${entry.level || "?"} - ${dateLabel}</li>`;
+      })
+      .join("");
+  }
+
+  function sanitizePlayerName(name) {
+    return String(name || "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 24);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  profile.playerName = sanitizePlayerName(profile.playerName);
+
+  function syncCharacterActions() {
+    const hasSelection = Boolean(selectedCharacter);
+    toStoreBtn.disabled = !hasSelection;
+    toLevelFromCharacterBtn.disabled = !hasSelection;
+  }
+
+  function syncLaunchAction() {
+    launchBtn.disabled = !selectedLevel;
   }
 
   function renderCharacterCards() {
     characterGrid.innerHTML = "";
-    FamilyDash.CHARACTERS.forEach((character) => {
+    const characters = FamilyDash.getCharactersSortedByDifficulty
+      ? FamilyDash.getCharactersSortedByDifficulty()
+      : FamilyDash.CHARACTERS;
+
+    characters.forEach((character) => {
       const card = document.createElement("article");
-      card.className = "card";
+      card.className = "card character-card";
+      const difficultyTone = character.difficulty?.tone || "medium";
+      const difficultyLabel = character.difficulty?.label || "Medium";
+      const difficultyNote = character.difficulty?.note || "Solid all-around pick";
       card.innerHTML = `
+        <div class="character-card-top">
+          <span class="difficulty-badge" data-tone="${difficultyTone}">${difficultyLabel}</span>
+          <span class="difficulty-rank">#${character.difficulty?.rank || "?"} by ease</span>
+        </div>
+        <div class="character-portrait-frame">
+          <img class="character-portrait" src="${character.portrait || `assets/characters/${character.id}.svg`}" alt="${character.name} portrait" loading="lazy" />
+        </div>
         <h3>${character.name}</h3>
-        <p><strong>${character.role}</strong></p>
+        <p class="character-role"><strong>${character.role}</strong></p>
+        <p class="character-difficulty"><strong>Use:</strong> ${difficultyLabel} - ${difficultyNote}</p>
         <p>${character.flavor}</p>
         <p><strong>Strengths:</strong> ${character.strengths}</p>
         <p><strong>Weakness:</strong> ${character.weakness}</p>
@@ -113,14 +178,18 @@
         <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
         <p><strong>Control:</strong> ${character.stats.control}/5</p>
       `;
+      if (selectedCharacter === character.id) {
+        card.classList.add("selected");
+      }
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
         [...characterGrid.children].forEach((child) => child.classList.remove("selected"));
         card.classList.add("selected");
-        toStoreBtn.disabled = false;
+        syncCharacterActions();
       });
       characterGrid.appendChild(card);
     });
+    syncCharacterActions();
   }
 
   function renderStore() {
@@ -169,14 +238,29 @@
         <p><strong>Distance:</strong> ${level.length}m</p>
         <p><strong>Difficulty:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
       `;
+      if (selectedLevel === level.id) {
+        card.classList.add("selected");
+      }
       card.addEventListener("click", () => {
         selectedLevel = level.id;
         [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
         card.classList.add("selected");
-        launchBtn.disabled = false;
+        syncLaunchAction();
       });
       levelGrid.appendChild(card);
     });
+    syncLaunchAction();
+  }
+
+  function openStore() {
+    renderStore();
+    switchScreen("store");
+  }
+
+  function openLevelSelect(fromScreen) {
+    levelBackTarget = fromScreen;
+    renderLevelCards();
+    switchScreen("level");
   }
 
   function updateHud(data) {
@@ -207,20 +291,147 @@
       },
       () => {
         game.stop();
-        renderStore();
-        switchScreen("store");
+        openStore();
       }
     );
   }
 
-  function showOverlay(title, message, primaryLabel, secondaryLabel, onPrimary, onSecondary) {
+  function showOverlay(title, message, primaryLabel, secondaryLabel, onPrimary, onSecondary, options) {
+    const config = options || {};
+    const showNamePrompt = Boolean(config.namePrompt);
+    const tertiaryLabel = config.tertiaryLabel || "";
+    const tertiaryAction = config.tertiaryAction || null;
+    const syncNamePrompt = () => {
+      if (!showNamePrompt) {
+        overlayPrimary.disabled = false;
+        return;
+      }
+      const hasName = Boolean(sanitizePlayerName(overlayNameInput.value));
+      overlayPrimary.disabled = Boolean(config.requireName) && !hasName;
+    };
+
     overlayTitle.textContent = title;
     overlayText.textContent = message;
     overlayPrimary.textContent = primaryLabel;
-    overlaySecondary.textContent = secondaryLabel;
-    overlayPrimary.onclick = onPrimary;
-    overlaySecondary.onclick = onSecondary;
+    overlaySecondary.hidden = !secondaryLabel;
+    overlaySecondary.textContent = secondaryLabel || "";
+    overlayTertiary.hidden = !tertiaryLabel;
+    overlayTertiary.textContent = tertiaryLabel;
+
+    overlayNamePrompt.hidden = !showNamePrompt;
+    overlayNameInput.value = showNamePrompt ? sanitizePlayerName(config.nameValue || profile.playerName) : "";
+    overlayNameHint.textContent = showNamePrompt ? (config.nameHint || "") : "";
+    overlayNameInput.oninput = syncNamePrompt;
+    overlayNameInput.onkeydown = (event) => {
+      if (event.key === "Enter" && !overlayPrimary.disabled) {
+        event.preventDefault();
+        overlayPrimary.click();
+      }
+    };
+
+    syncNamePrompt();
+
+    overlayPrimary.onclick = () => {
+      const value = showNamePrompt ? sanitizePlayerName(overlayNameInput.value) : undefined;
+      if (config.requireName && !value) return;
+      if (onPrimary) onPrimary(value);
+    };
+    overlaySecondary.onclick = secondaryLabel && onSecondary ? onSecondary : null;
+    overlayTertiary.onclick = tertiaryLabel && tertiaryAction ? tertiaryAction : null;
     switchScreen("overlay");
+
+    if (showNamePrompt) {
+      requestAnimationFrame(() => {
+        overlayNameInput.focus();
+        overlayNameInput.select();
+      });
+    }
+  }
+
+  function saveMissionResult(result) {
+    const playerName = sanitizePlayerName(result.playerName);
+    profile.playerName = playerName;
+    profile.wallet += result.coins;
+    profile.highScore = Math.max(profile.highScore, result.score);
+    profile.sessions.push({
+      score: result.score,
+      playerName,
+      character: result.character.name,
+      level: result.levelId,
+      date: new Date().toLocaleDateString()
+    });
+    saveProfile();
+    renderScoreboard();
+  }
+
+  function showMissionOutcomeOverlay(result) {
+    const details = `${result.playerName} ran ${Math.floor(result.distance)}m with ${result.character.name}, scored ${result.score}, collected ${result.coins} coins. Wallet: ${profile.wallet}.`;
+    if (result.outcome === "win") {
+      showOverlay(
+        "Level Complete!",
+        `${details} Nice work. Keep climbing all 10 levels!`,
+        result.levelId < FamilyDash.LEVELS.length ? "Next Level" : "Play Again",
+        "Store",
+        () => {
+          if (result.levelId < FamilyDash.LEVELS.length) {
+            selectedLevel = result.levelId + 1;
+            startRun();
+          } else {
+            switchScreen("character");
+          }
+        },
+        () => openStore(),
+        result.levelId < FamilyDash.LEVELS.length
+          ? {
+              tertiaryLabel: "Choose Character",
+              tertiaryAction: () => switchScreen("character")
+            }
+          : null
+      );
+      return;
+    }
+
+    showOverlay(
+      "Game Over",
+      `${details} Nice effort. Try a store boost before retrying.`,
+      "Retry",
+      "Store",
+      () => startRun(),
+      () => openStore(),
+      {
+        tertiaryLabel: "Choose Character",
+        tertiaryAction: () => switchScreen("character")
+      }
+    );
+  }
+
+  function promptForMissionName(result) {
+    const acknowledgement = result.outcome === "win"
+      ? "Mission complete. Great run. Confirm the name you want saved on the scoreboard."
+      : "Mission complete. That run still counts. Confirm the name you want saved on the scoreboard.";
+    const hint = profile.playerName
+      ? "Edit the saved name if someone else just played, or accept to keep using it for future missions."
+      : "Enter a name once and the game will remember it for future missions.";
+
+    showOverlay(
+      "Save Your Score",
+      acknowledgement,
+      "Accept Name",
+      "",
+      (playerName) => {
+        const finalName = sanitizePlayerName(playerName);
+        if (!finalName) return;
+        saveMissionResult({ ...result, playerName: finalName });
+        showMissionOutcomeOverlay({ ...result, playerName: finalName });
+      },
+      null,
+      {
+        namePrompt: true,
+        requireName: true,
+        nameValue: profile.playerName,
+        nameHint: hint
+      }
+    );
   }
 
   function startRun() {
@@ -239,6 +450,15 @@
       onHud: updateHud,
       onPause: openPauseOverlay,
       onEnd: ({ outcome, score, coins, distance }) => {
+        promptForMissionName({
+          outcome,
+          score,
+          coins,
+          distance,
+          character,
+          levelId: selectedLevel
+        });
+        return;
         profile.wallet += coins;
         profile.highScore = Math.max(profile.highScore, score);
         profile.sessions.push({
@@ -265,10 +485,7 @@
                 switchScreen("character");
               }
             },
-            () => {
-              renderStore();
-              switchScreen("store");
-            }
+            () => openStore()
           );
         } else {
           showOverlay(
@@ -277,10 +494,7 @@
             "Retry",
             "Store",
             () => startRun(),
-            () => {
-              renderStore();
-              switchScreen("store");
-            }
+            () => openStore()
           );
         }
       }
@@ -307,19 +521,16 @@
     switchScreen("start");
   });
 
-  toStoreBtn.addEventListener("click", () => {
-    renderStore();
-    switchScreen("store");
-  });
-
-  toLevelBtn.addEventListener("click", () => {
-    renderLevelCards();
-    switchScreen("level");
-  });
+  toStoreBtn.addEventListener("click", openStore);
+  toLevelFromCharacterBtn.addEventListener("click", () => openLevelSelect("character"));
+  toLevelBtn.addEventListener("click", () => openLevelSelect("store"));
 
   backToStoreBtn.addEventListener("click", () => {
-    renderStore();
-    switchScreen("store");
+    if (levelBackTarget === "store") {
+      openStore();
+      return;
+    }
+    switchScreen("character");
   });
 
   backToCharactersBtn.addEventListener("click", () => switchScreen("character"));

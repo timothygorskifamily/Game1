@@ -72,6 +72,7 @@
         y: def.flying ? yBase - 72 - Math.random() * 30 : yBase,
         width: def.width,
         height: def.height,
+        variant: Math.floor(Math.random() * 5),
         damage: def.damage,
         kickable: def.kickable,
         color: def.color

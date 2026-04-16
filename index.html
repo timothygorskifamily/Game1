@@ -25,10 +25,12 @@
 
         <section id="characterScreen" class="panel">
           <h2>Choose Your Character</h2>
+          <p class="character-screen-note">Sorted from easiest to hardest to use so starter-friendly picks show up first.</p>
           <div id="characterGrid" class="character-grid"></div>
           <div class="actions">
             <button id="backToStartBtn">Back</button>
-            <button id="toStoreBtn" class="primary" disabled>Store</button>
+            <button id="toStoreBtn" disabled>Store</button>
+            <button id="toLevelFromCharacterBtn" class="primary" disabled>Choose Level</button>
           </div>
         </section>
 
@@ -53,6 +55,19 @@
 
         <section id="gameScreen" class="panel game-panel">
           <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
+          <div class="game-support">
+            <aside class="pc-controls" aria-label="How to play on PC">
+              <h3>How To Play On PC</h3>
+              <div class="control-row"><kbd>Space</kbd><span>or</span><kbd>Up Arrow</kbd><span>Jump over hazards</span></div>
+              <div class="control-row"><kbd>Down Arrow</kbd><span>Slide under trouble</span></div>
+              <div class="control-row"><kbd>P</kbd><span>or</span><kbd>Esc</kbd><span>Pause or resume</span></div>
+              <p class="pc-controls-summary">Dodge obstacles, grab coins and powerups, then make it to the end of the level.</p>
+            </aside>
+            <div class="soundtrack-banner">
+              <strong>Soundtrack:</strong>
+              <span id="musicTrackName">Stand By</span>
+            </div>
+          </div>
           <div id="hud" class="hud"></div>
           <div class="mobile-controls">
             <button data-action="jump">Jump</button>
@@ -64,9 +79,15 @@
         <section id="overlayScreen" class="panel">
           <h2 id="overlayTitle"></h2>
           <p id="overlayText"></p>
+          <div id="overlayNamePrompt" class="overlay-name-prompt" hidden>
+            <label for="overlayNameInput">Scoreboard Name</label>
+            <input id="overlayNameInput" type="text" maxlength="24" autocomplete="name" placeholder="Enter your name" />
+            <p id="overlayNameHint" class="overlay-name-hint"></p>
+          </div>
           <div class="actions">
             <button id="overlayPrimary" class="primary"></button>
             <button id="overlaySecondary"></button>
+            <button id="overlayTertiary" hidden></button>
           </div>
         </section>
       </main>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-labelledby="title desc">
+  <title id="title">David portrait</title>
+  <desc id="desc">A portrait inspired by the family photo with sandy hair, a tan vest, and a soft gray shirt.</desc>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#96a27b"/>
+      <stop offset="0.62" stop-color="#c99a56"/>
+      <stop offset="1" stop-color="#6b5940"/>
+    </linearGradient>
+  </defs>
+  <rect width="160" height="160" rx="18" fill="#323528"/>
+  <rect x="8" y="8" width="144" height="144" rx="14" fill="url(#sky)"/>
+  <circle cx="42" cy="42" r="20" fill="#8aa15e" opacity="0.45"/>
+  <circle cx="116" cy="38" r="24" fill="#db9d48" opacity="0.5"/>
+  <rect x="8" y="118" width="144" height="34" fill="#6c7e4b"/>
+  <path d="M30 146c7-30 24-48 50-48 27 0 44 18 50 48z" fill="#bc8e58"/>
+  <path d="M55 104h50l7 42H48z" fill="#c99b60"/>
+  <path d="M58 104h44l5 39H53z" fill="#d1a56c"/>
+  <path d="M80 102l16 41" stroke="#e0b986" stroke-width="2"/>
+  <path d="M80 102l-16 41" stroke="#e0b986" stroke-width="2"/>
+  <path d="M63 101h34l5 14H58z" fill="#d7d3cf"/>
+  <circle cx="80" cy="61" r="27" fill="#efc6a6"/>
+  <path d="M55 58c3-20 14-31 28-31 16 0 28 10 31 29l-8 2c-4-10-11-18-23-18-11 0-19 6-22 20z" fill="#8b7350"/>
+  <path d="M58 49c7-8 15-11 24-11 9 0 18 3 24 10" fill="none" stroke="#b49666" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="70" cy="61" r="3.3" fill="#32241d"/>
+  <circle cx="91" cy="61" r="3.3" fill="#32241d"/>
+  <path d="M71 76c5 4 12 4 16 0" fill="none" stroke="#9d6047" stroke-width="3.2" stroke-linecap="round"/>
+  <path d="M63 106c4 5 10 8 17 8 7 0 13-2 18-8" fill="none" stroke="#dfbba1" stroke-width="4" stroke-linecap="round"/>
+</svg>
