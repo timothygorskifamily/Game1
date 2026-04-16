@@ -30,10 +30,57 @@
     }
 
     get hitbox() {
-      const scale = this.character.gameplay.hitboxScale || 1;
-      const width = this.width * scale;
-      const height = this.height * scale;
-      return { x: this.x + (this.width - width) / 2, y: this.y + (this.height - height) / 2, width, height };
+      return this.createCollisionBox(this.character.gameplay.hitboxScale || 1);
+    }
+
+    get hurtbox() {
+      const baseBoxes = this.isSliding
+        ? [
+            { x: 0.12, y: 0.58, width: 0.68, height: 0.16 },
+            { x: 0.24, y: 0.44, width: 0.48, height: 0.18 },
+            { x: 0.56, y: 0.26, width: 0.2, height: 0.22 }
+          ]
+        : [
+            { x: 0.28, y: 0.02, width: 0.32, height: 0.46 },
+            { x: 0.16, y: 0.44, width: 0.64, height: 0.54 }
+          ];
+      return this.createCollisionEntity(this.scaleCollisionBoxes(baseBoxes, this.character.gameplay.hitboxScale || 1));
+    }
+
+    createCollisionBox(scale) {
+      const clampedScale = Math.max(0.3, scale);
+      const width = this.width * clampedScale;
+      const height = this.height * clampedScale;
+      return {
+        x: this.x + (this.width - width) / 2,
+        y: this.y + (this.height - height) / 2,
+        width,
+        height
+      };
+    }
+
+    createCollisionEntity(collisionBoxes) {
+      return {
+        x: this.x,
+        y: this.y,
+        width: this.width,
+        height: this.height,
+        collisionBoxes
+      };
+    }
+
+    scaleCollisionBoxes(collisionBoxes, scale) {
+      const clampedScale = Math.max(0.3, scale);
+      return collisionBoxes.map((box) => {
+        const width = box.width * clampedScale;
+        const height = box.height * clampedScale;
+        return {
+          x: box.x + (box.width - width) / 2,
+          y: box.y + (box.height - height) / 2,
+          width,
+          height
+        };
+      });
     }
 
     isGrounded() { return this.y >= this.groundY - this.height - 0.2; }

@@ -65,6 +65,8 @@
       const pool = this.level.obstaclePool;
       const type = pool[Math.floor(Math.random() * pool.length)];
       const def = FamilyDash.OBSTACLE_DEFS[type];
+      const variant = Math.floor(Math.random() * 5);
+      const style = this.renderer.obstacleTheme(this.level.biome, { type, color: def.color }).style;
       const yBase = this.groundY - def.height;
       this.obstacles.push({
         type,
@@ -72,10 +74,12 @@
         y: def.flying ? yBase - 72 - Math.random() * 30 : yBase,
         width: def.width,
         height: def.height,
-        variant: Math.floor(Math.random() * 5),
+        variant,
+        style,
         damage: def.damage,
         kickable: def.kickable,
-        color: def.color
+        color: def.color,
+        collisionBoxes: def.collisionBoxes
       });
     }
 
@@ -192,8 +196,9 @@
 
     handleCollisions() {
       const playerBox = this.player.hitbox;
+      const playerHurtbox = this.player.hurtbox;
       this.obstacles = this.obstacles.filter((obstacle) => {
-        if (!FamilyDash.intersects(playerBox, obstacle)) return true;
+        if (!FamilyDash.intersects(playerHurtbox, obstacle)) return true;
         if (this.player.character.id === "liam" && Math.random() < (this.player.character.gameplay.techShieldChance || 0)) {
           return false;
         }
