@@ -198,6 +198,7 @@
       this.canvas = canvas;
       this.ctx = canvas.getContext("2d");
       this.level = level;
+      this.imageCache = new Map();
       this.logicalWidth = Number(canvas.getAttribute("width")) || 960;
       this.logicalHeight = Number(canvas.getAttribute("height")) || 420;
       this.displayWidth = this.logicalWidth;
@@ -964,6 +965,78 @@
       fillRoundRect(ctx, -torsoWidth * 0.48, torsoHeight * 0.84, torsoWidth * 0.96, torsoHeight * 0.11, torsoWidth * 0.2, alphaColor(outfitSecondary, 0.88));
     }
 
+    getImage(src) {
+      if (!src) return null;
+      if (this.imageCache.has(src)) return this.imageCache.get(src);
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+      this.imageCache.set(src, image);
+      return image;
+    }
+
+    drawPortraitHead(ctx, src, radius, ringColor, shadowColor, options) {
+      const image = this.getImage(src);
+      if (!image || !image.complete || !image.naturalWidth) return false;
+
+      const config = options || {};
+      const zoom = config.zoom || 1.12;
+      const offsetX = config.offsetX || 0;
+      const offsetY = config.offsetY || 0;
+      const cutout = Boolean(config.cutout);
+      const drawSize = radius * 2 * zoom;
+      const drawX = -drawSize * 0.5 + radius * offsetX;
+      const drawY = (cutout ? -drawSize * 0.5 : -drawSize * 0.52) + radius * offsetY;
+
+      if (cutout) {
+        ctx.drawImage(image, drawX, drawY, drawSize, drawSize);
+        return true;
+      }
+
+      const faceCenterY = radius * 0.06;
+      const faceRadiusX = radius * 0.94;
+      const faceRadiusY = radius * 1.02;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(0, faceCenterY, faceRadiusX, faceRadiusY, 0, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+      ctx.drawImage(image, drawX, drawY, drawSize, drawSize);
+      ctx.restore();
+
+      return true;
+    }
+
+    drawCharacterHead(ctx, player, appearance, headRadius, skin, skinShadow, hair, hairShadow, outfitTrim, sliding) {
+      const portraitSrc = player.character.gameplayPortrait;
+      const portraitZoom = player.character.gameplayPortraitZoom || 1.12;
+      const portraitOffsetX = player.character.gameplayPortraitOffsetX || 0;
+      const portraitOffsetY = player.character.gameplayPortraitOffsetY || 0;
+      const portraitCutout = Boolean(player.character.gameplayPortraitCutout);
+
+      if (portraitSrc && this.drawPortraitHead(ctx, portraitSrc, headRadius, outfitTrim, hairShadow, {
+        zoom: portraitZoom,
+        offsetX: portraitOffsetX,
+        offsetY: portraitOffsetY,
+        cutout: portraitCutout
+      })) {
+        return;
+      }
+
+      this.drawHair(ctx, appearance, 0, 0, headRadius, hair, hairShadow, sliding, outfitTrim, "back");
+      this.drawFaceBase(ctx, appearance, 0, 0, headRadius, skin, skinShadow);
+      this.drawHair(ctx, appearance, 0, 0, headRadius, hair, hairShadow, sliding, outfitTrim, "front");
+      this.drawFaceFeatures(ctx, appearance, 0, 0, headRadius, appearance.eye || "#2a1d17", hairShadow, skinShadow);
+
+      if (appearance.accessory === "beard") {
+        const beardScale = appearance.beardScale || 1;
+        const beardWidth = appearance.beardWidth || 1;
+        ellipse(ctx, headRadius * 0.03, headRadius * 0.35, headRadius * 0.23 * beardWidth, headRadius * 0.14 * beardScale, hair, 0.84);
+        line(ctx, -headRadius * 0.04, headRadius * 0.2, headRadius * 0.18, headRadius * 0.21, 1.3, hair, 0.82);
+      }
+    }
+
     drawRunner(player, animationClock) {
       const ctx = this.ctx;
       const appearance = player.character.appearance || {};
@@ -1029,16 +1102,7 @@
         ctx.save();
         ctx.translate(x + w * 0.74, y + h * 0.4);
         ctx.rotate(headTilt * 0.45);
-        this.drawHair(ctx, appearance, 0, 0, headRadius * 0.88, hair, hairShadow, true, outfitTrim, "back");
-        this.drawFaceBase(ctx, appearance, 0, 0, headRadius * 0.88, skin, skinShadow);
-        this.drawHair(ctx, appearance, 0, 0, headRadius * 0.88, hair, hairShadow, true, outfitTrim, "front");
-        this.drawFaceFeatures(ctx, appearance, 0, 0, headRadius * 0.88, appearance.eye || "#2a1d17", hairShadow, skinShadow);
-        if (appearance.accessory === "beard") {
-          const beardScale = appearance.beardScale || 1;
-          const beardWidth = appearance.beardWidth || 1;
-          ellipse(ctx, headRadius * 0.03, headRadius * 0.33, headRadius * 0.2 * beardWidth, headRadius * 0.12 * beardScale, hair, 0.84);
-          line(ctx, -headRadius * 0.03, headRadius * 0.18, headRadius * 0.16, headRadius * 0.19, 1.2, hair, 0.82);
-        }
+        this.drawCharacterHead(ctx, player, appearance, headRadius * 0.88, skin, skinShadow, hair, hairShadow, outfitTrim, true);
         ctx.restore();
         return;
       }
@@ -1104,17 +1168,7 @@
       ctx.save();
       ctx.translate(0, -headRadius * 0.18);
       ctx.rotate(headTilt);
-      this.drawHair(ctx, appearance, 0, 0, headRadius, hair, hairShadow, false, outfitTrim, "back");
-      this.drawFaceBase(ctx, appearance, 0, 0, headRadius, skin, skinShadow);
-      this.drawHair(ctx, appearance, 0, 0, headRadius, hair, hairShadow, false, outfitTrim, "front");
-      this.drawFaceFeatures(ctx, appearance, 0, 0, headRadius, appearance.eye || "#2a1d17", hairShadow, skinShadow);
-
-      if (appearance.accessory === "beard") {
-        const beardScale = appearance.beardScale || 1;
-        const beardWidth = appearance.beardWidth || 1;
-        ellipse(ctx, headRadius * 0.03, headRadius * 0.35, headRadius * 0.23 * beardWidth, headRadius * 0.14 * beardScale, hair, 0.84);
-        line(ctx, -headRadius * 0.04, headRadius * 0.2, headRadius * 0.18, headRadius * 0.21, 1.3, hair, 0.82);
-      }
+      this.drawCharacterHead(ctx, player, appearance, headRadius, skin, skinShadow, hair, hairShadow, outfitTrim, false);
       ctx.restore();
 
       ctx.restore();

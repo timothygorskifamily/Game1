@@ -157,6 +157,10 @@
     return Array.from({ length: 5 }, (_, index) => `<span class="stat-segment ${index < value ? "fill" : ""}"></span>`).join("");
   }
 
+  function getPortraitSrc(character) {
+    return character?.portrait || `assets/characters/${character?.id}.svg`;
+  }
+
   function renderCharacterCards() {
     characterGrid.innerHTML = "";
     const characters = FamilyDash.getCharactersSortedByDifficulty
@@ -186,7 +190,7 @@
           <span class="difficulty-badge" data-tone="${difficultyTone}">${difficultyLabel}</span>
         </div>
         <div class="character-portrait-frame">
-          <img class="character-portrait" src="${character.portrait || `assets/characters/${character.id}.svg`}" alt="${character.name} portrait" loading="lazy" />
+          <img class="character-portrait" src="${getPortraitSrc(character)}" alt="${character.name} portrait" loading="lazy" />
         </div>
         <div class="character-copy">
           <h3>${character.name}</h3>
@@ -295,8 +299,24 @@
 
   function updateHud(data) {
     const character = FamilyDash.getCharacterById(selectedCharacter);
+    const runnerMarkup = character
+      ? `
+        <div class="hud-runner">
+          <div class="hud-runner-portrait-frame">
+            <img class="hud-runner-portrait" src="${getPortraitSrc(character)}" alt="${escapeHtml(character.name)} portrait" loading="eager" />
+          </div>
+          <div class="hud-runner-copy">
+            <span>Runner</span>
+            <strong>${escapeHtml(character.name)}</strong>
+          </div>
+        </div>
+      `
+      : `
+        <span>Runner</span>
+        <strong>--</strong>
+      `;
     hud.innerHTML = `
-      <div class="hud-card hud-card-primary"><span>Runner</span><strong>${character ? character.name : "--"}</strong></div>
+      <div class="hud-card hud-card-primary">${runnerMarkup}</div>
       <div class="hud-card"><span>Level</span><strong>${data.level}/10</strong></div>
       <div class="hud-card"><span>Health</span><strong>${data.health} / ${data.maxHealth}</strong></div>
       <div class="hud-card"><span>Score</span><strong>${data.score}</strong></div>
@@ -366,14 +386,22 @@
       "Paused",
       "Take a breath. Tap Resume or press P / Escape to continue.",
       "Resume",
-      "Store",
+      "Home",
       () => {
         switchScreen("game");
         game.pause();
       },
       () => {
         game.stop();
-        openStore();
+        renderScoreboard();
+        switchScreen("start");
+      },
+      {
+        tertiaryLabel: "Store",
+        tertiaryAction: () => {
+          game.stop();
+          openStore();
+        }
       }
     );
   }
@@ -540,7 +568,9 @@
   launchBtn.addEventListener("click", startRun);
 
   window.addEventListener("keydown", (event) => {
-    if ((event.code === "KeyP" || event.code === "Escape") && screens.game.classList.contains("active") && game && game.state === "paused") {
+    const pauseToggle = event.code === "KeyP" || event.code === "Escape";
+    const pausedOverlayOpen = screens.overlay.classList.contains("active") && game && game.state === "paused";
+    if (pauseToggle && ((screens.game.classList.contains("active") && game && game.state === "paused") || pausedOverlayOpen)) {
       switchScreen("game");
       game.pause();
     }
