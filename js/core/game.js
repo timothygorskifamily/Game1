@@ -17,8 +17,10 @@
 
     start(character, level, runModifiers) {
       this.level = level;
-      this.groundY = this.canvas.height - 74;
-      this.player = new FamilyDash.Player(character, this.canvas.height, this.groundY);
+      const viewport = this.renderer.getViewport ? this.renderer.getViewport() : { width: this.canvas.width, height: this.canvas.height };
+      this.viewport = viewport;
+      this.groundY = viewport.height - 74;
+      this.player = new FamilyDash.Player(character, viewport.height, this.groundY);
       this.runModifiers = runModifiers || {};
       if (this.runModifiers.startShield) this.player.shieldTimer = 6;
       if (this.runModifiers.extraHeart) { this.player.maxHealth += 1; this.player.health += 1; }
@@ -70,7 +72,7 @@
       const yBase = this.groundY - def.height;
       this.obstacles.push({
         type,
-        x: this.canvas.width + Math.random() * 120,
+        x: this.viewport.width + Math.random() * 120,
         y: def.flying ? yBase - 72 - Math.random() * 30 : yBase,
         width: def.width,
         height: def.height,
@@ -86,7 +88,7 @@
     spawnCoin() {
       const h = 18;
       this.coins.push({
-        x: this.canvas.width + Math.random() * 80,
+        x: this.viewport.width + Math.random() * 80,
         y: this.groundY - 40 - Math.random() * 80,
         radius: h / 2,
         width: h,
@@ -100,7 +102,7 @@
       const def = FamilyDash.POWERUP_DEFS[random];
       this.powerups.push({
         kind: random,
-        x: this.canvas.width + Math.random() * 200,
+        x: this.viewport.width + Math.random() * 200,
         y: this.groundY - 120 - Math.random() * 80,
         width: 24,
         height: 24,

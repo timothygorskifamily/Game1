@@ -38,12 +38,21 @@
   const input = new FamilyDash.InputManager();
   input.bind();
   input.attachMobileControls(document.querySelector(".mobile-controls"));
+
   const audio = new FamilyDash.AudioSystem();
   audio.setTrackChangeListener((track) => {
     if (!musicTrackName || !track) return;
     musicTrackName.textContent = track.name;
   });
+
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
+  const statLabels = {
+    speed: "Speed",
+    jump: "Jump",
+    stamina: "Stamina",
+    strength: "Strength",
+    control: "Control"
+  };
 
   const STORE_ITEMS = [
     { id: "speedBoost", name: "Turbo Shoes", cost: 24, desc: "+22 start speed for one run" },
@@ -59,7 +68,6 @@
   let selectedLevel = null;
   let game = null;
   let levelBackTarget = "store";
-
 
   function readJSON(key, fallback) {
     try {
@@ -92,32 +100,6 @@
     localStorage.setItem("familyDashInventory", JSON.stringify(profile.inventory));
   }
 
-  function switchScreen(name) {
-    Object.values(screens).forEach((screen) => screen.classList.remove("active"));
-    screens[name].classList.add("active");
-  }
-
-  function renderScoreboard() {
-    if (!scoreList) return;
-    const valid = profile.sessions.filter((s) => s && Number.isFinite(Number(s.score)));
-    const topRecent = [...valid].sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 8);
-    if (topRecent.length === 0) {
-      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
-      return;
-    }
-    scoreList.innerHTML = topRecent
-      .map((entry, idx) => `<li>#${idx + 1} ${entry.score} pts • ${entry.character || "Unknown"} • L${entry.level || "?"} • ${entry.date || "today"}</li>`)
-      .join("");
-    scoreList.innerHTML = topRecent
-      .map((entry, idx) => {
-        const playerName = escapeHtml(entry.playerName || "Player");
-        const characterName = escapeHtml(entry.character || "Unknown");
-        const dateLabel = escapeHtml(entry.date || "today");
-        return `<li>#${idx + 1} ${playerName} - ${entry.score} pts - ${characterName} - L${entry.level || "?"} - ${dateLabel}</li>`;
-      })
-      .join("");
-  }
-
   function sanitizePlayerName(name) {
     return String(name || "")
       .replace(/\s+/g, " ")
@@ -136,6 +118,31 @@
 
   profile.playerName = sanitizePlayerName(profile.playerName);
 
+  function switchScreen(name) {
+    Object.values(screens).forEach((screen) => screen.classList.remove("active"));
+    screens[name].classList.add("active");
+    if (name === "game") requestAnimationFrame(() => renderer.resize && renderer.resize());
+  }
+
+  function renderScoreboard() {
+    if (!scoreList) return;
+    const valid = profile.sessions.filter((session) => session && Number.isFinite(Number(session.score)));
+    const topRecent = [...valid].sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 8);
+    if (!topRecent.length) {
+      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
+      return;
+    }
+
+    scoreList.innerHTML = topRecent
+      .map((entry, idx) => {
+        const playerName = escapeHtml(entry.playerName || "Player");
+        const characterName = escapeHtml(entry.character || "Unknown");
+        const dateLabel = escapeHtml(entry.date || "today");
+        return `<li>#${idx + 1} ${playerName} - ${entry.score} pts - ${characterName} - L${entry.level || "?"} - ${dateLabel}</li>`;
+      })
+      .join("");
+  }
+
   function syncCharacterActions() {
     const hasSelection = Boolean(selectedCharacter);
     toStoreBtn.disabled = !hasSelection;
@@ -144,6 +151,10 @@
 
   function syncLaunchAction() {
     launchBtn.disabled = !selectedLevel;
+  }
+
+  function statMeter(value) {
+    return Array.from({ length: 5 }, (_, index) => `<span class="stat-segment ${index < value ? "fill" : ""}"></span>`).join("");
   }
 
   function renderCharacterCards() {
@@ -155,32 +166,40 @@
     characters.forEach((character) => {
       const card = document.createElement("article");
       card.className = "card character-card";
+      card.style.setProperty("--card-accent", character.accent);
+      card.style.setProperty("--card-color", character.color);
+
       const difficultyTone = character.difficulty?.tone || "medium";
       const difficultyLabel = character.difficulty?.label || "Medium";
       const difficultyNote = character.difficulty?.note || "Solid all-around pick";
+      const statsMarkup = Object.entries(character.stats)
+        .map(([key, value]) => `
+          <div class="character-stat">
+            <div class="character-stat-label">${statLabels[key] || key}</div>
+            <div class="character-stat-meter">${statMeter(value)}</div>
+          </div>
+        `)
+        .join("");
+
       card.innerHTML = `
         <div class="character-card-top">
           <span class="difficulty-badge" data-tone="${difficultyTone}">${difficultyLabel}</span>
-          <span class="difficulty-rank">#${character.difficulty?.rank || "?"} by ease</span>
         </div>
         <div class="character-portrait-frame">
           <img class="character-portrait" src="${character.portrait || `assets/characters/${character.id}.svg`}" alt="${character.name} portrait" loading="lazy" />
         </div>
-        <h3>${character.name}</h3>
-        <p class="character-role"><strong>${character.role}</strong></p>
-        <p class="character-difficulty"><strong>Use:</strong> ${difficultyLabel} - ${difficultyNote}</p>
-        <p>${character.flavor}</p>
-        <p><strong>Strengths:</strong> ${character.strengths}</p>
-        <p><strong>Weakness:</strong> ${character.weakness}</p>
-        <p><strong>Speed:</strong> ${character.stats.speed}/5</p>
-        <p><strong>Jump:</strong> ${character.stats.jump}/5</p>
-        <p><strong>Stamina:</strong> ${character.stats.stamina}/5</p>
-        <p><strong>Strength:</strong> ${character.stats.strength}/5</p>
-        <p><strong>Control:</strong> ${character.stats.control}/5</p>
+        <div class="character-copy">
+          <h3>${character.name}</h3>
+          <p class="character-role">${character.role}</p>
+          <p class="character-difficulty"><strong>Use:</strong> ${difficultyNote}</p>
+          <p class="character-flavor">${character.flavor}</p>
+          <p><strong>Strengths:</strong> ${character.strengths}</p>
+          <p><strong>Watch out:</strong> ${character.weakness}</p>
+        </div>
+        <div class="character-stat-list">${statsMarkup}</div>
       `;
-      if (selectedCharacter === character.id) {
-        card.classList.add("selected");
-      }
+
+      if (selectedCharacter === character.id) card.classList.add("selected");
       card.addEventListener("click", () => {
         selectedCharacter = character.id;
         [...characterGrid.children].forEach((child) => child.classList.remove("selected"));
@@ -189,17 +208,25 @@
       });
       characterGrid.appendChild(card);
     });
+
     syncCharacterActions();
   }
 
   function renderStore() {
     walletValue.textContent = profile.wallet;
     storeGrid.innerHTML = "";
+
     STORE_ITEMS.forEach((item) => {
       const owned = profile.inventory[item.id] || 0;
       const card = document.createElement("article");
-      card.className = "card";
-      card.innerHTML = `<h3>${item.name}</h3><p>${item.desc}</p><p><strong>Cost:</strong> ${item.cost} coins</p><p><strong>Owned:</strong> ${owned}</p>`;
+      card.className = "card store-card";
+      card.innerHTML = `
+        <h3>${item.name}</h3>
+        <p>${item.desc}</p>
+        <p><strong>Cost:</strong> ${item.cost} coins</p>
+        <p><strong>Owned:</strong> ${owned}</p>
+      `;
+
       const buy = document.createElement("button");
       buy.textContent = `Buy ${item.name}`;
       buy.disabled = profile.wallet < item.cost;
@@ -210,6 +237,7 @@
         saveProfile();
         renderStore();
       });
+
       card.appendChild(buy);
       storeGrid.appendChild(card);
     });
@@ -231,16 +259,18 @@
     levelGrid.innerHTML = "";
     FamilyDash.LEVELS.forEach((level) => {
       const card = document.createElement("article");
-      card.className = "card";
+      card.className = "card level-card";
       card.innerHTML = `
-        <h3>Level ${level.id}: ${level.name}</h3>
+        <div class="level-card-top">
+          <h3>Level ${level.id}: ${level.name}</h3>
+          <span class="level-biome">${level.biome}</span>
+        </div>
         <p>${level.description}</p>
         <p><strong>Distance:</strong> ${level.length}m</p>
-        <p><strong>Difficulty:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
+        <p><strong>Difficulty Growth:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
       `;
-      if (selectedLevel === level.id) {
-        card.classList.add("selected");
-      }
+
+      if (selectedLevel === level.id) card.classList.add("selected");
       card.addEventListener("click", () => {
         selectedLevel = level.id;
         [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
@@ -264,36 +294,19 @@
   }
 
   function updateHud(data) {
+    const character = FamilyDash.getCharacterById(selectedCharacter);
     hud.innerHTML = `
-      <div class="hud-card"><strong>Character:</strong> ${FamilyDash.getCharacterById(selectedCharacter).name}</div>
-      <div class="hud-card"><strong>Level:</strong> ${data.level}/10</div>
-      <div class="hud-card"><strong>Health:</strong> ${"❤️".repeat(Math.max(0, data.health))}${"🖤".repeat(Math.max(0, data.maxHealth - data.health))}</div>
-      <div class="hud-card"><strong>Score:</strong> ${data.score}</div>
-      <div class="hud-card"><strong>Coins:</strong> ${data.coins}</div>
-      <div class="hud-card"><strong>Distance:</strong> ${data.distance}m</div>
-      <div class="hud-card"><strong>Shield:</strong> ${data.shield > 0 ? `${data.shield.toFixed(1)}s` : "--"}</div>
-      <div class="hud-card"><strong>Rush:</strong> ${data.rush > 0 ? `${data.rush.toFixed(1)}s` : "--"}</div>
-      <div class="hud-card"><strong>Status:</strong> ${data.status}</div>
-      <div class="hud-card"><strong>Best:</strong> ${profile.highScore}</div>
+      <div class="hud-card hud-card-primary"><span>Runner</span><strong>${character ? character.name : "--"}</strong></div>
+      <div class="hud-card"><span>Level</span><strong>${data.level}/10</strong></div>
+      <div class="hud-card"><span>Health</span><strong>${data.health} / ${data.maxHealth}</strong></div>
+      <div class="hud-card"><span>Score</span><strong>${data.score}</strong></div>
+      <div class="hud-card"><span>Coins</span><strong>${data.coins}</strong></div>
+      <div class="hud-card"><span>Distance</span><strong>${data.distance}m</strong></div>
+      <div class="hud-card"><span>Shield</span><strong>${data.shield > 0 ? `${data.shield.toFixed(1)}s` : "Ready"}</strong></div>
+      <div class="hud-card"><span>Rush</span><strong>${data.rush > 0 ? `${data.rush.toFixed(1)}s` : "Idle"}</strong></div>
+      <div class="hud-card"><span>Status</span><strong>${String(data.status || "").replace(/^./, (charValue) => charValue.toUpperCase())}</strong></div>
+      <div class="hud-card"><span>Best</span><strong>${profile.highScore}</strong></div>
     `;
-  }
-
-
-  function openPauseOverlay() {
-    showOverlay(
-      "Paused",
-      "Take a breath. Tap Resume or press P / Escape to continue.",
-      "Resume",
-      "Store",
-      () => {
-        switchScreen("game");
-        game.pause();
-      },
-      () => {
-        game.stop();
-        openStore();
-      }
-    );
   }
 
   function showOverlay(title, message, primaryLabel, secondaryLabel, onPrimary, onSecondary, options) {
@@ -346,6 +359,23 @@
         overlayNameInput.select();
       });
     }
+  }
+
+  function openPauseOverlay() {
+    showOverlay(
+      "Paused",
+      "Take a breath. Tap Resume or press P / Escape to continue.",
+      "Resume",
+      "Store",
+      () => {
+        switchScreen("game");
+        game.pause();
+      },
+      () => {
+        game.stop();
+        openStore();
+      }
+    );
   }
 
   function saveMissionResult(result) {
@@ -442,6 +472,7 @@
     if (game) game.stop();
     const runModifiers = consumeRunModifiers();
 
+    renderer.resize && renderer.resize();
     game = new FamilyDash.RunnerGame({
       canvas,
       input,
@@ -458,50 +489,22 @@
           character,
           levelId: selectedLevel
         });
-        return;
-        profile.wallet += coins;
-        profile.highScore = Math.max(profile.highScore, score);
-        profile.sessions.push({
-          score,
-          character: character.name,
-          level: selectedLevel,
-          date: new Date().toLocaleDateString()
-        });
-        saveProfile();
-        renderScoreboard();
-
-        const details = `${character.name} ran ${Math.floor(distance)}m, scored ${score}, collected ${coins} coins. Wallet: ${profile.wallet}.`;
-        if (outcome === "win") {
-          showOverlay(
-            "Level Complete! 🎉",
-            `${details} Keep climbing all 10 levels!`,
-            selectedLevel < FamilyDash.LEVELS.length ? "Next Level" : "Play Again",
-            "Store",
-            () => {
-              if (selectedLevel < FamilyDash.LEVELS.length) {
-                selectedLevel += 1;
-                startRun();
-              } else {
-                switchScreen("character");
-              }
-            },
-            () => openStore()
-          );
-        } else {
-          showOverlay(
-            "Game Over 💥",
-            `${details} Try a store boost before retrying.`,
-            "Retry",
-            "Store",
-            () => startRun(),
-            () => openStore()
-          );
-        }
       }
     });
 
     switchScreen("game");
-    updateHud({ health: character.gameplay.maxHealth, maxHealth: character.gameplay.maxHealth, score: 0, coins: 0, distance: 0, level: level.id, status: "running", shield: 0, rush: 0 });
+    renderer.resize && renderer.resize();
+    updateHud({
+      health: character.gameplay.maxHealth,
+      maxHealth: character.gameplay.maxHealth,
+      score: 0,
+      coins: 0,
+      distance: 0,
+      level: level.id,
+      status: "running",
+      shield: 0,
+      rush: 0
+    });
     game.start(character, level, runModifiers);
   }
 
@@ -543,11 +546,21 @@
     }
   });
 
+  window.addEventListener("resize", () => renderer.resize && renderer.resize());
+  if (window.ResizeObserver) {
+    const resizeObserver = new ResizeObserver(() => renderer.resize && renderer.resize());
+    resizeObserver.observe(canvas);
+  }
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => renderer.resize && renderer.resize());
+  }
+
   if (profile.sessions.length) {
-    const best = profile.sessions.reduce((m, s) => Math.max(m, Number(s.score) || 0), profile.highScore || 0);
+    const best = profile.sessions.reduce((maxValue, session) => Math.max(maxValue, Number(session.score) || 0), profile.highScore || 0);
     profile.highScore = best;
     saveProfile();
   }
+
   renderScoreboard();
   switchScreen("start");
 })();
