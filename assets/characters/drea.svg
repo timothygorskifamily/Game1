@@ -1,48 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 260" role="img" aria-labelledby="title desc">
   <title id="title">Drea portrait</title>
-  <desc id="desc">Stylized portrait of Drea with a heart-shaped face, dark ponytail, white headband, and a polished soccer captain jacket.</desc>
+  <desc id="desc">Generic illustrated portrait of Drea as a mom with dark hair, a white headband, and a teal athletic jacket.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#102f3d"/>
-      <stop offset="0.56" stop-color="#2f6d7b"/>
-      <stop offset="1" stop-color="#9ed3ba"/>
+      <stop offset="0" stop-color="#16384d"/>
+      <stop offset="1" stop-color="#4f9f97"/>
     </linearGradient>
-    <linearGradient id="kit" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#387c8a"/>
+    <linearGradient id="shirt" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3f8a92"/>
       <stop offset="1" stop-color="#173844"/>
     </linearGradient>
   </defs>
-  <rect width="220" height="260" rx="28" fill="#0c2130"/>
+  <rect width="220" height="260" rx="28" fill="#0b1d2a"/>
   <rect x="10" y="10" width="200" height="240" rx="22" fill="url(#bg)"/>
-  <circle cx="44" cy="52" r="22" fill="#f6cb73" opacity="0.46"/>
-  <path d="M18 216c26-23 57-36 94-36 38 0 67 12 91 31v39H18z" fill="#3d8e66" opacity="0.78"/>
-  <path d="M48 226c10-40 27-66 61-80 34 14 50 40 61 80z" fill="#173543" opacity="0.86"/>
-  <path d="M63 226c4-26 10-47 24-62 7-8 14-12 23-12 10 0 17 4 24 12 14 15 21 36 25 62z" fill="#16323d"/>
-  <path d="M59 174c12-16 29-24 50-24 22 0 39 8 51 24l-8 50H67z" fill="url(#kit)"/>
-  <path d="M77 170c8 8 18 13 33 13 13 0 24-4 32-13l9 10c-11 12-24 18-42 18-18 0-31-6-42-18z" fill="#f3f6fa"/>
-  <path d="M106 150h8v74h-8z" fill="#f3f6fa" opacity="0.94"/>
-  <path d="M72 180c-6 10-10 21-13 33l14 4c3-14 7-24 13-32z" fill="#244c5b"/>
-  <path d="M148 180c6 10 10 21 13 33l-14 4c-3-14-7-24-13-32z" fill="#244c5b"/>
-  <path d="M97 144c2-8 7-12 13-12 7 0 11 4 13 12v12H97z" fill="#d79f80"/>
-  <ellipse cx="84" cy="104" rx="6" ry="9" fill="#efc3a2"/>
-  <ellipse cx="136" cy="104" rx="6" ry="9" fill="#efc3a2"/>
-  <path d="M82 95c0-27 13-47 28-47 18 0 30 20 30 47 0 24-11 43-30 55-18-12-28-31-28-55z" fill="#efc3a2"/>
-  <path d="M87 66c7-15 20-24 35-24 16 0 29 9 35 25l-11 4c-8-11-17-16-27-16-11 0-19 5-26 15z" fill="#241717"/>
-  <path d="M78 100c4-34 21-56 39-56 20 0 38 20 40 55l-12 4c-5-18-15-34-35-34-16 0-28 13-34 35z" fill="#241717"/>
-  <path d="M81 108c5 27 15 42 30 53l-6 16c-21-12-33-30-35-60z" fill="#241717"/>
-  <path d="M141 108c-5 26-15 41-30 53l6 16c21-12 34-31 35-60z" fill="#241717"/>
-  <path d="M143 108c13 5 24 15 30 29l-12 4c-4-10-11-18-22-24z" fill="#241717" opacity="0.72"/>
-  <path d="M82 58c9-10 19-15 30-15 13 0 23 4 32 13l-8 12c-8-7-16-10-24-10-9 0-18 3-26 10z" fill="#fbfdff"/>
-  <ellipse cx="92" cy="124" rx="10" ry="7" fill="#f0af95" opacity="0.16"/>
-  <ellipse cx="128" cy="124" rx="10" ry="7" fill="#f0af95" opacity="0.16"/>
-  <ellipse cx="96" cy="100" rx="6.1" ry="5.1" fill="#fffdfc"/>
-  <ellipse cx="124" cy="100" rx="6.1" ry="5.1" fill="#fffdfc"/>
-  <circle cx="96" cy="100" r="3.2" fill="#2f211d"/>
-  <circle cx="124" cy="100" r="3.2" fill="#2f211d"/>
-  <circle cx="97.5" cy="98.8" r="1.1" fill="#ffffff" opacity="0.9"/>
-  <circle cx="125.5" cy="98.8" r="1.1" fill="#ffffff" opacity="0.9"/>
-  <path d="M90 87c3-2 7-3 11-2M119 86c3-1 7 0 10 2" fill="none" stroke="#180e0d" stroke-width="2.2" stroke-linecap="round"/>
-  <path d="M109 103c1 7 2 12 1 18" fill="none" stroke="#d4997d" stroke-width="2.4" stroke-linecap="round"/>
-  <path d="M97 122c5 4 11 5 18 0" fill="none" stroke="#a55f49" stroke-width="3.6" stroke-linecap="round"/>
-  <path d="M91 150c5 6 12 10 19 10 9 0 16-3 22-10" fill="none" stroke="#d7a286" stroke-width="4.3" stroke-linecap="round"/>
+  <circle cx="44" cy="48" r="24" fill="#ffffff" opacity="0.12"/>
+  <path d="M54 226c8-44 27-72 56-72 29 0 48 28 56 72z" fill="#173844" opacity="0.75"/>
+  <path d="M62 171c12-18 28-27 48-27s36 9 48 27l-10 55H72z" fill="url(#shirt)"/>
+  <path d="M86 171c8 8 16 12 24 12 9 0 17-4 24-12l8 8c-9 11-20 16-32 16-13 0-24-5-33-16z" fill="#f3f6fa"/>
+  <path d="M94 144c3-9 8-13 16-13 8 0 13 4 16 13v14H94z" fill="#ce8b69"/>
+  <ellipse cx="110" cy="99" rx="34" ry="42" fill="#e3b290"/>
+  <path d="M74 92c2-36 19-58 37-58s35 22 37 58l-10 4c-5-20-14-33-27-39-13 6-22 19-27 39z" fill="#251916"/>
+  <path d="M73 108c4 28 15 49 30 63l-7 19c-22-10-34-35-35-66z" fill="#251916"/>
+  <path d="M147 108c-4 28-15 49-30 63l7 19c22-10 34-35 35-66z" fill="#251916"/>
+  <path d="M78 59c10-12 21-18 33-18 13 0 24 6 34 18" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round"/>
+  <ellipse cx="92" cy="121" rx="10" ry="7" fill="#ef9c7f" opacity="0.14"/>
+  <ellipse cx="128" cy="121" rx="10" ry="7" fill="#ef9c7f" opacity="0.14"/>
+  <path d="M92 89c4-3 9-3 13-1M116 88c4-2 9-2 13 1" fill="none" stroke="#1a100e" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="94" cy="102" r="3.2" fill="#2f211d"/>
+  <circle cx="126" cy="102" r="3.2" fill="#2f211d"/>
+  <circle cx="95.2" cy="100.9" r="0.9" fill="#ffffff" opacity="0.9"/>
+  <circle cx="127.2" cy="100.9" r="0.9" fill="#ffffff" opacity="0.9"/>
+  <path d="M109 106c1 5 1 10 0 14" fill="none" stroke="#cb8d6c" stroke-width="2.1" stroke-linecap="round"/>
+  <path d="M95 123c5 5 11 7 15 7 6 0 11-2 15-7" fill="none" stroke="#a45f4a" stroke-width="3.2" stroke-linecap="round"/>
 </svg>

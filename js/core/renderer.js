@@ -812,96 +812,117 @@
       const faceWidth = headRadius * (appearance.faceWidth || 0.94);
       const jawWidth = headRadius * (appearance.jawWidth || 0.78);
       const cheekTint = appearance.cheekTint || mixColor(skin, "#f3ae97", 0.3);
+      const cheekFullness = appearance.cheekFullness || 1;
       const earScale = appearance.earScale || 1;
-      const earX = faceWidth * 0.82;
-      const earRadiusX = headRadius * 0.15 * earScale;
-      const earRadiusY = headRadius * 0.23 * earScale;
+      const earX = faceWidth * 0.68;
+      const earRadiusX = headRadius * 0.1 * earScale;
+      const earRadiusY = headRadius * 0.14 * earScale;
       const backEarX = headX - earX * facing;
-      const faceCenterX = headX + headRadius * 0.06 * facing;
+      const faceCenterX = headX + headRadius * 0.04 * facing;
 
-      ellipse(ctx, backEarX, headY + headRadius * 0.04, earRadiusX, earRadiusY, skin, 0.96);
-      ellipse(ctx, backEarX, headY + headRadius * 0.08, earRadiusX * 0.56, earRadiusY * 0.54, alphaColor(skinShadow, 0.2), 1);
+      ellipse(ctx, backEarX, headY + headRadius * 0.06, earRadiusX, earRadiusY, alphaColor(skin, 0.86), 1);
 
       switch (faceShape) {
+        case "gentle-heart":
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.03, faceWidth * 0.95, headRadius, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.5, headY + headRadius * 0.24, jawWidth, headRadius * 0.16, headRadius * 0.13, skin);
+          break;
+        case "long-soft":
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.06, faceWidth * 0.88, headRadius * 1.05, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.66, headY + headRadius * 0.22, jawWidth * 1.28, headRadius * 0.22, headRadius * 0.14, skin);
+          break;
+        case "youth-oval":
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.02, faceWidth * 0.97, headRadius, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.52, headY + headRadius * 0.24, jawWidth * 1.02, headRadius * 0.16, headRadius * 0.13, skin);
+          break;
         case "square":
-          fillRoundRect(ctx, faceCenterX - faceWidth, headY - headRadius * 0.96, faceWidth * 2, headRadius * 1.9, headRadius * 0.34, skin);
-          fillRoundRect(ctx, faceCenterX - jawWidth * 0.9, headY + headRadius * 0.16, jawWidth * 1.72, headRadius * 0.48, headRadius * 0.16, skin);
+          fillRoundRect(ctx, faceCenterX - faceWidth, headY - headRadius * 0.94, faceWidth * 2, headRadius * 1.78, headRadius * 0.28, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.74, headY + headRadius * 0.2, jawWidth * 1.42, headRadius * 0.22, headRadius * 0.14, skin);
           break;
         case "heart":
-          ellipse(ctx, faceCenterX, headY - headRadius * 0.06, faceWidth, headRadius * 1.02, skin);
-          polygon(ctx, [[faceCenterX - jawWidth * 0.92, headY + headRadius * 0.16], [faceCenterX - jawWidth * 0.12 * facing, headY + headRadius * 0.98], [faceCenterX + jawWidth * 0.68, headY + headRadius * 0.08]], skin);
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.04, faceWidth * 0.97, headRadius, skin);
+          polygon(ctx, [[faceCenterX - jawWidth * 0.78, headY + headRadius * 0.18], [faceCenterX - jawWidth * 0.1 * facing, headY + headRadius * 0.82], [faceCenterX + jawWidth * 0.6, headY + headRadius * 0.14]], skin);
           break;
         case "narrow-oval":
-          ellipse(ctx, faceCenterX, headY - headRadius * 0.04, faceWidth * 0.92, headRadius * 1.08, skin);
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.04, faceWidth * 0.89, headRadius * 1.03, skin);
           break;
         case "soft-round":
-          ellipse(ctx, faceCenterX, headY - headRadius * 0.02, faceWidth, headRadius * 1.02, skin);
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.01, faceWidth * 0.97, headRadius * 0.98, skin);
+          break;
+        case "soft-round-child":
+          ellipse(ctx, faceCenterX, headY + headRadius * 0.01, faceWidth * 0.98, headRadius * 0.97, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.52, headY + headRadius * 0.24, jawWidth * 1.02, headRadius * 0.16, headRadius * 0.13, skin);
+          break;
+        case "compact-round":
+          ellipse(ctx, faceCenterX, headY + headRadius * 0.02, faceWidth * 0.99, headRadius * 0.97, skin);
+          fillRoundRect(ctx, faceCenterX - jawWidth * 0.56, headY + headRadius * 0.24, jawWidth * 1.06, headRadius * 0.15, headRadius * 0.13, skin);
           break;
         case "toddler-round":
-          circle(ctx, faceCenterX, headY + headRadius * 0.02, headRadius * 1.04, skin);
+          circle(ctx, faceCenterX, headY + headRadius * 0.04, headRadius * 1.02, skin);
           break;
         default:
-          ellipse(ctx, faceCenterX, headY - headRadius * 0.04, faceWidth, headRadius * 1.04, skin);
+          ellipse(ctx, faceCenterX, headY - headRadius * 0.04, faceWidth * 0.97, headRadius, skin);
       }
 
-      ellipse(ctx, faceCenterX + faceWidth * 0.24 * facing, headY + headRadius * 0.14, faceWidth * 0.26, headRadius * 0.26, alphaColor(cheekTint, 0.18), 1);
-      ellipse(ctx, faceCenterX - headRadius * 0.2, headY + headRadius * 0.14, faceWidth * 0.78, headRadius * 0.74, skinShadow, 0.1);
-      ellipse(ctx, faceCenterX + headRadius * 0.2 * facing, headY + headRadius * 0.52, jawWidth * 0.5, headRadius * 0.14, alphaColor(skinShadow, 0.08), 1);
-      ellipse(ctx, faceCenterX + headRadius * 0.18 * facing, headY - headRadius * 0.44, faceWidth * 0.5, headRadius * 0.18, alphaColor("#ffffff", 0.08), 1);
+      ellipse(ctx, faceCenterX + faceWidth * 0.16 * facing, headY + headRadius * 0.17, faceWidth * (0.12 + cheekFullness * 0.03), headRadius * (0.12 + cheekFullness * 0.03), alphaColor(cheekTint, 0.08), 1);
+      ellipse(ctx, faceCenterX + headRadius * 0.12 * facing, headY - headRadius * 0.38, faceWidth * 0.34, headRadius * 0.12, alphaColor("#ffffff", 0.05), 1);
     }
 
     drawFaceFeatures(ctx, appearance, headX, headY, headRadius, eyeColor, hairShadow, skinShadow) {
       const facing = appearance.faceDirection || 1;
-      const eyeSize = clamp(headRadius * 0.12 * (appearance.eyeSize || 1), 1.1, 2.3);
+      const eyeSpread = headRadius * (appearance.eyeSpread || 0.22);
+      const eyeSize = clamp(headRadius * 0.092 * (appearance.eyeSize || 1), 0.82, 1.72);
       const eyeY = headY + headRadius * (appearance.eyeY ?? -0.06);
       const browTilt = headRadius * (appearance.browTilt || 0);
       const browWeight = appearance.browWeight || 1;
-      const browWidth = eyeSize * (1.55 + browWeight * 0.16);
-      const noseLength = headRadius * (appearance.noseLength || 0.22);
-      const mouthWidth = headRadius * (appearance.mouthWidth || 0.32);
-      const mouthCurve = headRadius * (appearance.mouthCurve || 0.08);
+      const browLift = headRadius * (appearance.browLift || 0);
+      const browSpan = appearance.browSpan || 1;
+      const eyeRoundness = appearance.eyeRoundness || 1;
+      const featureShift = headRadius * (appearance.featureShift || 0);
+      const browWidth = eyeSize * (1.04 + browWeight * 0.1) * browSpan;
+      const noseLength = headRadius * (appearance.noseLength || 0.22) * 0.66;
+      const noseWidth = headRadius * (appearance.noseWidth || 0.07);
+      const mouthWidth = headRadius * (appearance.mouthWidth || 0.32) * 0.78;
+      const mouthCurve = headRadius * (appearance.mouthCurve || 0.08) * 0.72;
       const mouthY = headY + headRadius * (appearance.mouthY || 0.44);
-      const eyeX = headX + headRadius * 0.18 * facing;
-      const farEyeX = headX - headRadius * 0.06 * facing;
-      const noseBridgeX = headX + headRadius * 0.24 * facing;
-      const noseTipX = headX + headRadius * 0.46 * facing;
-      const mouthStartX = headX + headRadius * 0.06 * facing;
-      const mouthEndX = headX + (mouthWidth + headRadius * 0.08) * facing;
+      const smileLift = appearance.smileLift ?? 1;
+      const faceCenterX = headX + featureShift * 0.28;
+      const leftEyeX = faceCenterX - eyeSpread * 0.46;
+      const rightEyeX = faceCenterX + eyeSpread * 0.46;
+      const eyeWidth = eyeSize * (0.84 + eyeRoundness * 0.06);
+      const eyeHeight = eyeSize * (0.42 + eyeRoundness * 0.04);
+      const browY = eyeY - headRadius * 0.13 - browLift;
+      const noseBridgeX = faceCenterX + facing * headRadius * 0.01;
+      const noseTipX = faceCenterX + facing * (headRadius * 0.04 + noseLength * 0.18);
+      const noseY = eyeY + noseLength * 0.86;
+      const mouthStartX = faceCenterX - mouthWidth * 0.46;
+      const mouthEndX = faceCenterX + mouthWidth * 0.46;
+      const smilePeakX = faceCenterX + facing * mouthWidth * 0.04;
 
-      line(ctx, eyeX - browWidth * 0.8, eyeY - headRadius * 0.2, eyeX + browWidth * 0.4, eyeY - headRadius * 0.2 + browTilt, 1.05 + browWeight * 0.38, hairShadow, 0.85);
-      line(ctx, farEyeX - eyeSize * 0.3, eyeY - headRadius * 0.22, farEyeX + eyeSize * 0.12, eyeY - headRadius * 0.2, 0.9, alphaColor(hairShadow, 0.32));
+      line(ctx, leftEyeX - browWidth * 0.34, browY - browTilt * 0.2, leftEyeX + browWidth * 0.18, browY + browTilt, 0.84 + browWeight * 0.16, hairShadow, 0.66);
+      line(ctx, rightEyeX - browWidth * 0.18, browY + browTilt, rightEyeX + browWidth * 0.34, browY - browTilt * 0.2, 0.84 + browWeight * 0.16, hairShadow, 0.66);
 
-      ellipse(ctx, eyeX, eyeY, eyeSize * 1.08, eyeSize * 0.82, "#ffffff", 0.96);
-      ellipse(ctx, eyeX, eyeY - eyeSize * 0.2, eyeSize * 1.04, eyeSize * 0.3, alphaColor(hairShadow, 0.08), 1);
-      ellipse(ctx, eyeX, eyeY, eyeSize * 0.68, eyeSize * 0.64, eyeColor);
-      circle(ctx, eyeX, eyeY + eyeSize * 0.05, eyeSize * 0.24, alphaColor("#000000", 0.38), 1);
-      circle(ctx, eyeX + eyeSize * 0.16, eyeY - eyeSize * 0.12, eyeSize * 0.18, "#ffffff", 0.85);
-      line(ctx, eyeX - eyeSize * 0.46, eyeY + eyeSize * 0.9, eyeX + eyeSize * 0.34, eyeY + eyeSize * 0.86, 0.8, alphaColor(skinShadow, 0.22));
-      circle(ctx, farEyeX, eyeY + eyeSize * 0.02, eyeSize * 0.18, alphaColor(eyeColor, 0.18), 1);
+      const drawEye = (eyeX, highlightDirection) => {
+        ellipse(ctx, eyeX, eyeY, eyeWidth, eyeHeight, "#ffffff", 0.92);
+        ellipse(ctx, eyeX + eyeSize * 0.01 * highlightDirection, eyeY + eyeSize * 0.01, eyeWidth * 0.4, eyeHeight * 0.74, eyeColor, 0.96);
+        circle(ctx, eyeX + eyeSize * 0.1 * highlightDirection, eyeY - eyeSize * 0.08, eyeSize * 0.08, "#ffffff", 0.82);
+      };
+
+      drawEye(leftEyeX, 1);
+      drawEye(rightEyeX, -1);
+
+      line(ctx, noseBridgeX, eyeY + headRadius * 0.04, noseTipX, noseY, 0.74, alphaColor(skinShadow, 0.32));
+      line(ctx, noseTipX - noseWidth * 0.32, noseY + headRadius * 0.02, noseTipX, noseY + headRadius * 0.04, 0.68, alphaColor(skinShadow, 0.24));
 
       ctx.save();
-      ctx.strokeStyle = alphaColor(skinShadow, 0.62);
-      ctx.lineWidth = 1.1;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(noseBridgeX - headRadius * 0.1 * facing, eyeY + headRadius * 0.02);
-      ctx.quadraticCurveTo(noseBridgeX, eyeY + noseLength * 0.42, noseTipX, eyeY + noseLength * 0.9);
-      ctx.stroke();
-      ctx.restore();
-      line(ctx, noseTipX - headRadius * 0.08, eyeY + noseLength + headRadius * 0.02, noseTipX, eyeY + noseLength + headRadius * 0.06, 1, alphaColor(skinShadow, 0.34));
-
-      ctx.save();
-      ctx.strokeStyle = "#a55f49";
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = alphaColor("#9a584d", 0.82);
+      ctx.lineWidth = 1.05;
       ctx.lineCap = "round";
       ctx.beginPath();
       ctx.moveTo(mouthStartX, mouthY);
-      ctx.quadraticCurveTo(headX + headRadius * 0.2 * facing, mouthY + mouthCurve * 0.72, mouthEndX, mouthY);
+      ctx.quadraticCurveTo(smilePeakX, mouthY + mouthCurve * (0.24 + smileLift * 0.18), mouthEndX, mouthY + mouthCurve * 0.03);
       ctx.stroke();
       ctx.restore();
-
-      line(ctx, mouthStartX + headRadius * 0.02 * facing, mouthY - headRadius * 0.04, mouthEndX - headRadius * 0.02 * facing, mouthY - headRadius * 0.04, 0.7, alphaColor("#8d473b", 0.18));
-      line(ctx, mouthStartX + headRadius * 0.02 * facing, mouthY + headRadius * 0.06, mouthEndX - headRadius * 0.02 * facing, mouthY + headRadius * 0.06, 0.8, alphaColor("#ffffff", 0.18));
     }
 
     drawOutfitDetail(ctx, appearance, torsoWidth, torsoHeight, outfitPrimary, outfitSecondary, outfitTrim) {
@@ -1014,7 +1035,9 @@
         this.drawFaceFeatures(ctx, appearance, 0, 0, headRadius * 0.88, appearance.eye || "#2a1d17", hairShadow, skinShadow);
         if (appearance.accessory === "beard") {
           const beardScale = appearance.beardScale || 1;
-          polygon(ctx, [[-headRadius * 0.32, headRadius * 0.06], [0, headRadius * 0.56 * beardScale], [headRadius * 0.34, headRadius * 0.06]], hair, 0.9);
+          const beardWidth = appearance.beardWidth || 1;
+          ellipse(ctx, headRadius * 0.03, headRadius * 0.33, headRadius * 0.2 * beardWidth, headRadius * 0.12 * beardScale, hair, 0.84);
+          line(ctx, -headRadius * 0.03, headRadius * 0.18, headRadius * 0.16, headRadius * 0.19, 1.2, hair, 0.82);
         }
         ctx.restore();
         return;
@@ -1088,7 +1111,9 @@
 
       if (appearance.accessory === "beard") {
         const beardScale = appearance.beardScale || 1;
-        polygon(ctx, [[-headRadius * 0.42, headRadius * 0.02], [0, headRadius * 0.78 * beardScale], [headRadius * 0.46, headRadius * 0.02]], hair, 0.9);
+        const beardWidth = appearance.beardWidth || 1;
+        ellipse(ctx, headRadius * 0.03, headRadius * 0.35, headRadius * 0.23 * beardWidth, headRadius * 0.14 * beardScale, hair, 0.84);
+        line(ctx, -headRadius * 0.04, headRadius * 0.2, headRadius * 0.18, headRadius * 0.21, 1.3, hair, 0.82);
       }
       ctx.restore();
 
@@ -1099,46 +1124,64 @@
       const facing = appearance.faceDirection || 1;
       const hairStyle = appearance.hairStyle || "short";
       const accessory = appearance.accessory || "";
-      const volume = clamp(appearance.hairVolume || 1, 0.82, 1.08);
+      const volume = clamp(appearance.hairVolume || 1, 0.78, 1.2);
       const ponyLength = appearance.ponyLength || 0.92;
+      const hairlineHeight = appearance.hairlineHeight || 0;
+      const backHairDepth = appearance.backHairDepth || 1;
       const tailScale = sliding ? 0.78 : 1;
       const backDir = -facing;
-      const crownX = headX + backDir * headRadius * 0.16;
-      const crownY = headY - headRadius * 0.6;
-      const napeX = headX + backDir * headRadius * 0.5;
-      const napeY = headY - headRadius * 0.12;
-      const topCapWidth = headRadius * 0.44 * volume;
-      const topCapHeight = headRadius * 0.15;
-      const backCapWidth = headRadius * 0.3 * volume;
-      const backCapHeight = headRadius * 0.4;
-      const tuftX = headX + facing * headRadius * 0.1;
+      const crownX = headX + backDir * headRadius * 0.12;
+      const crownY = headY - headRadius * (0.64 + hairlineHeight * 0.62);
+      const fullCrownY = headY - headRadius * (0.74 + hairlineHeight * 0.22);
+      const napeX = headX + backDir * headRadius * 0.46;
+      const napeY = headY + headRadius * (-0.08 + (backHairDepth - 1) * 0.14);
+      const topCapWidth = headRadius * 0.34 * volume;
+      const topCapHeight = headRadius * 0.14;
+      const fullCrownWidth = headRadius * (0.68 + volume * 0.16);
+      const fullCrownHeight = headRadius * 0.26;
+      const backCapWidth = headRadius * 0.28 * volume;
+      const backCapHeight = headRadius * (0.34 + backHairDepth * 0.1);
+      const tuftX = headX + facing * headRadius * 0.08;
+      const style = ({
+        "headband-pony": "headband-flow",
+        "runner-crop": "parted-sweep",
+        "soccer-crop": "soft-crop-part",
+        "hoodie-swoop": "compact-swoop",
+        "long-ribbon-pony": "long-wave-back",
+        "toddler-puffs": "tiny-puffs"
+      }[hairStyle] || hairStyle);
 
       if (layer === "back") {
-        ellipse(ctx, crownX, crownY, topCapWidth * 0.8, topCapHeight * 0.72, hair, 0.95);
+        ellipse(ctx, headX + backDir * headRadius * 0.08, fullCrownY, fullCrownWidth, fullCrownHeight, hair, 0.96);
+        ellipse(ctx, headX + backDir * headRadius * 0.02, fullCrownY + headRadius * 0.03, fullCrownWidth * 0.66, fullCrownHeight * 0.56, hairShadow, 0.12);
+        ellipse(ctx, crownX, crownY, topCapWidth * 0.86, topCapHeight * 0.78, hair, 0.95);
         ellipse(ctx, napeX, napeY, backCapWidth, backCapHeight, hair, 0.94);
-        ellipse(ctx, napeX + backDir * headRadius * 0.04, napeY + headRadius * 0.08, backCapWidth * 0.74, backCapHeight * 0.62, hairShadow, 0.22);
+        ellipse(ctx, napeX + backDir * headRadius * 0.04, napeY + headRadius * 0.1, backCapWidth * 0.72, backCapHeight * 0.58, hairShadow, 0.2);
 
-        switch (hairStyle) {
-          case "headband-pony":
-            polygon(ctx, [[headX + backDir * headRadius * 0.18, headY - headRadius * 0.2], [headX + backDir * headRadius * (0.86 + ponyLength * 0.16) * tailScale, headY + headRadius * 0.18], [headX + backDir * headRadius * 0.28, headY + headRadius * 0.42]], hair);
-            line(ctx, headX + backDir * headRadius * 0.18, headY - headRadius * 0.18, headX + backDir * headRadius * 0.54, headY + headRadius * 0.08, headRadius * 0.07, hairShadow, 0.44);
+        switch (style) {
+          case "headband-flow":
+            ellipse(ctx, headX + backDir * headRadius * 0.56, headY + headRadius * 0.08, headRadius * 0.26 * volume, headRadius * 0.7 * backHairDepth, hair, 0.92);
+            polygon(ctx, [[headX + backDir * headRadius * 0.24, headY - headRadius * 0.14], [headX + backDir * headRadius * (0.9 + ponyLength * 0.22) * tailScale, headY + headRadius * 0.06], [headX + backDir * headRadius * (0.7 + ponyLength * 0.12), headY + headRadius * 0.98], [headX + backDir * headRadius * 0.34, headY + headRadius * 0.46]], hair);
+            line(ctx, headX + backDir * headRadius * 0.24, headY - headRadius * 0.16, headX + backDir * headRadius * 0.58, headY + headRadius * 0.12, headRadius * 0.05, hairShadow, 0.44);
             break;
-          case "runner-crop":
-            ellipse(ctx, headX + backDir * headRadius * 0.4, headY - headRadius * 0.2, headRadius * 0.22 * volume, headRadius * 0.22, hair, 0.92);
+          case "parted-sweep":
+            ellipse(ctx, headX + backDir * headRadius * 0.2, headY - headRadius * 0.34, headRadius * 0.18 * volume, headRadius * 0.16, hair, 0.92);
+            ellipse(ctx, headX + backDir * headRadius * 0.3, headY - headRadius * 0.02, headRadius * 0.14 * volume, headRadius * 0.16, hair, 0.9);
             break;
-          case "soccer-crop":
-            ellipse(ctx, headX + backDir * headRadius * 0.42, headY - headRadius * 0.22, headRadius * 0.24 * volume, headRadius * 0.24, hair, 0.92);
+          case "soft-crop-part":
+            ellipse(ctx, headX + backDir * headRadius * 0.26, headY - headRadius * 0.14, headRadius * 0.15 * volume, headRadius * 0.16, hair, 0.92);
             break;
-          case "hoodie-swoop":
-            ellipse(ctx, headX + backDir * headRadius * 0.34, headY - headRadius * 0.26, headRadius * 0.18 * volume, headRadius * 0.18, hair, 0.9);
+          case "compact-swoop":
+            ellipse(ctx, headX + backDir * headRadius * 0.22, headY - headRadius * 0.1, headRadius * 0.15 * volume, headRadius * 0.15, hair, 0.9);
             break;
-          case "long-ribbon-pony":
-            polygon(ctx, [[headX + backDir * headRadius * 0.16, headY - headRadius * 0.2], [headX + backDir * headRadius * (0.96 + ponyLength * 0.22) * tailScale, headY + headRadius * (0.16 + ponyLength * 0.42) * tailScale], [headX + backDir * headRadius * 0.24, headY + headRadius * 0.5]], hair);
-            line(ctx, headX + backDir * headRadius * 0.16, headY - headRadius * 0.16, headX + backDir * headRadius * 0.54, headY + headRadius * 0.18, headRadius * 0.07, hairShadow, 0.44);
+          case "long-wave-back":
+            ellipse(ctx, headX + backDir * headRadius * 0.46, headY + headRadius * 0.08, headRadius * 0.36 * volume, headRadius * 0.72 * backHairDepth, hair, 0.92);
+            polygon(ctx, [[headX + backDir * headRadius * 0.06, headY - headRadius * 0.18], [headX + backDir * headRadius * (1 + ponyLength * 0.2) * tailScale, headY + headRadius * 0.08], [headX + backDir * headRadius * (0.84 + ponyLength * 0.12), headY + headRadius * 1.04], [headX + backDir * headRadius * 0.16, headY + headRadius * 0.58]], hair);
+            line(ctx, headX + backDir * headRadius * 0.08, headY - headRadius * 0.14, headX + backDir * headRadius * 0.48, headY + headRadius * 0.24, headRadius * 0.07, hairShadow, 0.42);
             break;
-          case "toddler-puffs":
-            circle(ctx, headX + backDir * headRadius * 0.42, headY - headRadius * 0.82, headRadius * 0.16 * volume, hair);
-            circle(ctx, headX + backDir * headRadius * 0.16, headY - headRadius * 0.94, headRadius * 0.12 * volume, hair, 0.94);
+          case "tiny-puffs":
+            circle(ctx, headX + backDir * headRadius * 0.22, headY - headRadius * 0.94, headRadius * 0.12 * volume, hair);
+            circle(ctx, headX + backDir * headRadius * 0.01, headY - headRadius * 1.04, headRadius * 0.08 * volume, hair, 0.94);
             break;
           case "ponytail":
             polygon(ctx, [[headX + backDir * headRadius * 0.18, headY - headRadius * 0.18], [headX + backDir * headRadius * 0.9 * tailScale, headY + headRadius * 0.24], [headX + backDir * headRadius * 0.26, headY + headRadius * 0.38]], hair);
@@ -1158,22 +1201,42 @@
         }
 
         if (accessory === "chaos" && !sliding) {
-          line(ctx, headX + backDir * headRadius * 0.2, headY - headRadius * 0.9, headX + backDir * headRadius * 0.42, headY - headRadius * 1.06, 1.8, accessoryColor || "#ffd7c8", 0.8);
-          line(ctx, headX + backDir * headRadius * 0.38, headY - headRadius * 0.84, headX + backDir * headRadius * 0.64, headY - headRadius * 0.98, 1.8, accessoryColor || "#ffd7c8", 0.8);
+          line(ctx, headX + backDir * headRadius * 0.22, headY - headRadius * 0.94, headX + backDir * headRadius * 0.42, headY - headRadius * 1.08, 1.8, accessoryColor || "#ffd7c8", 0.8);
+          line(ctx, headX + backDir * headRadius * 0.34, headY - headRadius * 0.84, headX + backDir * headRadius * 0.58, headY - headRadius * 1.02, 1.8, accessoryColor || "#ffd7c8", 0.8);
         }
         return;
       }
 
-      fillRoundRect(ctx, crownX - topCapWidth * 0.5, crownY - topCapHeight * 0.7, topCapWidth, topCapHeight * 1.3, topCapHeight * 0.62, hair, 0.96);
-      ellipse(ctx, crownX, crownY - headRadius * 0.02, topCapWidth * 0.56, topCapHeight * 0.5, hairShadow, 0.18);
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(headX - headRadius * 1.15, headY - headRadius * 1.08, headRadius * 2.3, headRadius * 0.72);
+      ctx.clip();
+      ellipse(ctx, headX + backDir * headRadius * 0.02, fullCrownY, fullCrownWidth * 1.02, fullCrownHeight * 1.08, hair, 0.97);
+      ellipse(ctx, crownX, crownY - headRadius * 0.02, topCapWidth * 0.76, topCapHeight * 0.7, hair, 0.95);
+      ellipse(ctx, headX + backDir * headRadius * 0.04, fullCrownY - headRadius * 0.02, fullCrownWidth * 0.62, fullCrownHeight * 0.28, hairShadow, 0.1);
+      ctx.restore();
 
-      switch (hairStyle) {
-        case "headband-pony":
-          line(ctx, headX + backDir * headRadius * 0.48, headY - headRadius * 0.44, headX + facing * headRadius * 0.08, headY - headRadius * 0.42, headRadius * 0.1, accessoryColor || "#ffffff", 0.96);
+      switch (style) {
+        case "headband-flow":
+          line(ctx, headX + backDir * headRadius * 0.38, headY - headRadius * 0.48, headX + facing * headRadius * 0.16, headY - headRadius * 0.46, headRadius * 0.11, accessoryColor || "#ffffff", 0.98);
+          line(ctx, headX + backDir * headRadius * 0.02, headY - headRadius * 0.62, headX + facing * headRadius * 0.02, headY - headRadius * 0.48, headRadius * 0.03, alphaColor(hairShadow, 0.24), 1);
           break;
+        case "parted-sweep":
+          line(ctx, headX + backDir * headRadius * 0.04, headY - headRadius * 0.64, headX + facing * headRadius * 0.12, headY - headRadius * 0.48, headRadius * 0.04, alphaColor(hairShadow, 0.32), 1);
+          break;
+        case "compact-swoop":
         case "hoodie-swoop":
         case "swoop":
-          polygon(ctx, [[crownX - backDir * headRadius * 0.04, crownY - headRadius * 0.02], [tuftX, headY - headRadius * 0.56], [headX + facing * headRadius * 0.04, headY - headRadius * 0.34]], hairShadow, 0.5);
+          line(ctx, crownX - backDir * headRadius * 0.02, headY - headRadius * 0.64, headX + facing * headRadius * 0.02, headY - headRadius * 0.48, headRadius * 0.04, alphaColor(hairShadow, 0.24), 1);
+          break;
+        case "soft-crop-part":
+          line(ctx, crownX - backDir * headRadius * 0.01, headY - headRadius * 0.62, headX + facing * headRadius * 0.06, headY - headRadius * 0.48, headRadius * 0.03, alphaColor(hairShadow, 0.18), 1);
+          break;
+        case "long-wave-back":
+          line(ctx, crownX, headY - headRadius * 0.64, headX + facing * headRadius * 0.03, headY - headRadius * 0.5, headRadius * 0.03, alphaColor(hairShadow, 0.14), 1);
+          break;
+        case "tiny-puffs":
+          ellipse(ctx, crownX - backDir * headRadius * 0.02, crownY - headRadius * 0.02, topCapWidth * 0.28, topCapHeight * 0.28, hairShadow, 0.1);
           break;
         case "long-ribbon-pony":
           line(ctx, headX + backDir * headRadius * 0.12, headY - headRadius * 0.2, headX + backDir * headRadius * 0.22, headY - headRadius * 0.08, headRadius * 0.08, accessoryColor || "#ffd166", 0.86);
