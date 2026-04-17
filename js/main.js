@@ -18,11 +18,14 @@
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
   const musicTrackName = document.getElementById("musicTrackName");
+  const prevTrackBtn = document.getElementById("prevTrackBtn");
+  const nextTrackBtn = document.getElementById("nextTrackBtn");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlayText = document.getElementById("overlayText");
   const overlayNamePrompt = document.getElementById("overlayNamePrompt");
   const overlayNameInput = document.getElementById("overlayNameInput");
   const overlayNameHint = document.getElementById("overlayNameHint");
+  const overlayDetails = document.getElementById("overlayDetails");
   const overlayPrimary = document.getElementById("overlayPrimary");
   const overlaySecondary = document.getElementById("overlaySecondary");
   const overlayTertiary = document.getElementById("overlayTertiary");
@@ -40,9 +43,13 @@
   input.attachMobileControls(document.querySelector(".mobile-controls"));
 
   const audio = new FamilyDash.AudioSystem();
-  audio.setTrackChangeListener((track) => {
+  audio.setTrackChangeListener((track, index) => {
     if (!musicTrackName || !track) return;
-    musicTrackName.textContent = track.name;
+    const totalTracks = audio.soundtracks?.length || 0;
+    const trackNumber = Number.isFinite(index) ? index + 1 : 0;
+    musicTrackName.textContent = totalTracks > 0
+      ? `${track.name} (${trackNumber} of ${totalTracks})`
+      : track.name;
   });
 
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
@@ -63,6 +70,16 @@
     { id: "coinDoubler", name: "Coin Doubler", cost: 34, desc: "2x coin value this run" },
     { id: "phaseStart", name: "Phase Start", cost: 30, desc: "Start run with temporary phase" }
   ];
+  const CHARACTER_MISSIONS = {
+    drea: { title: "Lead The Pack", description: "Win 3 runs with Drea.", type: "wins_total", target: 3 },
+    tim: { title: "Heat Check", description: "Reach Combo 10 in a single run.", type: "max_combo", target: 10 },
+    david: { title: "Clean Boots", description: "Land 8 perfect dodges in one run.", type: "perfects_single_run", target: 8 },
+    liam: { title: "Vacuum Mode", description: "Collect 65 coins in one run.", type: "coins_single_run", target: 65 },
+    ariel: { title: "Untouchable", description: "Clear any level with no hits.", type: "no_hit_wins", target: 1 },
+    addy: { title: "Tiny Menace", description: "Trigger 6 close calls in one run.", type: "close_calls_single_run", target: 6 },
+    grandma: { title: "Steady Hands", description: "Reach a clean streak of 18 obstacle clears.", type: "clean_streak_single_run", target: 18 },
+    grandpa: { title: "Boss Collector", description: "Earn 2 boss trophies.", type: "boss_trophies", target: 2 }
+  };
 
   let selectedCharacter = null;
   let selectedLevel = null;
@@ -85,12 +102,23 @@
     wallet: Number(localStorage.getItem("familyDashWallet") || 0),
     playerName: localStorage.getItem("familyDashPlayerName") || "",
     sessions: readJSON("familyDashSessions", []),
-    inventory: readJSON("familyDashInventory", {})
+    inventory: readJSON("familyDashInventory", {}),
+    progress: readJSON("familyDashProgress", {})
   };
 
   if (!Array.isArray(profile.sessions)) profile.sessions = [];
   if (typeof profile.inventory !== "object" || Array.isArray(profile.inventory)) profile.inventory = {};
   if (typeof profile.playerName !== "string") profile.playerName = "";
+
+  function normalizeProgress(progress) {
+    const source = progress && typeof progress === "object" && !Array.isArray(progress) ? progress : {};
+    const levels = source.levels && typeof source.levels === "object" && !Array.isArray(source.levels) ? source.levels : {};
+    const bossTrophies = source.bossTrophies && typeof source.bossTrophies === "object" && !Array.isArray(source.bossTrophies) ? source.bossTrophies : {};
+    const characterMissions = source.characterMissions && typeof source.characterMissions === "object" && !Array.isArray(source.characterMissions) ? source.characterMissions : {};
+    return { levels, bossTrophies, characterMissions };
+  }
+
+  profile.progress = normalizeProgress(profile.progress);
 
   function saveProfile() {
     localStorage.setItem("familyDashHighScore", String(profile.highScore));
@@ -98,6 +126,7 @@
     localStorage.setItem("familyDashPlayerName", profile.playerName);
     localStorage.setItem("familyDashSessions", JSON.stringify(profile.sessions.slice(-25)));
     localStorage.setItem("familyDashInventory", JSON.stringify(profile.inventory));
+    localStorage.setItem("familyDashProgress", JSON.stringify(profile.progress));
   }
 
   function sanitizePlayerName(name) {
@@ -117,6 +146,93 @@
   }
 
   profile.playerName = sanitizePlayerName(profile.playerName);
+
+  function getLevelProgress(levelId) {
+    const key = String(levelId);
+    if (!profile.progress.levels[key] || typeof profile.progress.levels[key] !== "object") {
+      profile.progress.levels[key] = { bestStars: 0, bestScore: 0, bestCoins: 0, noHitClear: false, completions: 0 };
+    }
+    return profile.progress.levels[key];
+  }
+
+  function getBossTrophyRoster(levelId) {
+    const key = String(levelId);
+    if (!profile.progress.bossTrophies[key] || typeof profile.progress.bossTrophies[key] !== "object") {
+      profile.progress.bossTrophies[key] = {};
+    }
+    return profile.progress.bossTrophies[key];
+  }
+
+  function hasBossTrophy(levelId, characterId) {
+    return Boolean(getBossTrophyRoster(levelId)[characterId]);
+  }
+
+  function countBossTrophiesForLevel(levelId) {
+    return Object.keys(getBossTrophyRoster(levelId)).length;
+  }
+
+  function countBossTrophiesForCharacter(characterId) {
+    return Object.values(profile.progress.bossTrophies).reduce((count, roster) => count + (roster && roster[characterId] ? 1 : 0), 0);
+  }
+
+  function getCharacterMission(characterId) {
+    return CHARACTER_MISSIONS[characterId] || null;
+  }
+
+  function getMissionRecord(characterId) {
+    if (!profile.progress.characterMissions[characterId] || typeof profile.progress.characterMissions[characterId] !== "object") {
+      profile.progress.characterMissions[characterId] = { value: 0, completed: false };
+    }
+    return profile.progress.characterMissions[characterId];
+  }
+
+  function getMissionStatus(characterId) {
+    const mission = getCharacterMission(characterId);
+    if (!mission) return null;
+    const record = getMissionRecord(characterId);
+    const rawValue = mission.type === "boss_trophies" ? countBossTrophiesForCharacter(characterId) : Number(record.value) || 0;
+    const value = Math.min(mission.target, rawValue);
+    const completed = record.completed || value >= mission.target;
+    record.value = value;
+    record.completed = completed;
+    return { ...mission, value, completed };
+  }
+
+  function getLevelCoinGoal(level) {
+    return 18 + level.id * 6;
+  }
+
+  function evaluateLevelGoals(level, result) {
+    const coinGoal = getLevelCoinGoal(level);
+    const cleared = result.outcome === "win";
+    const noHit = cleared && (result.stats?.hitsTaken || 0) === 0;
+    const coinGoalMet = cleared && result.coins >= coinGoal;
+    const goals = [
+      { id: "clear", label: "Finish level", complete: cleared },
+      { id: "coins", label: `Collect ${coinGoal} coins`, complete: coinGoalMet },
+      { id: "noHit", label: "No-hit clear", complete: noHit }
+    ];
+    const stars = goals.reduce((count, goal) => count + (goal.complete ? 1 : 0), 0);
+    return { coinGoal, goals, stars, noHit, coinGoalMet };
+  }
+
+  function renderStarsMarkup(stars, maxStars) {
+    return Array.from({ length: maxStars }, (_, index) => `<span class="star ${index < stars ? "fill" : ""}">★</span>`).join("");
+  }
+
+  function renderMissionMarkup(characterId) {
+    const mission = getMissionStatus(characterId);
+    if (!mission) return "";
+    return `
+      <div class="mission-summary ${mission.completed ? "complete" : ""}">
+        <div class="mission-summary-top">
+          <strong>${escapeHtml(mission.title)}</strong>
+          <span class="mission-badge">${mission.completed ? "Complete" : `${mission.value}/${mission.target}`}</span>
+        </div>
+        <p>${escapeHtml(mission.description)}</p>
+      </div>
+    `;
+  }
 
   function switchScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
@@ -201,6 +317,7 @@
           <p><strong>Watch out:</strong> ${character.weakness}</p>
         </div>
         <div class="character-stat-list">${statsMarkup}</div>
+        ${renderMissionMarkup(character.id)}
       `;
 
       if (selectedCharacter === character.id) card.classList.add("selected");
@@ -262,6 +379,15 @@
   function renderLevelCards() {
     levelGrid.innerHTML = "";
     FamilyDash.LEVELS.forEach((level) => {
+      const progress = getLevelProgress(level.id);
+      const coinGoal = getLevelCoinGoal(level);
+      const goalStates = [
+        { label: "Clear", complete: progress.completions > 0 },
+        { label: `${coinGoal} Coins`, complete: progress.bestCoins >= coinGoal },
+        { label: "No Hit", complete: progress.noHitClear }
+      ];
+      const trophyCount = level.bossEncounter ? countBossTrophiesForLevel(level.id) : 0;
+      const selectedCharacterHasTrophy = selectedCharacter ? hasBossTrophy(level.id, selectedCharacter) : false;
       const card = document.createElement("article");
       card.className = "card level-card";
       card.innerHTML = `
@@ -269,9 +395,15 @@
           <h3>Level ${level.id}: ${level.name}</h3>
           <span class="level-biome">${level.biome}</span>
         </div>
+        <div class="level-stars">${renderStarsMarkup(progress.bestStars || 0, 3)}</div>
         <p>${level.description}</p>
         <p><strong>Distance:</strong> ${level.length}m</p>
         <p><strong>Difficulty Growth:</strong> ${(level.difficultyGrowth * 100).toFixed(0)}%</p>
+        <div class="level-goals">
+          ${goalStates.map((goal) => `<span class="goal-pill ${goal.complete ? "complete" : ""}">${goal.complete ? "Done" : "Open"}: ${goal.label}</span>`).join("")}
+        </div>
+        <p class="level-progress-copy"><strong>Best Score:</strong> ${progress.bestScore || 0}</p>
+        ${level.bossEncounter ? `<p class="level-progress-copy"><strong>Boss Trophies:</strong> ${trophyCount}/${FamilyDash.CHARACTERS.length}${selectedCharacter ? ` • ${selectedCharacterHasTrophy ? "selected runner earned one" : "selected runner still missing one"}` : ""}</p>` : ""}
       `;
 
       if (selectedLevel === level.id) card.classList.add("selected");
@@ -299,6 +431,14 @@
 
   function updateHud(data) {
     const character = FamilyDash.getCharacterById(selectedCharacter);
+    const activeBuffs = [];
+    if (data.shield > 0) activeBuffs.push(`Shield ${data.shield.toFixed(1)}s`);
+    if (data.rush > 0) activeBuffs.push(`Rush ${data.rush.toFixed(1)}s`);
+    if (data.phase > 0) activeBuffs.push(`Phase ${data.phase.toFixed(1)}s`);
+    if (data.coinBurst > 0) activeBuffs.push(`Coin+ ${data.coinBurst.toFixed(1)}s`);
+    const skillText = data.skillLabel
+      ? `${escapeHtml(data.skillLabel)}${data.skillScore > 0 ? ` +${data.skillScore}` : ""}`
+      : "Build combo with coins, close calls, and perfect reads";
     const runnerMarkup = character
       ? `
         <div class="hud-runner">
@@ -322,8 +462,11 @@
       <div class="hud-card"><span>Score</span><strong>${data.score}</strong></div>
       <div class="hud-card"><span>Coins</span><strong>${data.coins}</strong></div>
       <div class="hud-card"><span>Distance</span><strong>${data.distance}m</strong></div>
-      <div class="hud-card"><span>Shield</span><strong>${data.shield > 0 ? `${data.shield.toFixed(1)}s` : "Ready"}</strong></div>
-      <div class="hud-card"><span>Rush</span><strong>${data.rush > 0 ? `${data.rush.toFixed(1)}s` : "Idle"}</strong></div>
+      <div class="hud-card hud-card-accent"><span>Combo</span><strong>x${data.comboMultiplier.toFixed(2)}</strong><div class="hud-subtext">${data.combo > 0 ? `${data.combo} combo built` : "No combo yet"}</div></div>
+      <div class="hud-card"><span>Coin Chain</span><strong>${Math.max(1, data.coinChain || 0)}x</strong><div class="hud-subtext">Keep coins flowing to keep the chain alive</div></div>
+      <div class="hud-card"><span>Clean Streak</span><strong>${data.cleanStreak || 0}</strong><div class="hud-subtext">${data.perfectDodges || 0} perfect • ${data.closeCalls || 0} close calls</div></div>
+      <div class="hud-card"><span>Powerups</span><strong>${activeBuffs.length ? activeBuffs[0] : "Idle"}</strong><div class="hud-subtext">${activeBuffs.length > 1 ? activeBuffs.slice(1).join(" • ") : activeBuffs.length ? "Stack active" : "No active effects"}</div></div>
+      <div class="hud-card"><span>Skill Feed</span><strong>${skillText}</strong></div>
       <div class="hud-card"><span>Status</span><strong>${String(data.status || "").replace(/^./, (charValue) => charValue.toUpperCase())}</strong></div>
       <div class="hud-card"><span>Best</span><strong>${profile.highScore}</strong></div>
     `;
@@ -350,6 +493,8 @@
     overlaySecondary.textContent = secondaryLabel || "";
     overlayTertiary.hidden = !tertiaryLabel;
     overlayTertiary.textContent = tertiaryLabel;
+    overlayDetails.hidden = !config.detailsHtml;
+    overlayDetails.innerHTML = config.detailsHtml || "";
 
     overlayNamePrompt.hidden = !showNamePrompt;
     overlayNameInput.value = showNamePrompt ? sanitizePlayerName(config.nameValue || profile.playerName) : "";
@@ -408,6 +553,62 @@
 
   function saveMissionResult(result) {
     const playerName = sanitizePlayerName(result.playerName);
+    const level = FamilyDash.LEVELS.find((entry) => entry.id === result.levelId);
+    const goalSummary = evaluateLevelGoals(level, result);
+    const levelProgress = getLevelProgress(result.levelId);
+    const previousBestStars = levelProgress.bestStars || 0;
+    const levelStarsImproved = goalSummary.stars > previousBestStars;
+    levelProgress.bestStars = Math.max(levelProgress.bestStars || 0, goalSummary.stars);
+    levelProgress.bestScore = Math.max(levelProgress.bestScore || 0, result.score);
+    levelProgress.bestCoins = Math.max(levelProgress.bestCoins || 0, result.coins);
+    levelProgress.noHitClear = Boolean(levelProgress.noHitClear || goalSummary.noHit);
+    if (result.outcome === "win") levelProgress.completions = (levelProgress.completions || 0) + 1;
+
+    let bossTrophyEarned = false;
+    if (level?.bossEncounter && result.outcome === "win" && result.stats?.bossDefeated) {
+      const roster = getBossTrophyRoster(result.levelId);
+      bossTrophyEarned = !roster[result.character.id];
+      roster[result.character.id] = true;
+    }
+
+    const mission = getCharacterMission(result.character.id);
+    const missionRecord = mission ? getMissionRecord(result.character.id) : null;
+    let missionValue = missionRecord ? Number(missionRecord.value) || 0 : 0;
+    if (mission && missionRecord) {
+      switch (mission.type) {
+        case "wins_total":
+          if (result.outcome === "win") missionValue += 1;
+          break;
+        case "max_combo":
+          missionValue = Math.max(missionValue, result.stats?.maxCombo || 0);
+          break;
+        case "perfects_single_run":
+          missionValue = Math.max(missionValue, result.stats?.perfectDodges || 0);
+          break;
+        case "coins_single_run":
+          missionValue = Math.max(missionValue, result.coins || 0);
+          break;
+        case "no_hit_wins":
+          if (goalSummary.noHit) missionValue += 1;
+          break;
+        case "close_calls_single_run":
+          missionValue = Math.max(missionValue, result.stats?.closeCalls || 0);
+          break;
+        case "clean_streak_single_run":
+          missionValue = Math.max(missionValue, result.stats?.longestCleanStreak || 0);
+          break;
+        case "boss_trophies":
+          missionValue = countBossTrophiesForCharacter(result.character.id);
+          break;
+        default:
+          break;
+      }
+      const missionCompletedBefore = Boolean(missionRecord.completed);
+      missionRecord.value = Math.min(mission.target, missionValue);
+      missionRecord.completed = missionRecord.value >= mission.target;
+      missionRecord.justCompleted = !missionCompletedBefore && missionRecord.completed;
+    }
+
     profile.playerName = playerName;
     profile.wallet += result.coins;
     profile.highScore = Math.max(profile.highScore, result.score);
@@ -416,13 +617,39 @@
       playerName,
       character: result.character.name,
       level: result.levelId,
-      date: new Date().toLocaleDateString()
+      date: new Date().toLocaleDateString(),
+      stars: goalSummary.stars
     });
     saveProfile();
     renderScoreboard();
+    return {
+      playerName,
+      goalSummary,
+      levelStarsImproved,
+      bossTrophyEarned,
+      missionStatus: mission ? getMissionStatus(result.character.id) : null,
+      missionJustCompleted: Boolean(missionRecord && missionRecord.justCompleted)
+    };
   }
 
-  function showMissionOutcomeOverlay(result) {
+  function showMissionOutcomeOverlay(result, progression) {
+    const starsMarkup = renderStarsMarkup(progression.goalSummary.stars, 3);
+    const missionStatus = progression.missionStatus;
+    const detailsHtml = `
+      <div class="overlay-stats-grid">
+        <div class="overlay-stat-card"><span>Stars</span><strong>${starsMarkup}</strong></div>
+        <div class="overlay-stat-card"><span>Best Combo</span><strong>x${result.stats?.maxCombo || 0}</strong></div>
+        <div class="overlay-stat-card"><span>Perfects</span><strong>${result.stats?.perfectDodges || 0}</strong></div>
+        <div class="overlay-stat-card"><span>Close Calls</span><strong>${result.stats?.closeCalls || 0}</strong></div>
+      </div>
+      <div class="overlay-detail-block">
+        <strong>Level Goals</strong>
+        <div class="overlay-goals">${progression.goalSummary.goals.map((goal) => `<span class="goal-pill ${goal.complete ? "complete" : ""}">${goal.complete ? "Done" : "Open"}: ${escapeHtml(goal.label)}</span>`).join("")}</div>
+      </div>
+      ${progression.levelStarsImproved ? `<div class="overlay-detail-block"><strong>New Star Record</strong><p>This run set a new best star rating for the level.</p></div>` : ""}
+      ${progression.bossTrophyEarned ? `<div class="overlay-detail-block"><strong>Boss Trophy Earned</strong><p>${escapeHtml(result.character.name)} claimed this level's boss trophy.</p></div>` : ""}
+      ${missionStatus ? `<div class="overlay-detail-block"><strong>Character Mission</strong><p>${escapeHtml(missionStatus.title)} • ${missionStatus.value}/${missionStatus.target}${progression.missionJustCompleted ? " • Completed!" : ""}</p></div>` : ""}
+    `;
     const details = `${result.playerName} ran ${Math.floor(result.distance)}m with ${result.character.name}, scored ${result.score}, collected ${result.coins} coins. Wallet: ${profile.wallet}.`;
     if (result.outcome === "win") {
       showOverlay(
@@ -441,10 +668,11 @@
         () => openStore(),
         result.levelId < FamilyDash.LEVELS.length
           ? {
+              detailsHtml,
               tertiaryLabel: "Choose Character",
               tertiaryAction: () => switchScreen("character")
             }
-          : null
+          : { detailsHtml }
       );
       return;
     }
@@ -457,6 +685,7 @@
       () => startRun(),
       () => openStore(),
       {
+        detailsHtml,
         tertiaryLabel: "Choose Character",
         tertiaryAction: () => switchScreen("character")
       }
@@ -479,8 +708,8 @@
       (playerName) => {
         const finalName = sanitizePlayerName(playerName);
         if (!finalName) return;
-        saveMissionResult({ ...result, playerName: finalName });
-        showMissionOutcomeOverlay({ ...result, playerName: finalName });
+        const progression = saveMissionResult({ ...result, playerName: finalName });
+        showMissionOutcomeOverlay({ ...result, playerName: finalName }, progression);
       },
       null,
       {
@@ -508,12 +737,13 @@
       audio,
       onHud: updateHud,
       onPause: openPauseOverlay,
-      onEnd: ({ outcome, score, coins, distance }) => {
+      onEnd: ({ outcome, score, coins, distance, stats }) => {
         promptForMissionName({
           outcome,
           score,
           coins,
           distance,
+          stats,
           character,
           levelId: selectedLevel
         });
@@ -531,13 +761,35 @@
       level: level.id,
       status: "running",
       shield: 0,
-      rush: 0
+      rush: 0,
+      phase: 0,
+      coinBurst: 0,
+      combo: 0,
+      comboMultiplier: 1,
+      coinChain: 0,
+      cleanStreak: 0,
+      perfectDodges: 0,
+      closeCalls: 0,
+      skillLabel: "",
+      skillScore: 0
     });
     game.start(character, level, runModifiers);
   }
 
   function activateAudio() {
     audio.startMusic();
+  }
+
+  if (prevTrackBtn) {
+    prevTrackBtn.addEventListener("click", () => {
+      audio.previousTrack();
+    });
+  }
+
+  if (nextTrackBtn) {
+    nextTrackBtn.addEventListener("click", () => {
+      audio.nextTrack();
+    });
   }
 
   startBtn.addEventListener("click", () => {

@@ -281,6 +281,52 @@ button:disabled {
   cursor: pointer;
 }
 
+.level-stars {
+  display: flex;
+  gap: 0.18rem;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.star {
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.24);
+}
+
+.star.fill {
+  color: #ffd166;
+}
+
+.level-goals,
+.overlay-goals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.55rem;
+}
+
+.goal-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.32rem 0.62rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #dcebf9;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.goal-pill.complete {
+  background: rgba(88, 215, 176, 0.14);
+  border-color: rgba(88, 215, 176, 0.28);
+  color: #d8fff3;
+}
+
+.level-progress-copy {
+  color: var(--muted);
+}
+
 .level-card-top h3 {
   font-size: 1.08rem;
 }
@@ -384,6 +430,39 @@ button:disabled {
   margin-top: 0.2rem;
 }
 
+.mission-summary {
+  margin-top: 0.2rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.mission-summary.complete {
+  background: rgba(88, 215, 176, 0.12);
+  border-color: rgba(88, 215, 176, 0.28);
+}
+
+.mission-summary-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+.mission-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.26rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 209, 102, 0.16);
+  color: #fff0c3;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .character-stat {
   display: grid;
   grid-template-columns: 72px 1fr;
@@ -469,6 +548,17 @@ button:disabled {
 
 .hud-card-primary {
   background: linear-gradient(135deg, rgba(255, 209, 102, 0.18), rgba(88, 215, 176, 0.18));
+}
+
+.hud-card-accent {
+  background: linear-gradient(135deg, rgba(255, 209, 102, 0.16), rgba(255, 179, 71, 0.18));
+}
+
+.hud-subtext {
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.35;
 }
 
 .hud-runner {
@@ -569,6 +659,24 @@ kbd {
   min-height: 100%;
 }
 
+.soundtrack-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.soundtrack-controls {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.soundtrack-controls button {
+  min-width: 74px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.84rem;
+}
+
 .mobile-controls {
   margin-top: 0.8rem;
   display: none;
@@ -579,6 +687,46 @@ kbd {
 .overlay-panel {
   max-width: 720px;
   margin: 0 auto;
+}
+
+.overlay-details {
+  display: grid;
+  gap: 0.85rem;
+  margin: 1rem 0;
+}
+
+.overlay-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.6rem;
+}
+
+.overlay-stat-card,
+.overlay-detail-block {
+  border-radius: 18px;
+  background: rgba(9, 18, 30, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.85rem 0.95rem;
+}
+
+.overlay-stat-card span {
+  display: block;
+  font-size: 0.74rem;
+  color: #aac4db;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.overlay-stat-card strong {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 1.12rem;
+}
+
+.overlay-detail-block strong {
+  display: block;
+  margin-bottom: 0.35rem;
 }
 
 .overlay-name-prompt {
@@ -667,6 +815,19 @@ kbd {
 
   .actions button,
   .mobile-controls button {
+    width: 100%;
+  }
+
+  .soundtrack-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .soundtrack-controls {
+    width: 100%;
+  }
+
+  .soundtrack-controls button {
     width: 100%;
   }
 

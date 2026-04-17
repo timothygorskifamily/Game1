@@ -71,7 +71,13 @@
             </aside>
             <div class="soundtrack-banner">
               <strong>Soundtrack</strong>
-              <span id="musicTrackName">Stand By</span>
+              <div class="soundtrack-row">
+                <span id="musicTrackName">Stand By</span>
+                <div class="soundtrack-controls">
+                  <button id="prevTrackBtn" type="button" aria-label="Previous soundtrack">Prev</button>
+                  <button id="nextTrackBtn" type="button" aria-label="Next soundtrack">Next</button>
+                </div>
+              </div>
             </div>
           </div>
           <div class="mobile-controls">
@@ -89,6 +95,7 @@
             <input id="overlayNameInput" type="text" maxlength="24" autocomplete="name" placeholder="Enter your name" />
             <p id="overlayNameHint" class="overlay-name-hint"></p>
           </div>
+          <div id="overlayDetails" class="overlay-details" hidden></div>
           <div class="actions">
             <button id="overlayPrimary" class="primary"></button>
             <button id="overlaySecondary"></button>
