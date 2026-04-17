@@ -14,11 +14,84 @@
     { name: "Cyber Night", biome: "cyber", ground: "#344260", sky: "#18203c" }
   ];
 
+  const BOSS_ENCOUNTERS = {
+    3: {
+      tier: "mini",
+      style: "bogbeast",
+      spawnAt: 0.56,
+      width: 126,
+      height: 94,
+      damage: 1,
+      moveSpeed: 10,
+      color: "#5e7c50",
+      gapX: 0.34,
+      gapY: 0.22,
+      gapWidth: 0.38,
+      gapHeight: 0.42
+    },
+    6: {
+      tier: "mini",
+      style: "magma-ogre",
+      spawnAt: 0.61,
+      width: 150,
+      height: 112,
+      damage: 1,
+      moveSpeed: 14,
+      color: "#87453a",
+      gapX: 0.33,
+      gapY: 0.24,
+      gapWidth: 0.36,
+      gapHeight: 0.4
+    },
+    8: {
+      tier: "mini",
+      style: "tide-crab-lord",
+      spawnAt: 0.66,
+      width: 176,
+      height: 128,
+      damage: 1,
+      moveSpeed: 18,
+      color: "#4d677a",
+      gapX: 0.32,
+      gapY: 0.25,
+      gapWidth: 0.34,
+      gapHeight: 0.38
+    },
+    9: {
+      tier: "mini",
+      style: "vine-jaguar",
+      spawnAt: 0.7,
+      width: 198,
+      height: 142,
+      damage: 1,
+      moveSpeed: 22,
+      color: "#47603a",
+      gapX: 0.29,
+      gapY: 0.24,
+      gapWidth: 0.38,
+      gapHeight: 0.44
+    },
+    10: {
+      tier: "final",
+      style: "cyber-colossus",
+      spawnAt: 0.79,
+      width: 248,
+      height: 184,
+      damage: 2,
+      moveSpeed: 8,
+      color: "#5568a4",
+      gapX: 0.38,
+      gapY: 0.28,
+      gapWidth: 0.24,
+      gapHeight: 0.34
+    }
+  };
+
   FamilyDash.LEVELS = themes.map((t, index) => {
     const id = index + 1;
     const starterPool = ["cone", "toyBox", "pile", "sign"];
     const midPool = ["cone", "toyBox", "pile", "sign", "ramp", "bench", "drone"];
-    const latePool = ["cone", "toyBox", "pile", "sign", "ramp", "bench", "drone", "barrel", "crystal"];
+    const latePool = ["cone", "toyBox", "pile", "sign", "ramp", "bench", "drone", "barrel", "crystal", "monster"];
     return {
       id,
       name: t.name,
@@ -29,10 +102,44 @@
       difficultyGrowth: 0.09 + id * 0.015,
       backdrop: { sky: t.sky, hill: "#5d78a1", city: "#4f678f", ground: t.ground },
       obstaclePool: id < 3 ? starterPool : id < 6 ? midPool : latePool,
+      bossEncounter: BOSS_ENCOUNTERS[id] || null,
       coinRate: Math.min(0.95, 0.58 + id * 0.035),
       powerupRate: Math.min(0.5, 0.16 + id * 0.02)
     };
   });
+
+  const MONSTER_PROFILES = {
+    volcano: [
+      { style: "imp", motion: "hop", moveSpeed: 88, motionHeight: 40, motionRate: 5.8 },
+      { style: "emberbat", motion: "fly", moveSpeed: 76, motionHeight: 18, motionRate: 3.8, flightOffset: 104 }
+    ],
+    snow: [
+      { style: "yeti", motion: "hop", moveSpeed: 72, motionHeight: 34, motionRate: 4.4 },
+      { style: "frostbat", motion: "fly", moveSpeed: 82, motionHeight: 16, motionRate: 3.6, flightOffset: 110 }
+    ],
+    beach: [
+      { style: "crab", motion: "ground", moveSpeed: 96, motionHeight: 0, motionRate: 0 },
+      { style: "gullmonster", motion: "fly", moveSpeed: 86, motionHeight: 14, motionRate: 3.2, flightOffset: 116 }
+    ],
+    jungle: [
+      { style: "lizard", motion: "hop", moveSpeed: 90, motionHeight: 30, motionRate: 5.2 },
+      { style: "bat", motion: "fly", moveSpeed: 92, motionHeight: 20, motionRate: 4.1, flightOffset: 108 }
+    ],
+    cyber: [
+      { style: "crawler", motion: "ground", moveSpeed: 104, motionHeight: 0, motionRate: 0 },
+      { style: "sentinel", motion: "fly", moveSpeed: 94, motionHeight: 16, motionRate: 3.4, flightOffset: 112 }
+    ]
+  };
+
+  FamilyDash.getMonsterProfile = function (biome, variant) {
+    const profiles = MONSTER_PROFILES[biome];
+    if (!profiles || !profiles.length) return null;
+    return profiles[Math.abs(variant || 0) % profiles.length];
+  };
+
+  FamilyDash.getBossEncounter = function (levelId) {
+    return BOSS_ENCOUNTERS[levelId] || null;
+  };
 
   function box(x, y, width, height) {
     return { x, y, width, height };
@@ -299,6 +406,91 @@
               box(0.66, 0.24, 0.16, 0.54)
             ];
         }
+      }
+    },
+    monster: {
+      width: 58,
+      height: 48,
+      damage: 1,
+      kickable: false,
+      color: "#6b4053",
+      moveSpeed(level) {
+        return 54 + level.id * 6;
+      },
+      collisionBoxes(obstacle) {
+        switch (obstacle.style) {
+          case "imp":
+            return [
+              box(0.22, 0.14, 0.54, 0.62),
+              box(0.28, 0.74, 0.12, 0.18),
+              box(0.58, 0.74, 0.12, 0.18)
+            ];
+          case "yeti":
+            return [
+              box(0.18, 0.12, 0.64, 0.66),
+              box(0.22, 0.78, 0.18, 0.14),
+              box(0.6, 0.78, 0.18, 0.14)
+            ];
+          case "crab":
+            return [
+              box(0.12, 0.42, 0.76, 0.28),
+              box(0.24, 0.24, 0.52, 0.18)
+            ];
+          case "lizard":
+            return [
+              box(0.12, 0.38, 0.68, 0.24),
+              box(0.54, 0.24, 0.2, 0.18)
+            ];
+          case "crawler":
+            return [
+              box(0.18, 0.26, 0.64, 0.4),
+              box(0.24, 0.68, 0.52, 0.12)
+            ];
+          case "emberbat":
+          case "frostbat":
+          case "bat":
+            return [
+              box(0.24, 0.26, 0.52, 0.24),
+              box(0.34, 0.5, 0.32, 0.18)
+            ];
+          case "gullmonster":
+            return [
+              box(0.2, 0.22, 0.58, 0.28),
+              box(0.42, 0.5, 0.2, 0.2)
+            ];
+          case "sentinel":
+            return [box(0.22, 0.18, 0.56, 0.48)];
+          default:
+            return [box(0.16, 0.24, 0.68, 0.52)];
+        }
+      }
+    },
+    boss: {
+      width: 160,
+      height: 120,
+      damage: 1,
+      kickable: false,
+      color: "#5f5f76",
+      collisionBoxes(obstacle) {
+        const gapX = obstacle.gapX ?? 0.34;
+        const gapY = obstacle.gapY ?? 0.24;
+        const gapWidth = obstacle.gapWidth ?? 0.34;
+        const gapHeight = obstacle.gapHeight ?? 0.4;
+        const gapRight = gapX + gapWidth;
+        const gapBottom = gapY + gapHeight;
+        const boxes = [
+          box(0.04, 0.18, Math.max(0.12, gapX - 0.04), 0.64),
+          box(gapRight, 0.18, Math.max(0.12, 0.96 - gapRight), 0.64),
+          box(gapX, 0.06, gapWidth, Math.max(0.12, gapY - 0.06)),
+          box(gapX, gapBottom, gapWidth, Math.max(0.12, 0.94 - gapBottom))
+        ];
+        if (obstacle.bossTier === "final") {
+          boxes.push(
+            box(0.16, 0.08, 0.14, 0.18),
+            box(0.7, 0.08, 0.14, 0.18)
+          );
+        }
+        return boxes;
       }
     }
   };

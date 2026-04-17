@@ -15,16 +15,16 @@
   };
 
   const BIOME_STYLES = {
-    desert: { cone: "cactus", toyBox: "crate", ramp: "dune", drone: "scarab", barrel: "jar", pile: "tumbleweed", sign: "trailsign", bench: "stonebench", crystal: "sandstone" },
-    farm: { cone: "pumpkin", toyBox: "hay", ramp: "fence", drone: "crow", barrel: "milk", pile: "producepile", sign: "farmsign", bench: "cart", crystal: "cornshock" },
-    marsh: { cone: "stump", toyBox: "crate", ramp: "boardwalk", drone: "dragonfly", barrel: "barrel", pile: "reedstack", sign: "warningsign", bench: "dockbench", crystal: "cattails" },
-    city: { cone: "cone", toyBox: "toolbox", ramp: "barricade", drone: "drone", barrel: "trashcan", pile: "debrispile", sign: "streetsign", bench: "bench", crystal: "hydrant" },
-    space: { cone: "moonrock", toyBox: "crate", ramp: "launchpad", drone: "probe", barrel: "canister", pile: "meteorcluster", sign: "beacon", bench: "console", crystal: "crystal" },
-    volcano: { cone: "lavarock", toyBox: "crate", ramp: "basalt", drone: "emberbat", barrel: "magma", pile: "rubblepile", sign: "hazardsign", bench: "basaltbench", crystal: "magmaflare" },
-    snow: { cone: "snowman", toyBox: "gift", ramp: "snowdrift", drone: "owl", barrel: "log", pile: "snowpile", sign: "skimarker", bench: "sled", crystal: "iceshard" },
-    beach: { cone: "sandcastle", toyBox: "cooler", ramp: "driftwood", drone: "gull", barrel: "buoy", pile: "shellpile", sign: "beachsign", bench: "lounger", crystal: "coral" },
-    jungle: { cone: "stump", toyBox: "crate", ramp: "root", drone: "parrot", barrel: "totem", pile: "fernclump", sign: "campmarker", bench: "fallenlog", crystal: "idol" },
-    cyber: { cone: "bollard", toyBox: "neoncrate", ramp: "datawedge", drone: "hoverbot", barrel: "battery", pile: "scrappile", sign: "holosign", bench: "glitchrail", crystal: "datacrystal" }
+    desert: { cone: "cactus", toyBox: "crate", ramp: "dune", drone: "scarab", barrel: "jar", pile: "tumbleweed", sign: "trailsign", bench: "stonebench", crystal: "sandstone", monster: "scorpion" },
+    farm: { cone: "pumpkin", toyBox: "hay", ramp: "fence", drone: "crow", barrel: "milk", pile: "producepile", sign: "farmsign", bench: "cart", crystal: "cornshock", monster: "boar" },
+    marsh: { cone: "stump", toyBox: "crate", ramp: "boardwalk", drone: "dragonfly", barrel: "barrel", pile: "reedstack", sign: "warningsign", bench: "dockbench", crystal: "cattails", monster: "slime" },
+    city: { cone: "cone", toyBox: "toolbox", ramp: "barricade", drone: "drone", barrel: "trashcan", pile: "debrispile", sign: "streetsign", bench: "bench", crystal: "hydrant", monster: "rat" },
+    space: { cone: "moonrock", toyBox: "crate", ramp: "launchpad", drone: "probe", barrel: "canister", pile: "meteorcluster", sign: "beacon", bench: "console", crystal: "crystal", monster: "alien" },
+    volcano: { cone: "lavarock", toyBox: "crate", ramp: "basalt", drone: "emberbat", barrel: "magma", pile: "rubblepile", sign: "hazardsign", bench: "basaltbench", crystal: "magmaflare", monster: "imp" },
+    snow: { cone: "snowman", toyBox: "gift", ramp: "snowdrift", drone: "owl", barrel: "log", pile: "snowpile", sign: "skimarker", bench: "sled", crystal: "iceshard", monster: "yeti" },
+    beach: { cone: "sandcastle", toyBox: "cooler", ramp: "driftwood", drone: "gull", barrel: "buoy", pile: "shellpile", sign: "beachsign", bench: "lounger", crystal: "coral", monster: "crab" },
+    jungle: { cone: "stump", toyBox: "crate", ramp: "root", drone: "parrot", barrel: "totem", pile: "fernclump", sign: "campmarker", bench: "fallenlog", crystal: "idol", monster: "lizard" },
+    cyber: { cone: "bollard", toyBox: "neoncrate", ramp: "datawedge", drone: "hoverbot", barrel: "battery", pile: "scrappile", sign: "holosign", bench: "glitchrail", crystal: "datacrystal", monster: "crawler" }
   };
 
   function clamp(value, min, max) {
@@ -233,7 +233,7 @@
 
     obstacleTheme(biome, obstacle) {
       const palette = this.palette(biome);
-      const style = (BIOME_STYLES[biome] && BIOME_STYLES[biome][obstacle.type]) || obstacle.type;
+      const style = obstacle.style || ((BIOME_STYLES[biome] && BIOME_STYLES[biome][obstacle.type]) || obstacle.type);
       const trim = mixColor(palette.near, "#0b1323", 0.45);
       const highlight = mixColor(palette.sun, "#ffffff", 0.45);
       switch (obstacle.type) {
@@ -255,6 +255,10 @@
           return { style, base: mixColor(palette.near, palette.sun, 0.18), accent: mixColor(palette.sun, "#ffffff", 0.18), trim, glow: palette.accent };
         case "crystal":
           return { style, base: mixColor(palette.accent, palette.near, 0.28), accent: mixColor(palette.accent, "#ffffff", 0.45), trim, glow: palette.accent };
+        case "monster":
+          return { style, base: mixColor(palette.near, palette.prop, biome === "cyber" ? 0.4 : 0.24), accent: mixColor(palette.accent, "#ffffff", 0.18), trim, glow: highlight };
+        case "boss":
+          return { style, base: obstacle.color || mixColor(palette.near, palette.prop, 0.32), accent: mixColor(palette.accent, "#ffffff", 0.24), trim, glow: palette.accent };
         default:
           return { style, base: obstacle.color, accent: highlight, trim, glow: palette.accent };
       }
@@ -765,6 +769,207 @@
       circle(ctx, x + w * 0.5, y + h * 0.46, w * 0.3, theme.glow, 0.12);
     }
 
+    drawMonsterObstacle(x, y, w, h, theme, phase) {
+      const ctx = this.ctx;
+      const strideX = Math.sin(phase) * w * 0.05;
+      const legLift = Math.sin(phase) * h * 0.04;
+      const bounce = Math.max(0, Math.sin(phase * 2.1)) * h * 0.04;
+      const dark = mixColor(theme.base, "#000000", 0.36);
+      const deeper = mixColor(theme.base, "#000000", 0.5);
+      const bright = mixColor(theme.accent, "#ffffff", 0.22);
+      const eyeOpen = Math.sin(phase * 0.45) > 0.94 ? 0.25 : 1;
+      const bodyY = y + bounce;
+
+      if (theme.style === "crab") {
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.56, w * 0.3, h * 0.2, theme.base);
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.48, w * 0.22, h * 0.12, bright, 0.75);
+        line(ctx, x + w * 0.2, bodyY + h * 0.56, x + w * 0.04, bodyY + h * 0.56 + legLift, 2.6, dark);
+        line(ctx, x + w * 0.8, bodyY + h * 0.56, x + w * 0.96, bodyY + h * 0.56 - legLift, 2.6, dark);
+        line(ctx, x + w * 0.26, bodyY + h * 0.66, x + w * 0.14, bodyY + h * 0.86, 2.2, dark);
+        line(ctx, x + w * 0.4, bodyY + h * 0.68, x + w * 0.32, bodyY + h * 0.88, 2.2, dark);
+        line(ctx, x + w * 0.6, bodyY + h * 0.68, x + w * 0.68, bodyY + h * 0.88, 2.2, dark);
+        line(ctx, x + w * 0.74, bodyY + h * 0.66, x + w * 0.86, bodyY + h * 0.86, 2.2, dark);
+        line(ctx, x + w * 0.38, bodyY + h * 0.42, x + w * 0.34, bodyY + h * 0.22, 2.2, deeper);
+        line(ctx, x + w * 0.62, bodyY + h * 0.42, x + w * 0.66, bodyY + h * 0.22, 2.2, deeper);
+        circle(ctx, x + w * 0.34, bodyY + h * 0.2, w * 0.04, theme.trim);
+        circle(ctx, x + w * 0.66, bodyY + h * 0.2, w * 0.04, theme.trim);
+        return;
+      }
+
+      if (theme.style === "lizard") {
+        polygon(ctx, [[x + w * 0.16, bodyY + h * 0.56], [x + w * 0.36, bodyY + h * 0.3], [x + w * 0.7, bodyY + h * 0.36], [x + w * 0.86, bodyY + h * 0.52], [x + w * 0.66, bodyY + h * 0.66], [x + w * 0.3, bodyY + h * 0.64]], theme.base);
+        polygon(ctx, [[x + w * 0.12, bodyY + h * 0.58], [x + w * 0.02, bodyY + h * 0.5], [x + w * 0.12, bodyY + h * 0.44]], dark);
+        polygon(ctx, [[x + w * 0.78, bodyY + h * 0.42], [x + w * 0.98, bodyY + h * 0.5], [x + w * 0.78, bodyY + h * 0.58]], theme.accent);
+        line(ctx, x + w * 0.34, bodyY + h * 0.62, x + w * 0.24 - strideX, bodyY + h * 0.88, 2.4, dark);
+        line(ctx, x + w * 0.56, bodyY + h * 0.62, x + w * 0.48 + strideX, bodyY + h * 0.88, 2.4, dark);
+        line(ctx, x + w * 0.52, bodyY + h * 0.38, x + w * 0.44, bodyY + h * 0.18, 2.2, deeper);
+        line(ctx, x + w * 0.64, bodyY + h * 0.38, x + w * 0.68, bodyY + h * 0.18, 2.2, deeper);
+        circle(ctx, x + w * 0.74, bodyY + h * 0.44, w * 0.03, theme.trim, eyeOpen);
+        return;
+      }
+
+      if (theme.style === "crawler") {
+        fillRoundRect(ctx, x + w * 0.18, bodyY + h * 0.26, w * 0.64, h * 0.34, 10, theme.base);
+        fillRoundRect(ctx, x + w * 0.28, bodyY + h * 0.18, w * 0.44, h * 0.14, 8, bright, 0.92);
+        for (let i = 0; i < 3; i += 1) {
+          const legX = x + w * (0.28 + i * 0.2);
+          line(ctx, legX, bodyY + h * 0.6, legX - w * 0.08, bodyY + h * 0.9 - legLift, 2.4, deeper);
+          line(ctx, legX + w * 0.16, bodyY + h * 0.6, legX + w * 0.24, bodyY + h * 0.9 + legLift, 2.4, deeper);
+        }
+        circle(ctx, x + w * 0.38, bodyY + h * 0.42, w * 0.05, theme.glow, 0.85);
+        circle(ctx, x + w * 0.62, bodyY + h * 0.42, w * 0.05, theme.glow, 0.85);
+        line(ctx, x + w * 0.26, bodyY + h * 0.2, x + w * 0.18, bodyY + h * 0.06, 1.8, theme.trim);
+        line(ctx, x + w * 0.74, bodyY + h * 0.2, x + w * 0.82, bodyY + h * 0.06, 1.8, theme.trim);
+        return;
+      }
+
+      if (theme.style === "emberbat" || theme.style === "frostbat" || theme.style === "bat") {
+        const wingLift = Math.sin(phase * 1.8) * h * 0.16;
+        polygon(ctx, [[x + w * 0.5, bodyY + h * 0.3], [x + w * 0.14, bodyY + h * 0.18 - wingLift], [x + w * 0.24, bodyY + h * 0.52]], dark);
+        polygon(ctx, [[x + w * 0.5, bodyY + h * 0.3], [x + w * 0.86, bodyY + h * 0.18 - wingLift], [x + w * 0.76, bodyY + h * 0.52]], dark);
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.38, w * 0.16, h * 0.18, theme.base);
+        polygon(ctx, [[x + w * 0.42, bodyY + h * 0.26], [x + w * 0.37, bodyY + h * 0.1], [x + w * 0.48, bodyY + h * 0.22]], deeper);
+        polygon(ctx, [[x + w * 0.58, bodyY + h * 0.26], [x + w * 0.63, bodyY + h * 0.1], [x + w * 0.52, bodyY + h * 0.22]], deeper);
+        circle(ctx, x + w * 0.44, bodyY + h * 0.38, w * 0.028, theme.trim, eyeOpen);
+        circle(ctx, x + w * 0.56, bodyY + h * 0.38, w * 0.028, theme.trim, eyeOpen);
+        line(ctx, x + w * 0.5, bodyY + h * 0.5, x + w * 0.48, bodyY + h * 0.72, 2, deeper);
+        return;
+      }
+
+      if (theme.style === "gullmonster") {
+        const wingLift = Math.sin(phase * 1.6) * h * 0.12;
+        polygon(ctx, [[x + w * 0.44, bodyY + h * 0.38], [x + w * 0.1, bodyY + h * 0.28 - wingLift], [x + w * 0.32, bodyY + h * 0.48]], theme.accent);
+        polygon(ctx, [[x + w * 0.56, bodyY + h * 0.38], [x + w * 0.9, bodyY + h * 0.28 - wingLift], [x + w * 0.68, bodyY + h * 0.48]], theme.accent);
+        ellipse(ctx, x + w * 0.48, bodyY + h * 0.44, w * 0.18, h * 0.14, theme.base);
+        polygon(ctx, [[x + w * 0.64, bodyY + h * 0.42], [x + w * 0.84, bodyY + h * 0.46], [x + w * 0.66, bodyY + h * 0.52]], bright);
+        circle(ctx, x + w * 0.42, bodyY + h * 0.4, w * 0.025, theme.trim, eyeOpen);
+        line(ctx, x + w * 0.44, bodyY + h * 0.54, x + w * 0.4, bodyY + h * 0.74, 1.8, deeper);
+        line(ctx, x + w * 0.52, bodyY + h * 0.54, x + w * 0.56, bodyY + h * 0.74, 1.8, deeper);
+        return;
+      }
+
+      if (theme.style === "sentinel") {
+        fillRoundRect(ctx, x + w * 0.28, bodyY + h * 0.2, w * 0.44, h * 0.42, 10, theme.base);
+        fillRoundRect(ctx, x + w * 0.22, bodyY + h * 0.3, w * 0.12, h * 0.14, 6, dark);
+        fillRoundRect(ctx, x + w * 0.66, bodyY + h * 0.3, w * 0.12, h * 0.14, 6, dark);
+        line(ctx, x + w * 0.5, bodyY + h * 0.2, x + w * 0.44, bodyY + h * 0.02, 1.8, theme.trim);
+        line(ctx, x + w * 0.5, bodyY + h * 0.2, x + w * 0.56, bodyY + h * 0.02, 1.8, theme.trim);
+        circle(ctx, x + w * 0.5, bodyY + h * 0.4, w * 0.08, theme.glow, 0.95);
+        strokeRoundRect(ctx, x + w * 0.18, bodyY + h * 0.24, w * 0.64, h * 0.34, 10, alphaColor(theme.glow, 0.28), 1.4);
+        return;
+      }
+
+      if (theme.style === "imp") {
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.44, w * 0.22, h * 0.24, theme.base);
+        polygon(ctx, [[x + w * 0.34, bodyY + h * 0.26], [x + w * 0.28, bodyY + h * 0.06], [x + w * 0.42, bodyY + h * 0.2]], deeper);
+        polygon(ctx, [[x + w * 0.66, bodyY + h * 0.26], [x + w * 0.72, bodyY + h * 0.06], [x + w * 0.58, bodyY + h * 0.2]], deeper);
+        polygon(ctx, [[x + w * 0.32, bodyY + h * 0.5], [x + w * 0.16, bodyY + h * 0.34], [x + w * 0.3, bodyY + h * 0.68]], dark);
+        polygon(ctx, [[x + w * 0.68, bodyY + h * 0.5], [x + w * 0.84, bodyY + h * 0.34], [x + w * 0.7, bodyY + h * 0.68]], dark);
+        line(ctx, x + w * 0.42, bodyY + h * 0.66, x + w * 0.34 - strideX * 0.7, bodyY + h * 0.9, 3, deeper);
+        line(ctx, x + w * 0.58, bodyY + h * 0.66, x + w * 0.66 + strideX * 0.7, bodyY + h * 0.9, 3, deeper);
+        circle(ctx, x + w * 0.42, bodyY + h * 0.4, w * 0.035, theme.trim, eyeOpen);
+        circle(ctx, x + w * 0.58, bodyY + h * 0.4, w * 0.035, theme.trim, eyeOpen);
+        line(ctx, x + w * 0.44, bodyY + h * 0.54, x + w * 0.56, bodyY + h * 0.54, 2, theme.accent);
+        return;
+      }
+
+      if (theme.style === "yeti") {
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.48, w * 0.28, h * 0.3, theme.accent);
+        ellipse(ctx, x + w * 0.5, bodyY + h * 0.42, w * 0.22, h * 0.22, theme.base);
+        circle(ctx, x + w * 0.38, bodyY + h * 0.42, w * 0.035, theme.trim, eyeOpen);
+        circle(ctx, x + w * 0.62, bodyY + h * 0.42, w * 0.035, theme.trim, eyeOpen);
+        fillRoundRect(ctx, x + w * 0.3, bodyY + h * 0.54, w * 0.4, h * 0.12, 8, bright, 0.7);
+        line(ctx, x + w * 0.4, bodyY + h * 0.74, x + w * 0.34 - strideX * 0.56, bodyY + h * 0.94, 3, deeper);
+        line(ctx, x + w * 0.6, bodyY + h * 0.74, x + w * 0.66 + strideX * 0.56, bodyY + h * 0.94, 3, deeper);
+        return;
+      }
+
+      ellipse(ctx, x + w * 0.5, bodyY + h * 0.56, w * 0.26, h * 0.18, theme.base);
+      ellipse(ctx, x + w * 0.5, bodyY + h * 0.4, w * 0.18, h * 0.16, bright, 0.82);
+      circle(ctx, x + w * 0.42, bodyY + h * 0.42, w * 0.03, theme.trim, eyeOpen);
+      circle(ctx, x + w * 0.58, bodyY + h * 0.42, w * 0.03, theme.trim, eyeOpen);
+      line(ctx, x + w * 0.36, bodyY + h * 0.68, x + w * 0.3 - strideX * 0.5, bodyY + h * 0.9, 2.6, dark);
+      line(ctx, x + w * 0.64, bodyY + h * 0.68, x + w * 0.7 + strideX * 0.5, bodyY + h * 0.9, 2.6, dark);
+    }
+
+    drawBossObstacle(x, y, w, h, theme, obstacle, phase) {
+      const ctx = this.ctx;
+      const dark = mixColor(theme.base, "#000000", 0.34);
+      const deeper = mixColor(theme.base, "#000000", 0.52);
+      const bright = mixColor(theme.accent, "#ffffff", 0.24);
+      const gapX = x + w * (obstacle.gapX ?? 0.34);
+      const gapY = y + h * (obstacle.gapY ?? 0.24);
+      const gapW = w * (obstacle.gapWidth ?? 0.34);
+      const gapH = h * (obstacle.gapHeight ?? 0.4);
+      const leftW = Math.max(0, gapX - x - w * 0.04);
+      const rightX = gapX + gapW;
+      const rightW = Math.max(0, x + w * 0.96 - rightX);
+      const eyeBlink = Math.sin(phase * 0.38) > 0.96 ? 0.2 : 1;
+
+      fillRoundRect(ctx, x + w * 0.04, y + h * 0.18, leftW, h * 0.62, 18, theme.base);
+      fillRoundRect(ctx, rightX, y + h * 0.18, rightW, h * 0.62, 18, theme.base);
+      fillRoundRect(ctx, gapX, y + h * 0.08, gapW, gapY - y - h * 0.08, 18, theme.base);
+      fillRoundRect(ctx, gapX, gapY + gapH, gapW, y + h * 0.92 - (gapY + gapH), 18, theme.base);
+      fillRoundRect(ctx, gapX + gapW * 0.02, gapY + gapH * 0.04, gapW * 0.96, gapH * 0.92, 18, alphaColor("#05070d", 0.94));
+      strokeRoundRect(ctx, gapX + gapW * 0.02, gapY + gapH * 0.04, gapW * 0.96, gapH * 0.92, 18, alphaColor(theme.glow, obstacle.bossTier === "final" ? 0.82 : 0.64), 3);
+      strokeRoundRect(ctx, gapX + gapW * 0.08, gapY + gapH * 0.12, gapW * 0.84, gapH * 0.76, 14, alphaColor("#ffffff", obstacle.bossTier === "final" ? 0.16 : 0.1), 1.4);
+      fillRoundRect(ctx, gapX + gapW * 0.1, gapY + gapH * 0.14, gapW * 0.8, gapH * 0.72, 12, alphaColor(theme.glow, obstacle.bossTier === "final" ? 0.08 : 0.05));
+
+      const cueColor = obstacle.bossTier === "final" ? theme.glow : theme.accent;
+      for (let i = 0; i < 3; i += 1) {
+        const cueY = gapY + gapH * (0.24 + i * 0.22);
+        polygon(ctx, [
+          [gapX - gapW * 0.18, cueY],
+          [gapX - gapW * 0.04, cueY - gapH * 0.08],
+          [gapX - gapW * 0.04, cueY + gapH * 0.08]
+        ], alphaColor(cueColor, 0.74));
+        polygon(ctx, [
+          [gapX + gapW * 1.18, cueY],
+          [gapX + gapW * 1.04, cueY - gapH * 0.08],
+          [gapX + gapW * 1.04, cueY + gapH * 0.08]
+        ], alphaColor(cueColor, 0.74));
+      }
+
+      line(ctx, gapX + gapW * 0.18, gapY + gapH * 0.22, gapX + gapW * 0.82, gapY + gapH * 0.22, 2, alphaColor("#ffffff", 0.12));
+      line(ctx, gapX + gapW * 0.18, gapY + gapH * 0.78, gapX + gapW * 0.82, gapY + gapH * 0.78, 2, alphaColor("#ffffff", 0.12));
+
+      if (theme.style === "bogbeast") {
+        polygon(ctx, [[x + w * 0.16, y + h * 0.34], [x + w * 0.08, y + h * 0.16], [x + w * 0.24, y + h * 0.22]], dark);
+        polygon(ctx, [[x + w * 0.84, y + h * 0.34], [x + w * 0.92, y + h * 0.16], [x + w * 0.76, y + h * 0.22]], dark);
+        line(ctx, x + w * 0.18, y + h * 0.82, x + w * 0.1, y + h * 0.96, 4, deeper);
+        line(ctx, x + w * 0.82, y + h * 0.82, x + w * 0.9, y + h * 0.96, 4, deeper);
+      } else if (theme.style === "magma-ogre") {
+        polygon(ctx, [[x + w * 0.18, y + h * 0.26], [x + w * 0.1, y + h * 0.02], [x + w * 0.28, y + h * 0.18]], deeper);
+        polygon(ctx, [[x + w * 0.82, y + h * 0.26], [x + w * 0.9, y + h * 0.02], [x + w * 0.72, y + h * 0.18]], deeper);
+        line(ctx, x + w * 0.18, y + h * 0.76, x + w * 0.12, y + h * 0.94, 5, dark);
+        line(ctx, x + w * 0.82, y + h * 0.76, x + w * 0.88, y + h * 0.94, 5, dark);
+        line(ctx, x + w * 0.5, y + h * 0.1, x + w * 0.5, y + h * 0.86, 2, alphaColor(theme.accent, 0.25));
+      } else if (theme.style === "tide-crab-lord") {
+        line(ctx, x + w * 0.08, y + h * 0.46, x + w * 0.02, y + h * 0.22, 5, dark);
+        line(ctx, x + w * 0.92, y + h * 0.46, x + w * 0.98, y + h * 0.22, 5, dark);
+        line(ctx, x + w * 0.16, y + h * 0.82, x + w * 0.08, y + h * 0.96, 4, deeper);
+        line(ctx, x + w * 0.84, y + h * 0.82, x + w * 0.92, y + h * 0.96, 4, deeper);
+      } else if (theme.style === "vine-jaguar") {
+        polygon(ctx, [[x + w * 0.18, y + h * 0.22], [x + w * 0.1, y + h * 0.04], [x + w * 0.24, y + h * 0.14]], deeper);
+        polygon(ctx, [[x + w * 0.82, y + h * 0.22], [x + w * 0.9, y + h * 0.04], [x + w * 0.76, y + h * 0.14]], deeper);
+        line(ctx, x + w * 0.14, y + h * 0.18, x + w * 0.06, y + h * 0.02, 3, theme.accent);
+        line(ctx, x + w * 0.86, y + h * 0.18, x + w * 0.94, y + h * 0.02, 3, theme.accent);
+      } else if (theme.style === "cyber-colossus") {
+        strokeRoundRect(ctx, x + w * 0.08, y + h * 0.14, w * 0.84, h * 0.72, 24, alphaColor(theme.glow, 0.28), 2);
+        fillRoundRect(ctx, x + w * 0.1, y + h * 0.2, w * 0.12, h * 0.16, 8, dark);
+        fillRoundRect(ctx, x + w * 0.78, y + h * 0.2, w * 0.12, h * 0.16, 8, dark);
+        line(ctx, x + w * 0.3, y + h * 0.14, x + w * 0.22, y + h * 0.02, 3, theme.trim);
+        line(ctx, x + w * 0.7, y + h * 0.14, x + w * 0.78, y + h * 0.02, 3, theme.trim);
+        circle(ctx, x + w * 0.18, y + h * 0.8, w * 0.03, theme.glow, 0.72);
+        circle(ctx, x + w * 0.82, y + h * 0.8, w * 0.03, theme.glow, 0.72);
+      }
+
+      circle(ctx, x + w * 0.34, y + h * 0.34, w * 0.03, theme.trim, eyeBlink);
+      circle(ctx, x + w * 0.66, y + h * 0.34, w * 0.03, theme.trim, eyeBlink);
+      line(ctx, x + w * 0.4, y + h * 0.46, x + w * 0.6, y + h * 0.46, 3, bright);
+      fillRoundRect(ctx, x + w * 0.12, y + h * 0.84, w * 0.76, h * 0.06, 10, alphaColor("#ffffff", 0.04));
+    }
+
     drawObstacle(obstacle, biome, animationClock) {
       const x = obstacle.x;
       const y = obstacle.y;
@@ -772,7 +977,9 @@
       const h = obstacle.height;
       const phase = animationClock * 6 + (obstacle.variant || 0) * 0.9;
       const theme = this.obstacleTheme(biome, obstacle);
-      ellipse(this.ctx, x + w * 0.5, y + h + 6, w * 0.42, h * 0.12, alphaColor("#000000", 0.14), 1);
+      const shadowY = typeof obstacle.shadowY === "number" ? obstacle.shadowY : y + h + 6;
+      const shadowWidth = obstacle.motion === "fly" ? w * 0.28 : w * 0.42;
+      ellipse(this.ctx, x + w * 0.5, shadowY, shadowWidth, h * 0.12, alphaColor("#000000", obstacle.motion === "fly" ? 0.1 : 0.14), 1);
 
       switch (obstacle.type) {
         case "cone":
@@ -801,6 +1008,12 @@
           break;
         case "crystal":
           this.drawArtifactObstacle(x, y, w, h, theme);
+          break;
+        case "monster":
+          this.drawMonsterObstacle(x, y, w, h, theme, phase);
+          break;
+        case "boss":
+          this.drawBossObstacle(x, y, w, h, theme, obstacle, phase);
           break;
         default:
           fillRoundRect(this.ctx, x, y, w, h, 8, theme.base);

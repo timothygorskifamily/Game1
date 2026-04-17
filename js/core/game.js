@@ -37,6 +37,9 @@
       this.obstacles = [];
       this.coins = [];
       this.powerups = [];
+      this.bossEncounter = level.bossEncounter || (FamilyDash.getBossEncounter ? FamilyDash.getBossEncounter(level.id) : null);
+      this.bossSpawned = false;
+      this.bossActive = false;
       this.animationClock = 0;
       this.spawnTimers = { obstacle: 1.15, coin: 0.65, powerup: 6.5 };
       this.lastFrame = performance.now();
@@ -68,12 +71,23 @@
       const type = pool[Math.floor(Math.random() * pool.length)];
       const def = FamilyDash.OBSTACLE_DEFS[type];
       const variant = Math.floor(Math.random() * 5);
-      const style = this.renderer.obstacleTheme(this.level.biome, { type, color: def.color }).style;
+      const monsterProfile = type === "monster" && FamilyDash.getMonsterProfile
+        ? FamilyDash.getMonsterProfile(this.level.biome, variant)
+        : null;
+      const style = monsterProfile?.style || this.renderer.obstacleTheme(this.level.biome, { type, color: def.color }).style;
       const yBase = this.groundY - def.height;
+      const moveSpeed = monsterProfile?.moveSpeed ?? (typeof def.moveSpeed === "function" ? def.moveSpeed(this.level, variant) : (def.moveSpeed || 0));
+      const motion = monsterProfile?.motion || (def.flying ? "fly" : "ground");
+      const motionHeight = monsterProfile?.motionHeight || 0;
+      const motionRate = monsterProfile?.motionRate || 0;
+      const motionPhase = Math.random() * Math.PI * 2;
+      const baseY = motion === "fly"
+        ? yBase - (monsterProfile?.flightOffset || 92) - Math.random() * 22
+        : yBase;
       this.obstacles.push({
         type,
         x: this.viewport.width + Math.random() * 120,
-        y: def.flying ? yBase - 72 - Math.random() * 30 : yBase,
+        y: motion === "fly" ? baseY : yBase,
         width: def.width,
         height: def.height,
         variant,
@@ -81,8 +95,51 @@
         damage: def.damage,
         kickable: def.kickable,
         color: def.color,
-        collisionBoxes: def.collisionBoxes
+        collisionBoxes: def.collisionBoxes,
+        moveSpeed,
+        motion,
+        motionHeight,
+        motionRate,
+        motionPhase,
+        baseY,
+        shadowY: yBase + def.height + 6
       });
+    }
+
+    spawnBossEncounter() {
+      if (!this.bossEncounter || this.bossSpawned) return;
+      const def = FamilyDash.OBSTACLE_DEFS.boss;
+      const encounter = this.bossEncounter;
+      const baseY = this.groundY - encounter.height;
+
+      // Clear the lane ahead so the boss reads like a real set piece instead of obstacle overlap.
+      this.obstacles = this.obstacles.filter((obj) => obj.x + obj.width < this.player.x - 20);
+
+      this.obstacles.push({
+        type: "boss",
+        x: this.viewport.width + 140,
+        y: baseY,
+        width: encounter.width || def.width,
+        height: encounter.height || def.height,
+        variant: 0,
+        style: encounter.style,
+        damage: encounter.damage || def.damage,
+        kickable: false,
+        color: encounter.color || def.color,
+        collisionBoxes: def.collisionBoxes,
+        moveSpeed: encounter.moveSpeed || 0,
+        gapX: encounter.gapX,
+        gapY: encounter.gapY,
+        gapWidth: encounter.gapWidth,
+        gapHeight: encounter.gapHeight,
+        bossTier: encounter.tier || "mini",
+        isBoss: true,
+        shadowY: this.groundY + 10
+      });
+
+      this.bossSpawned = true;
+      this.bossActive = true;
+      this.spawnTimers.obstacle = Math.max(this.spawnTimers.obstacle, 1.1);
     }
 
     spawnCoin() {
@@ -136,10 +193,25 @@
       this.spawnTimers.coin -= delta;
       this.spawnTimers.powerup -= delta;
 
+      const bossTriggerDistance = this.bossEncounter ? this.level.length * this.bossEncounter.spawnAt : Infinity;
+      const preBossWindow = this.bossEncounter ? 120 : 0;
+      const holdObstacleSpawn = this.bossEncounter && (
+        this.bossActive ||
+        (!this.bossSpawned && this.distance >= bossTriggerDistance - preBossWindow)
+      );
+
+      if (this.bossEncounter && !this.bossSpawned && this.distance >= bossTriggerDistance) {
+        this.spawnBossEncounter();
+      }
+
       const obstacleCadence = Math.max(0.45, 1.15 - (this.distance / this.level.length) * 0.55);
       if (this.spawnTimers.obstacle <= 0) {
-        this.spawnObstacle();
-        this.spawnTimers.obstacle = obstacleCadence + Math.random() * 0.45;
+        if (holdObstacleSpawn) {
+          this.spawnTimers.obstacle = 0.18;
+        } else {
+          this.spawnObstacle();
+          this.spawnTimers.obstacle = obstacleCadence + Math.random() * 0.45;
+        }
       }
       if (this.spawnTimers.coin <= 0) {
         if (Math.random() <= this.level.coinRate) this.spawnCoin();
@@ -152,7 +224,16 @@
 
       const magnet = (p.character.gameplay.coinMagnet || 1) + (p.magnetBonus || 0);
       const coinBurstBoost = p.coinBurstTimer > 0 ? 1.8 : 1;
-      this.obstacles.forEach((obj) => { obj.x -= speed * delta; });
+      this.obstacles.forEach((obj) => {
+        obj.x -= (speed + (obj.moveSpeed || 0)) * delta;
+        if (obj.motion === "hop") {
+          obj.motionPhase = (obj.motionPhase || 0) + delta * (obj.motionRate || 4.5);
+          obj.y = obj.baseY - Math.max(0, Math.sin(obj.motionPhase)) * (obj.motionHeight || 0);
+        } else if (obj.motion === "fly") {
+          obj.motionPhase = (obj.motionPhase || 0) + delta * (obj.motionRate || 3.2);
+          obj.y = obj.baseY + Math.sin(obj.motionPhase) * (obj.motionHeight || 0);
+        }
+      });
       this.coins.forEach((coin) => {
         coin.x -= speed * delta;
         if (magnet > 1) {
@@ -169,10 +250,12 @@
 
       this.handleCollisions();
       this.obstacles = this.obstacles.filter((obj) => obj.x + obj.width > -40);
+      this.bossActive = this.obstacles.some((obj) => obj.isBoss);
       this.coins = this.coins.filter((coin) => coin.x + coin.width > -20);
       this.powerups = this.powerups.filter((pw) => pw.x + pw.width > -20);
 
-      if (this.distance >= this.level.length) {
+      const bossCleared = !this.bossEncounter || (this.bossSpawned && !this.bossActive);
+      if (this.distance >= this.level.length && bossCleared) {
         this.state = "won";
         this.onEnd({ outcome: "win", score: Math.floor(this.score), coins: this.coinsCollected, distance: this.distance });
         this.stop();
