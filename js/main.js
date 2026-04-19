@@ -19,6 +19,7 @@
   const walletValue = document.getElementById("walletValue");
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
+  const gameStage = document.querySelector(".game-stage");
   const mobileLayoutLabel = document.getElementById("mobileLayoutLabel");
   const mobileScreenTitle = document.getElementById("mobileScreenTitle");
   const mobileStatusStrip = document.getElementById("mobileStatusStrip");
@@ -46,6 +47,7 @@
   const input = new FamilyDash.InputManager();
   input.bind();
   input.attachMobileControls(document.querySelector(".mobile-controls"));
+  input.attachGameplayTap(gameStage, () => detectMobileDevice() && activeScreenName === "game");
 
   const audio = new FamilyDash.AudioSystem();
   audio.setTrackChangeListener((track, index) => {
@@ -92,6 +94,11 @@
   let levelBackTarget = "store";
   let activeScreenName = "start";
   let viewportSyncFrame = 0;
+  const DOUBLE_TAP_WINDOW_MS = 360;
+  const quickAdvanceState = {
+    character: { id: null, at: 0 },
+    level: { id: null, at: 0 }
+  };
 
   function detectMobileDevice() {
     const width = window.innerWidth || document.documentElement.clientWidth || 0;
@@ -149,6 +156,50 @@
       viewportSyncFrame = 0;
       syncViewportMode();
       if (activeScreenName === "game") renderer.resize && renderer.resize();
+    });
+  }
+
+  function resetQuickAdvanceState(group) {
+    if (group && quickAdvanceState[group]) {
+      quickAdvanceState[group].id = null;
+      quickAdvanceState[group].at = 0;
+      return;
+    }
+
+    Object.values(quickAdvanceState).forEach((state) => {
+      state.id = null;
+      state.at = 0;
+    });
+  }
+
+  function handleQuickAdvanceTap(group, itemId, onSelect, onAdvance) {
+    const state = quickAdvanceState[group];
+    const now = performance.now();
+    const repeatedTap = state.id === itemId && now - state.at <= DOUBLE_TAP_WINDOW_MS;
+
+    onSelect();
+
+    if (detectMobileDevice() && repeatedTap) {
+      resetQuickAdvanceState(group);
+      onAdvance();
+      return;
+    }
+
+    state.id = itemId;
+    state.at = now;
+  }
+
+  function bindQuickAdvance(card, group, itemId, onSelect, onAdvance) {
+    card.addEventListener("click", () => {
+      handleQuickAdvanceTap(group, itemId, onSelect, onAdvance);
+    });
+
+    card.addEventListener("dblclick", (event) => {
+      if (detectMobileDevice()) return;
+      event.preventDefault();
+      onSelect();
+      resetQuickAdvanceState(group);
+      onAdvance();
     });
   }
 
@@ -303,6 +354,7 @@
   function switchScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
     screens[name].classList.add("active");
+    resetQuickAdvanceState();
     syncScreenChrome(name);
     window.scrollTo(0, 0);
     scheduleViewportSync();
@@ -390,12 +442,18 @@
       `;
 
       if (selectedCharacter === character.id) card.classList.add("selected");
-      card.addEventListener("click", () => {
-        selectedCharacter = character.id;
-        [...characterGrid.children].forEach((child) => child.classList.remove("selected"));
-        card.classList.add("selected");
-        syncCharacterActions();
-      });
+      bindQuickAdvance(
+        card,
+        "character",
+        character.id,
+        () => {
+          selectedCharacter = character.id;
+          [...characterGrid.children].forEach((child) => child.classList.remove("selected"));
+          card.classList.add("selected");
+          syncCharacterActions();
+        },
+        () => openLevelSelect("character")
+      );
       characterGrid.appendChild(card);
     });
 
@@ -476,12 +534,18 @@
       `;
 
       if (selectedLevel === level.id) card.classList.add("selected");
-      card.addEventListener("click", () => {
-        selectedLevel = level.id;
-        [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
-        card.classList.add("selected");
-        syncLaunchAction();
-      });
+      bindQuickAdvance(
+        card,
+        "level",
+        level.id,
+        () => {
+          selectedLevel = level.id;
+          [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
+          card.classList.add("selected");
+          syncLaunchAction();
+        },
+        () => startRun()
+      );
       levelGrid.appendChild(card);
     });
     syncLaunchAction();

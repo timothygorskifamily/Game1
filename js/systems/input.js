@@ -7,12 +7,18 @@
       this.actions = { jumpPressed: false, slide: false, pausePressed: false };
     }
 
+    pressAction(action) {
+      if (action === "jump") this.actions.jumpPressed = true;
+      if (action === "slide") this.actions.slide = true;
+      if (action === "pause") this.actions.pausePressed = true;
+    }
+
     bind() {
       window.addEventListener("keydown", (event) => {
         if (["Space", "ArrowUp", "ArrowDown"].includes(event.code)) event.preventDefault();
         this.keys.add(event.code);
-        if (event.code === "Space" || event.code === "ArrowUp") this.actions.jumpPressed = true;
-        if (event.code === "KeyP" || event.code === "Escape") this.actions.pausePressed = true;
+        if (event.code === "Space" || event.code === "ArrowUp") this.pressAction("jump");
+        if (event.code === "KeyP" || event.code === "Escape") this.pressAction("pause");
       });
 
       window.addEventListener("keyup", (event) => {
@@ -38,15 +44,28 @@
               // Ignore browsers that reject capture on synthetic interactions.
             }
           }
-          if (action === "jump") this.actions.jumpPressed = true;
-          if (action === "slide") this.actions.slide = true;
-          if (action === "pause") this.actions.pausePressed = true;
+          this.pressAction(action);
         });
         ["pointerup", "pointercancel", "pointerleave", "lostpointercapture"].forEach((eventName) => {
           button.addEventListener(eventName, releaseAction);
         });
         button.addEventListener("contextmenu", (event) => event.preventDefault());
       });
+    }
+
+    attachGameplayTap(rootElement, shouldHandleTap) {
+      if (!rootElement) return;
+      const isEnabled = typeof shouldHandleTap === "function" ? shouldHandleTap : () => true;
+
+      rootElement.addEventListener("pointerdown", (event) => {
+        if (!isEnabled()) return;
+        if (event.pointerType === "mouse") return;
+        if (event.isPrimary === false) return;
+        event.preventDefault();
+        this.pressAction("jump");
+      });
+
+      rootElement.addEventListener("contextmenu", (event) => event.preventDefault());
     }
 
     update() {
