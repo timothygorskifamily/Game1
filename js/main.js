@@ -23,6 +23,7 @@
   const mobileLayoutLabel = document.getElementById("mobileLayoutLabel");
   const mobileScreenTitle = document.getElementById("mobileScreenTitle");
   const mobileStatusStrip = document.getElementById("mobileStatusStrip");
+  const mobileStageHud = document.getElementById("mobileStageHud");
   const musicTrackName = document.getElementById("musicTrackName");
   const prevTrackBtn = document.getElementById("prevTrackBtn");
   const nextTrackBtn = document.getElementById("nextTrackBtn");
@@ -157,6 +158,10 @@
       syncViewportMode();
       if (activeScreenName === "game") renderer.resize && renderer.resize();
     });
+  }
+
+  function isMobileLandscapeMode() {
+    return body.classList.contains("is-mobile") && body.classList.contains("mobile-landscape");
   }
 
   function resetQuickAdvanceState(group) {
@@ -590,24 +595,44 @@
         <strong>--</strong>
       `;
     if (mobileStatusStrip) {
-      const mobileStats = [
-        { label: "Runner", value: character?.name || "--" },
-        { label: "HP", value: `${data.health} / ${data.maxHealth}` },
-        { label: "Score", value: String(data.score) },
-        { label: "Coins", value: String(data.coins) },
-        { label: "Distance", value: `${data.distance}m` },
-        { label: "Combo", value: `x${data.comboMultiplier.toFixed(2)}` },
-        { label: "State", value: activeBuffs[0] || statusText }
-      ];
+      if (isMobileLandscapeMode()) {
+        mobileStatusStrip.innerHTML = "";
+      } else {
+        const mobileStats = [
+          { label: "Runner", value: character?.name || "--" },
+          { label: "HP", value: `${data.health} / ${data.maxHealth}` },
+          { label: "Score", value: String(data.score) },
+          { label: "Coins", value: String(data.coins) },
+          { label: "Distance", value: `${data.distance}m` },
+          { label: "Combo", value: `x${data.comboMultiplier.toFixed(2)}` },
+          { label: "State", value: activeBuffs[0] || statusText }
+        ];
 
-      mobileStatusStrip.innerHTML = mobileStats
-        .map((stat) => `
-          <div class="mobile-status-chip">
-            <span>${escapeHtml(stat.label)}</span>
-            <strong>${escapeHtml(stat.value)}</strong>
-          </div>
-        `)
-        .join("");
+        mobileStatusStrip.innerHTML = mobileStats
+          .map((stat) => `
+            <div class="mobile-status-chip">
+              <span>${escapeHtml(stat.label)}</span>
+              <strong>${escapeHtml(stat.value)}</strong>
+            </div>
+          `)
+          .join("");
+      }
+    }
+    if (mobileStageHud) {
+      mobileStageHud.innerHTML = isMobileLandscapeMode()
+        ? [
+            { label: "HP", value: `${data.health}/${data.maxHealth}` },
+            { label: "Coins", value: String(data.coins) },
+            { label: "Distance", value: `${data.distance}m` }
+          ]
+            .map((stat) => `
+              <div class="mobile-stage-chip">
+                <span>${escapeHtml(stat.label)}</span>
+                <strong>${escapeHtml(stat.value)}</strong>
+              </div>
+            `)
+            .join("")
+        : "";
     }
     hud.innerHTML = `
       <div class="hud-card hud-card-primary">${runnerMarkup}</div>
@@ -672,12 +697,52 @@
     overlayTertiary.onclick = tertiaryLabel && tertiaryAction ? tertiaryAction : null;
     switchScreen("overlay");
 
+    if (typeof config.afterRender === "function") {
+      requestAnimationFrame(() => config.afterRender());
+    }
+
     if (showNamePrompt) {
       requestAnimationFrame(() => {
         overlayNameInput.focus();
         overlayNameInput.select();
       });
     }
+  }
+
+  function buildPauseSoundtrackDetails() {
+    const trackLabel = escapeHtml(musicTrackName?.textContent || "Stand By");
+    return `
+      <div class="overlay-detail-block pause-soundtrack-block">
+        <strong>Soundtrack</strong>
+        <div class="pause-soundtrack-panel">
+          <span class="pause-soundtrack-name">${trackLabel}</span>
+          <div class="pause-soundtrack-controls">
+            <button type="button" data-track-nav="prev">Prev</button>
+            <button type="button" data-track-nav="next">Next</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindPauseSoundtrackControls() {
+    const panel = overlayDetails.querySelector(".pause-soundtrack-panel");
+    if (!panel) return;
+
+    const trackNameLabel = panel.querySelector(".pause-soundtrack-name");
+    const syncTrackLabel = () => {
+      if (trackNameLabel) trackNameLabel.textContent = musicTrackName?.textContent || "Stand By";
+    };
+
+    panel.querySelectorAll("[data-track-nav]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.trackNav === "prev") audio.previousTrack();
+        if (button.dataset.trackNav === "next") audio.nextTrack();
+        syncTrackLabel();
+      });
+    });
+
+    syncTrackLabel();
   }
 
   function openPauseOverlay() {
@@ -696,6 +761,8 @@
         switchScreen("start");
       },
       {
+        detailsHtml: buildPauseSoundtrackDetails(),
+        afterRender: bindPauseSoundtrackControls,
         tertiaryLabel: "Store",
         tertiaryAction: () => {
           game.stop();
