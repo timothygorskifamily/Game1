@@ -98,6 +98,7 @@
       biome: t.biome,
       description: `${t.name} features unique scenery and tougher patterns.`,
       length: 2100 + id * 420,
+      totalCoins: (18 + id * 6) * 2,
       baseSpeedBoost: (id - 1) * 10,
       difficultyGrowth: 0.09 + id * 0.015,
       backdrop: { sky: t.sky, hill: "#5d78a1", city: "#4f678f", ground: t.ground },

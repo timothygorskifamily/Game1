@@ -4,21 +4,34 @@
   class InputManager {
     constructor() {
       this.keys = new Set();
-      this.actions = { jumpPressed: false, slide: false, pausePressed: false };
+      this.actions = {
+        jumpPressed: false,
+        slide: false,
+        pauseTogglePressed: false,
+        pauseMenuPressed: false
+      };
     }
 
     pressAction(action) {
       if (action === "jump") this.actions.jumpPressed = true;
       if (action === "slide") this.actions.slide = true;
-      if (action === "pause") this.actions.pausePressed = true;
+      if (action === "pauseToggle") this.actions.pauseTogglePressed = true;
+      if (action === "menu") this.actions.pauseMenuPressed = true;
     }
 
     bind() {
       window.addEventListener("keydown", (event) => {
+        const target = event.target;
+        const isEditableTarget = target && (
+          target.isContentEditable ||
+          ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName)
+        );
+        if (isEditableTarget) return;
         if (["Space", "ArrowUp", "ArrowDown"].includes(event.code)) event.preventDefault();
         this.keys.add(event.code);
         if (event.code === "Space" || event.code === "ArrowUp") this.pressAction("jump");
-        if (event.code === "KeyP" || event.code === "Escape") this.pressAction("pause");
+        if (!event.repeat && event.code === "KeyP") this.pressAction("pauseToggle");
+        if (!event.repeat && (event.code === "KeyM" || event.code === "Escape")) this.pressAction("menu");
       });
 
       window.addEventListener("keyup", (event) => {
@@ -76,6 +89,11 @@
       if (!this.actions[name]) return false;
       this.actions[name] = false;
       return true;
+    }
+
+    clearPauseActions() {
+      this.actions.pauseTogglePressed = false;
+      this.actions.pauseMenuPressed = false;
     }
   }
 

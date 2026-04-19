@@ -309,8 +309,9 @@
   function getLevelProgress(levelId) {
     const key = String(levelId);
     if (!profile.progress.levels[key] || typeof profile.progress.levels[key] !== "object") {
-      profile.progress.levels[key] = { bestStars: 0, bestScore: 0, bestCoins: 0, noHitClear: false, completions: 0 };
+      profile.progress.levels[key] = { bestStars: 0, bestScore: 0, bestCoins: 0, bestCoinPickups: 0, noHitClear: false, completions: 0 };
     }
+    if (!Number.isFinite(Number(profile.progress.levels[key].bestCoinPickups))) profile.progress.levels[key].bestCoinPickups = 0;
     return profile.progress.levels[key];
   }
 
@@ -357,18 +358,59 @@
     return { ...mission, value, completed };
   }
 
+  function getLevelCoinTotal(level) {
+    const configuredTotal = Number(level?.totalCoins);
+    if (Number.isFinite(configuredTotal) && configuredTotal > 0) return Math.round(configuredTotal);
+    return (18 + (Number(level?.id) || 0) * 6) * 2;
+  }
+
   function getLevelCoinGoal(level) {
-    return 18 + level.id * 6;
+    return Math.ceil(getLevelCoinTotal(level) * 0.5);
+  }
+
+  function getCoinPickupCount(result) {
+    return Math.max(0, Number(result?.stats?.coinPickups) || 0);
+  }
+
+  function isLevelUnlocked(levelId) {
+    if (levelId <= 1) return true;
+    const previousLevel = FamilyDash.LEVELS.find((entry) => entry.id === levelId - 1);
+    if (!previousLevel) return false;
+    return (getLevelProgress(previousLevel.id).bestCoinPickups || 0) >= getLevelCoinGoal(previousLevel);
+  }
+
+  function getHighestUnlockedLevelId() {
+    return FamilyDash.LEVELS.reduce((highestLevelId, level) => (isLevelUnlocked(level.id) ? level.id : highestLevelId), 1);
+  }
+
+  function getNextLevelUnlockStatus(levelId) {
+    const currentLevel = FamilyDash.LEVELS.find((entry) => entry.id === levelId);
+    const nextLevel = FamilyDash.LEVELS.find((entry) => entry.id === levelId + 1);
+    if (!currentLevel || !nextLevel) return null;
+
+    const totalCoins = getLevelCoinTotal(currentLevel);
+    const requiredCoins = getLevelCoinGoal(currentLevel);
+    const bestCoinPickups = Math.max(0, Number(getLevelProgress(currentLevel.id).bestCoinPickups) || 0);
+
+    return {
+      currentLevelId: currentLevel.id,
+      nextLevelId: nextLevel.id,
+      totalCoins,
+      requiredCoins,
+      progressCoins: Math.min(totalCoins, bestCoinPickups),
+      remainingCoins: Math.max(0, requiredCoins - bestCoinPickups),
+      unlocked: isLevelUnlocked(nextLevel.id)
+    };
   }
 
   function evaluateLevelGoals(level, result) {
     const coinGoal = getLevelCoinGoal(level);
     const cleared = result.outcome === "win";
     const noHit = cleared && (result.stats?.hitsTaken || 0) === 0;
-    const coinGoalMet = cleared && result.coins >= coinGoal;
+    const coinGoalMet = cleared && getCoinPickupCount(result) >= coinGoal;
     const goals = [
       { id: "clear", label: "Finish level", complete: cleared },
-      { id: "coins", label: `Collect ${coinGoal} coins`, complete: coinGoalMet },
+      { id: "coins", label: `Collect ${coinGoal}/${getLevelCoinTotal(level)} coins`, complete: coinGoalMet },
       { id: "noHit", label: "No-hit clear", complete: noHit }
     ];
     const stars = goals.reduce((count, goal) => count + (goal.complete ? 1 : 0), 0);
@@ -429,7 +471,7 @@
   }
 
   function syncLaunchAction() {
-    launchBtn.disabled = !selectedLevel;
+    launchBtn.disabled = !selectedLevel || !isLevelUnlocked(selectedLevel);
   }
 
   function statMeter(value) {
@@ -547,18 +589,34 @@
 
   function renderLevelCards() {
     levelGrid.innerHTML = "";
+    if (!selectedLevel || !isLevelUnlocked(selectedLevel)) selectedLevel = getHighestUnlockedLevelId();
+
     FamilyDash.LEVELS.forEach((level) => {
       const progress = getLevelProgress(level.id);
+      const unlocked = isLevelUnlocked(level.id);
       const coinGoal = getLevelCoinGoal(level);
+      const coinTotal = getLevelCoinTotal(level);
       const goalStates = [
         { label: "Clear", complete: progress.completions > 0 },
-        { label: `${coinGoal} Coins`, complete: progress.bestCoins >= coinGoal },
+        { label: `${coinGoal}/${coinTotal} Coins`, complete: progress.bestCoinPickups >= coinGoal },
         { label: "No Hit", complete: progress.noHitClear }
       ];
       const trophyCount = level.bossEncounter ? countBossTrophiesForLevel(level.id) : 0;
       const selectedCharacterHasTrophy = selectedCharacter ? hasBossTrophy(level.id, selectedCharacter) : false;
+      const nextLevelUnlockStatus = getNextLevelUnlockStatus(level.id);
+      const previousLevel = level.id > 1 ? FamilyDash.LEVELS.find((entry) => entry.id === level.id - 1) : null;
+      const previousLevelProgress = previousLevel ? getLevelProgress(previousLevel.id) : null;
+      const lockedProgress = previousLevel
+        ? Math.min(getLevelCoinTotal(previousLevel), previousLevelProgress?.bestCoinPickups || 0)
+        : 0;
+      const unlockCopy = unlocked
+        ? (nextLevelUnlockStatus
+            ? `<p class="level-progress-copy level-unlock-copy"><strong>Unlock Level ${nextLevelUnlockStatus.nextLevelId}:</strong> ${Math.min(coinTotal, progress.bestCoinPickups || 0)}/${coinTotal} coins picked. Need ${nextLevelUnlockStatus.requiredCoins}.</p>`
+            : `<p class="level-progress-copy level-unlock-copy"><strong>Final Stage:</strong> This level is already unlocked.</p>`)
+        : `<p class="level-progress-copy level-lock-note"><strong>Locked:</strong> Collect ${lockedProgress}/${getLevelCoinTotal(previousLevel)} coins in Level ${previousLevel.id}. Need ${getLevelCoinGoal(previousLevel)} to unlock this stage.</p>`;
       const card = document.createElement("article");
-      card.className = "card level-card";
+      card.className = `card level-card${unlocked ? "" : " locked"}`;
+      card.setAttribute("aria-disabled", unlocked ? "false" : "true");
       card.innerHTML = `
         <div class="level-card-top">
           <h3>Level ${level.id}: ${level.name}</h3>
@@ -572,22 +630,26 @@
           ${goalStates.map((goal) => `<span class="goal-pill ${goal.complete ? "complete" : ""}">${goal.complete ? "Done" : "Open"}: ${goal.label}</span>`).join("")}
         </div>
         <p class="level-progress-copy"><strong>Best Score:</strong> ${progress.bestScore || 0}</p>
+        <p class="level-progress-copy"><strong>Best Coin Route:</strong> ${Math.min(coinTotal, progress.bestCoinPickups || 0)}/${coinTotal}</p>
+        ${unlockCopy}
         ${level.bossEncounter ? `<p class="level-progress-copy"><strong>Boss Trophies:</strong> ${trophyCount}/${FamilyDash.CHARACTERS.length}${selectedCharacter ? ` • ${selectedCharacterHasTrophy ? "selected runner earned one" : "selected runner still missing one"}` : ""}</p>` : ""}
       `;
 
       if (selectedLevel === level.id) card.classList.add("selected");
-      bindQuickAdvance(
-        card,
-        "level",
-        level.id,
-        () => {
-          selectedLevel = level.id;
-          [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
-          card.classList.add("selected");
-          syncLaunchAction();
-        },
-        () => startRun()
-      );
+      if (unlocked) {
+        bindQuickAdvance(
+          card,
+          "level",
+          level.id,
+          () => {
+            selectedLevel = level.id;
+            [...levelGrid.children].forEach((child) => child.classList.remove("selected"));
+            card.classList.add("selected");
+            syncLaunchAction();
+          },
+          () => startRun()
+        );
+      }
       levelGrid.appendChild(card);
     });
     syncLaunchAction();
@@ -784,9 +846,10 @@
   }
 
   function openPauseOverlay() {
+    input.clearPauseActions();
     showOverlay(
       "Paused",
-      "Take a breath. Tap Resume or press P / Escape to continue.",
+      "Take a breath. Tap Resume or press P, M, or Esc to continue.",
       "Resume",
       "Home",
       () => {
@@ -810,6 +873,21 @@
     );
   }
 
+  function isPausedGameScreenOpen() {
+    return screens.game.classList.contains("active") && game && game.state === "paused";
+  }
+
+  function isPausedOverlayOpen() {
+    return screens.overlay.classList.contains("active") && game && game.state === "paused";
+  }
+
+  function resumePausedGame() {
+    if (!game || game.state !== "paused") return;
+    input.clearPauseActions();
+    switchScreen("game");
+    game.pause();
+  }
+
   function saveMissionResult(result) {
     const playerName = sanitizePlayerName(result.playerName);
     const level = FamilyDash.LEVELS.find((entry) => entry.id === result.levelId);
@@ -820,6 +898,7 @@
     levelProgress.bestStars = Math.max(levelProgress.bestStars || 0, goalSummary.stars);
     levelProgress.bestScore = Math.max(levelProgress.bestScore || 0, result.score);
     levelProgress.bestCoins = Math.max(levelProgress.bestCoins || 0, result.coins);
+    levelProgress.bestCoinPickups = Math.max(levelProgress.bestCoinPickups || 0, getCoinPickupCount(result));
     levelProgress.noHitClear = Boolean(levelProgress.noHitClear || goalSummary.noHit);
     if (result.outcome === "win") levelProgress.completions = (levelProgress.completions || 0) + 1;
 
@@ -881,11 +960,13 @@
     });
     saveProfile();
     renderScoreboard();
+    const nextLevelUnlockStatus = getNextLevelUnlockStatus(result.levelId);
     return {
       playerName,
       goalSummary,
       levelStarsImproved,
       bossTrophyEarned,
+      nextLevelUnlockStatus,
       missionStatus: mission ? getMissionStatus(result.character.id) : null,
       missionJustCompleted: Boolean(missionRecord && missionRecord.justCompleted)
     };
@@ -894,9 +975,13 @@
   function showMissionOutcomeOverlay(result, progression) {
     const starsMarkup = renderStarsMarkup(progression.goalSummary.stars, 3);
     const missionStatus = progression.missionStatus;
+    const level = FamilyDash.LEVELS.find((entry) => entry.id === result.levelId);
+    const coinPickups = getCoinPickupCount(result);
+    const nextLevelUnlockStatus = progression.nextLevelUnlockStatus;
     const detailsHtml = `
       <div class="overlay-stats-grid">
         <div class="overlay-stat-card"><span>Stars</span><strong>${starsMarkup}</strong></div>
+        <div class="overlay-stat-card"><span>Coin Route</span><strong>${coinPickups}/${getLevelCoinTotal(level)}</strong></div>
         <div class="overlay-stat-card"><span>Best Combo</span><strong>x${result.stats?.maxCombo || 0}</strong></div>
         <div class="overlay-stat-card"><span>Perfects</span><strong>${result.stats?.perfectDodges || 0}</strong></div>
         <div class="overlay-stat-card"><span>Close Calls</span><strong>${result.stats?.closeCalls || 0}</strong></div>
@@ -905,31 +990,36 @@
         <strong>Level Goals</strong>
         <div class="overlay-goals">${progression.goalSummary.goals.map((goal) => `<span class="goal-pill ${goal.complete ? "complete" : ""}">${goal.complete ? "Done" : "Open"}: ${escapeHtml(goal.label)}</span>`).join("")}</div>
       </div>
+      ${nextLevelUnlockStatus ? `<div class="overlay-detail-block"><strong>${nextLevelUnlockStatus.unlocked ? `Level ${nextLevelUnlockStatus.nextLevelId} Unlocked` : `Level ${nextLevelUnlockStatus.nextLevelId} Locked`}</strong><p>${nextLevelUnlockStatus.unlocked ? `You reached ${nextLevelUnlockStatus.progressCoins}/${nextLevelUnlockStatus.totalCoins} coins in Level ${nextLevelUnlockStatus.currentLevelId}, so the next level is ready.` : `Best route so far: ${nextLevelUnlockStatus.progressCoins}/${nextLevelUnlockStatus.totalCoins} coins in Level ${nextLevelUnlockStatus.currentLevelId}. Need ${nextLevelUnlockStatus.remainingCoins} more to unlock Level ${nextLevelUnlockStatus.nextLevelId}.`}</p></div>` : ""}
       ${progression.levelStarsImproved ? `<div class="overlay-detail-block"><strong>New Star Record</strong><p>This run set a new best star rating for the level.</p></div>` : ""}
       ${progression.bossTrophyEarned ? `<div class="overlay-detail-block"><strong>Boss Trophy Earned</strong><p>${escapeHtml(result.character.name)} claimed this level's boss trophy.</p></div>` : ""}
       ${missionStatus ? `<div class="overlay-detail-block"><strong>Character Mission</strong><p>${escapeHtml(missionStatus.title)} • ${missionStatus.value}/${missionStatus.target}${progression.missionJustCompleted ? " • Completed!" : ""}</p></div>` : ""}
     `;
     const details = `${result.playerName} ran ${Math.floor(result.distance)}m with ${result.character.name}, scored ${result.score}, collected ${result.coins} coins. Wallet: ${profile.wallet}.`;
+    const canAdvanceToNextLevel = Boolean(result.levelId < FamilyDash.LEVELS.length && nextLevelUnlockStatus?.unlocked);
     if (result.outcome === "win") {
       showOverlay(
         "Level Complete!",
         `${details} Nice work. Keep climbing all 10 levels!`,
-        result.levelId < FamilyDash.LEVELS.length ? "Next Level" : "Play Again",
+        canAdvanceToNextLevel ? "Next Level" : "Play Again",
         "Store",
         () => {
-          if (result.levelId < FamilyDash.LEVELS.length) {
+          if (canAdvanceToNextLevel) {
             selectedLevel = result.levelId + 1;
             startRun();
           } else {
-            switchScreen("character");
+            startRun();
           }
         },
         () => openStore(),
         result.levelId < FamilyDash.LEVELS.length
           ? {
               detailsHtml,
-              tertiaryLabel: "Choose Character",
-              tertiaryAction: () => switchScreen("character")
+              tertiaryLabel: canAdvanceToNextLevel ? "Choose Character" : "Choose Level",
+              tertiaryAction: () => {
+                if (canAdvanceToNextLevel) switchScreen("character");
+                else openLevelSelect("character");
+              }
             }
           : { detailsHtml }
       );
@@ -983,7 +1073,7 @@
   function startRun() {
     const character = FamilyDash.getCharacterById(selectedCharacter);
     const level = FamilyDash.LEVELS.find((entry) => entry.id === selectedLevel);
-    if (!character || !level) return;
+    if (!character || !level || !isLevelUnlocked(level.id)) return;
 
     if (game) game.stop();
     const runModifiers = consumeRunModifiers();
@@ -996,7 +1086,7 @@
       audio,
       onHud: updateHud,
       onJump: registerStageHintJump,
-      onPause: openPauseOverlay,
+      onPauseMenu: openPauseOverlay,
       onEnd: ({ outcome, score, coins, distance, stats }) => {
         promptForMissionName({
           outcome,
@@ -1082,11 +1172,23 @@
   launchBtn.addEventListener("click", startRun);
 
   window.addEventListener("keydown", (event) => {
-    const pauseToggle = event.code === "KeyP" || event.code === "Escape";
-    const pausedOverlayOpen = screens.overlay.classList.contains("active") && game && game.state === "paused";
-    if (pauseToggle && ((screens.game.classList.contains("active") && game && game.state === "paused") || pausedOverlayOpen)) {
-      switchScreen("game");
-      game.pause();
+    if (event.repeat) return;
+
+    if (event.code === "KeyP" && (isPausedGameScreenOpen() || isPausedOverlayOpen())) {
+      event.preventDefault();
+      resumePausedGame();
+      return;
+    }
+
+    if ((event.code === "KeyM" || event.code === "Escape") && isPausedGameScreenOpen()) {
+      event.preventDefault();
+      openPauseOverlay();
+      return;
+    }
+
+    if ((event.code === "KeyM" || event.code === "Escape") && isPausedOverlayOpen()) {
+      event.preventDefault();
+      resumePausedGame();
     }
   });
 

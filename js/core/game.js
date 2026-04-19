@@ -10,7 +10,7 @@
       this.onEnd = config.onEnd;
       this.onHud = config.onHud;
       this.onJump = config.onJump || function () {};
-      this.onPause = config.onPause || function () {};
+      this.onPauseMenu = config.onPauseMenu || function () {};
       this.state = "idle";
       this.lastFrame = 0;
       this.rafId = null;
@@ -180,6 +180,7 @@
           maxCombo: this.bestCombo,
           closeCalls: this.closeCalls,
           perfectDodges: this.perfectDodges,
+          coinPickups: this.coinPickups,
           hitsTaken: this.hitsTaken,
           longestCleanStreak: this.bestCleanStreak,
           bestCoinChain: this.bestCoinChain,
@@ -212,6 +213,7 @@
       this.distance = 0;
       this.score = 0;
       this.coinsCollected = 0;
+      this.coinPickups = 0;
       this.obstacles = [];
       this.coins = [];
       this.powerups = [];
@@ -386,11 +388,45 @@
       });
     }
 
+    emitHud() {
+      if (!this.player || !this.level) return;
+      this.onHud({
+        health: this.player.health,
+        maxHealth: this.player.maxHealth,
+        score: Math.floor(this.score),
+        coins: this.coinsCollected,
+        distance: Math.floor(this.distance),
+        level: this.level.id,
+        status: this.state,
+        shield: this.player.shieldTimer,
+        rush: this.player.rushTimer,
+        phase: this.player.phaseTimer,
+        coinBurst: this.player.coinBurstTimer,
+        combo: this.comboLevel(),
+        comboMultiplier: this.comboMultiplier(),
+        coinChain: this.coinChain,
+        cleanStreak: this.cleanStreak,
+        perfectDodges: this.perfectDodges,
+        closeCalls: this.closeCalls,
+        elapsedTime: this.elapsedTime,
+        skillLabel: this.highlightLabel,
+        skillScore: this.highlightScore
+      });
+    }
+
     update(delta) {
       this.input.update();
-      if (this.input.consumeAction("pausePressed")) {
+      if (this.input.consumeAction("pauseTogglePressed")) {
         this.pause();
-        if (this.state === "paused") this.onPause();
+        this.emitHud();
+        return;
+      }
+      if (this.input.consumeAction("pauseMenuPressed")) {
+        if (this.state === "running") this.pause();
+        if (this.state === "paused") {
+          this.emitHud();
+          this.onPauseMenu();
+        }
         return;
       }
       if (this.state !== "running") return;
@@ -495,28 +531,7 @@
         return;
       }
 
-      this.onHud({
-        health: this.player.health,
-        maxHealth: this.player.maxHealth,
-        score: Math.floor(this.score),
-        coins: this.coinsCollected,
-        distance: Math.floor(this.distance),
-        level: this.level.id,
-        status: this.state,
-        shield: this.player.shieldTimer,
-        rush: this.player.rushTimer,
-        phase: this.player.phaseTimer,
-        coinBurst: this.player.coinBurstTimer,
-        combo: this.comboLevel(),
-        comboMultiplier: this.comboMultiplier(),
-        coinChain: this.coinChain,
-        cleanStreak: this.cleanStreak,
-        perfectDodges: this.perfectDodges,
-        closeCalls: this.closeCalls,
-        elapsedTime: this.elapsedTime,
-        skillLabel: this.highlightLabel,
-        skillScore: this.highlightScore
-      });
+      this.emitHud();
     }
 
     handleCollisions() {
@@ -540,6 +555,8 @@
 
       this.coins = this.coins.filter((coin) => {
         if (!FamilyDash.intersects(playerBox, coin)) return true;
+        // Raw pickups drive progression so bonuses do not unlock levels early.
+        this.coinPickups += 1;
         let coinValue = 1;
         if (this.player.coinBurstTimer > 0) coinValue += 1;
         if (this.player.character.id === "liam") coinValue += 1;

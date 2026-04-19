@@ -339,6 +339,20 @@ button:disabled {
   cursor: pointer;
 }
 
+.level-card.locked {
+  cursor: default;
+  opacity: 0.62;
+  filter: saturate(0.72);
+}
+
+.level-lock-note {
+  color: #ffd8a8;
+}
+
+.level-unlock-copy {
+  color: #bfe9d7;
+}
+
 .level-stars {
   display: flex;
   gap: 0.18rem;

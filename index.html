@@ -56,7 +56,7 @@
 
         <section id="levelScreen" class="panel menu-panel" data-mobile-title="Choose Level">
           <h2>Choose Level</h2>
-          <p class="character-screen-note">Each level keeps the same runner mechanics and gets faster, denser, and more demanding.</p>
+          <p class="character-screen-note">Each level gets faster, denser, and more demanding. Collect 50% of a level's coin route to unlock the next one.</p>
           <div id="levelGrid" class="level-grid"></div>
           <div class="actions">
             <button id="backToStoreBtn">Back</button>
@@ -80,7 +80,8 @@
                 <h3>How To Play On PC</h3>
                 <div class="control-row"><kbd>Space</kbd><span>or</span><kbd>Up Arrow</kbd><span>Jump over hazards</span></div>
                 <div class="control-row"><kbd>Down Arrow</kbd><span>Slide under trouble</span></div>
-                <div class="control-row"><kbd>P</kbd><span>or</span><kbd>Esc</kbd><span>Pause or resume</span></div>
+                <div class="control-row"><kbd>P</kbd><span aria-hidden="true"></span><span aria-hidden="true"></span><span>Pause or resume on the game screen</span></div>
+                <div class="control-row"><kbd>M</kbd><span>or</span><kbd>Esc</kbd><span>Open the pause menu</span></div>
                 <p class="pc-controls-summary">Dodge obstacles, grab coins and powerups, and survive to the end of the level.</p>
               </aside>
               <div class="soundtrack-banner">
@@ -103,9 +104,9 @@
                 <span class="mobile-action-hint">Hold to</span>
                 <strong>Slide</strong>
               </button>
-              <button class="mobile-action mobile-action-pause" data-action="pause" type="button">
+              <button class="mobile-action mobile-action-pause" data-action="menu" type="button">
                 <span class="mobile-action-hint">Tap to</span>
-                <strong>Pause</strong>
+                <strong>Menu</strong>
               </button>
             </div>
           </div>

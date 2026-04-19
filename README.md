@@ -12,12 +12,13 @@ This version is intentionally built with **classic script loading** (no ES modul
 - Distinct per-level biome backgrounds with constantly changing district paths (homes, parks, ponds, playgrounds, streets, stores)
 - Character select with 6 runners and distinct stats
 - **10 progressive levels** with unique biome backgrounds (desert, farm, marsh, city, space, volcano, snow, beach, jungle, cyber) plus increasing speed/difficulty
+- **Level unlock progression** where each new level opens after you collect 50% of the previous level's coin route
 - In-game store to buy one-run boosts using coins earned in gameplay
 - Boost item dynamics during runs (rush, boost, coin burst, mega-heal, magnet, phase, shield, heal)
 - Session scoreboard showing top recent run results
 - Persistent wallet, inventory, and high score using `localStorage`
 - Hype-style generated background music loop via Web Audio API
-- Desktop and mobile/touch controls with pause + resume overlay flow
+- Desktop and mobile/touch controls with separate pause toggle and pause menu flow
 
 ## Run locally
 
@@ -34,7 +35,8 @@ Then open: `http://localhost:8080`
 
 - `Space` or `ArrowUp` → Jump
 - `ArrowDown` → Slide
-- `P` or `Esc` → Pause / resume
+- `P` → Pause / resume on the game screen
+- `M` or `Esc` → Open the pause menu
 
 ## Customization guide
 
