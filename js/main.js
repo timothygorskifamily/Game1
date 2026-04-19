@@ -1,5 +1,7 @@
 (function () {
   const FamilyDash = window.FamilyDash;
+  const body = document.body;
+  const appShell = document.querySelector(".app-shell");
 
   const screens = {
     start: document.getElementById("startScreen"),
@@ -17,6 +19,9 @@
   const walletValue = document.getElementById("walletValue");
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
+  const mobileLayoutLabel = document.getElementById("mobileLayoutLabel");
+  const mobileScreenTitle = document.getElementById("mobileScreenTitle");
+  const mobileStatusStrip = document.getElementById("mobileStatusStrip");
   const musicTrackName = document.getElementById("musicTrackName");
   const prevTrackBtn = document.getElementById("prevTrackBtn");
   const nextTrackBtn = document.getElementById("nextTrackBtn");
@@ -85,6 +90,67 @@
   let selectedLevel = null;
   let game = null;
   let levelBackTarget = "store";
+  let activeScreenName = "start";
+  let viewportSyncFrame = 0;
+
+  function detectMobileDevice() {
+    const width = window.innerWidth || document.documentElement.clientWidth || 0;
+    const height = window.innerHeight || document.documentElement.clientHeight || 0;
+    const shortestSide = Math.min(width, height);
+    const coarsePointer = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
+    const touchPrimary = coarsePointer || window.matchMedia("(hover: none)").matches;
+    return touchPrimary && (shortestSide <= 1024 || width <= 1180);
+  }
+
+  function detectOrientation() {
+    const width = window.innerWidth || document.documentElement.clientWidth || 0;
+    const height = window.innerHeight || document.documentElement.clientHeight || 0;
+    return width >= height ? "landscape" : "portrait";
+  }
+
+  function syncViewportMode() {
+    const isMobile = detectMobileDevice();
+    const orientation = detectOrientation();
+    const layoutLabel = isMobile
+      ? `${orientation.charAt(0).toUpperCase()}${orientation.slice(1)} touch layout`
+      : "Desktop layout";
+
+    document.documentElement.style.setProperty("--app-height", `${window.innerHeight || document.documentElement.clientHeight || 0}px`);
+    body.classList.toggle("is-mobile", isMobile);
+    body.classList.toggle("is-desktop", !isMobile);
+    body.classList.toggle("mobile-portrait", isMobile && orientation === "portrait");
+    body.classList.toggle("mobile-landscape", isMobile && orientation === "landscape");
+    body.dataset.deviceMode = isMobile ? `mobile-${orientation}` : "desktop";
+    if (appShell) appShell.dataset.layout = body.dataset.deviceMode;
+    if (mobileLayoutLabel) mobileLayoutLabel.textContent = layoutLabel;
+  }
+
+  function syncScreenChrome(name) {
+    activeScreenName = name;
+    body.dataset.activeScreen = name;
+    body.classList.toggle("game-screen-active", name === "game");
+    if (appShell) appShell.dataset.activeScreen = name;
+
+    Object.entries(screens).forEach(([key, screen]) => {
+      if (!screen) return;
+      screen.setAttribute("aria-hidden", key === name ? "false" : "true");
+    });
+
+    const activeScreen = screens[name];
+    const mobileTitle = activeScreen?.dataset?.mobileTitle
+      || activeScreen?.querySelector("h1, h2")?.textContent
+      || "Family Dash";
+    if (mobileScreenTitle) mobileScreenTitle.textContent = mobileTitle;
+  }
+
+  function scheduleViewportSync() {
+    if (viewportSyncFrame) cancelAnimationFrame(viewportSyncFrame);
+    viewportSyncFrame = requestAnimationFrame(() => {
+      viewportSyncFrame = 0;
+      syncViewportMode();
+      if (activeScreenName === "game") renderer.resize && renderer.resize();
+    });
+  }
 
   function readJSON(key, fallback) {
     try {
@@ -237,6 +303,9 @@
   function switchScreen(name) {
     Object.values(screens).forEach((screen) => screen.classList.remove("active"));
     screens[name].classList.add("active");
+    syncScreenChrome(name);
+    window.scrollTo(0, 0);
+    scheduleViewportSync();
     if (name === "game") requestAnimationFrame(() => renderer.resize && renderer.resize());
   }
 
@@ -439,6 +508,7 @@
     const skillText = data.skillLabel
       ? `${escapeHtml(data.skillLabel)}${data.skillScore > 0 ? ` +${data.skillScore}` : ""}`
       : "Build combo with coins, close calls, and perfect reads";
+    const statusText = String(data.status || "").replace(/^./, (charValue) => charValue.toUpperCase());
     const runnerMarkup = character
       ? `
         <div class="hud-runner">
@@ -455,6 +525,26 @@
         <span>Runner</span>
         <strong>--</strong>
       `;
+    if (mobileStatusStrip) {
+      const mobileStats = [
+        { label: "Runner", value: character?.name || "--" },
+        { label: "HP", value: `${data.health} / ${data.maxHealth}` },
+        { label: "Score", value: String(data.score) },
+        { label: "Coins", value: String(data.coins) },
+        { label: "Distance", value: `${data.distance}m` },
+        { label: "Combo", value: `x${data.comboMultiplier.toFixed(2)}` },
+        { label: "State", value: activeBuffs[0] || statusText }
+      ];
+
+      mobileStatusStrip.innerHTML = mobileStats
+        .map((stat) => `
+          <div class="mobile-status-chip">
+            <span>${escapeHtml(stat.label)}</span>
+            <strong>${escapeHtml(stat.value)}</strong>
+          </div>
+        `)
+        .join("");
+    }
     hud.innerHTML = `
       <div class="hud-card hud-card-primary">${runnerMarkup}</div>
       <div class="hud-card"><span>Level</span><strong>${data.level}/10</strong></div>
@@ -467,7 +557,7 @@
       <div class="hud-card"><span>Clean Streak</span><strong>${data.cleanStreak || 0}</strong><div class="hud-subtext">${data.perfectDodges || 0} perfect • ${data.closeCalls || 0} close calls</div></div>
       <div class="hud-card"><span>Powerups</span><strong>${activeBuffs.length ? activeBuffs[0] : "Idle"}</strong><div class="hud-subtext">${activeBuffs.length > 1 ? activeBuffs.slice(1).join(" • ") : activeBuffs.length ? "Stack active" : "No active effects"}</div></div>
       <div class="hud-card"><span>Skill Feed</span><strong>${skillText}</strong></div>
-      <div class="hud-card"><span>Status</span><strong>${String(data.status || "").replace(/^./, (charValue) => charValue.toUpperCase())}</strong></div>
+      <div class="hud-card"><span>Status</span><strong>${statusText}</strong></div>
       <div class="hud-card"><span>Best</span><strong>${profile.highScore}</strong></div>
     `;
   }
@@ -828,7 +918,11 @@
     }
   });
 
-  window.addEventListener("resize", () => renderer.resize && renderer.resize());
+  window.addEventListener("resize", () => {
+    scheduleViewportSync();
+    renderer.resize && renderer.resize();
+  });
+  window.addEventListener("orientationchange", scheduleViewportSync);
   if (window.ResizeObserver) {
     const resizeObserver = new ResizeObserver(() => renderer.resize && renderer.resize());
     resizeObserver.observe(canvas);
@@ -836,6 +930,13 @@
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => renderer.resize && renderer.resize());
   }
+  [window.matchMedia("(pointer: coarse)"), window.matchMedia("(hover: none)")].forEach((mediaQuery) => {
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", scheduleViewportSync);
+    } else if (typeof mediaQuery.addListener === "function") {
+      mediaQuery.addListener(scheduleViewportSync);
+    }
+  });
 
   if (profile.sessions.length) {
     const best = profile.sessions.reduce((maxValue, session) => Math.max(maxValue, Number(session.score) || 0), profile.highScore || 0);
@@ -843,6 +944,7 @@
     saveProfile();
   }
 
+  syncViewportMode();
   renderScoreboard();
   switchScreen("start");
 })();

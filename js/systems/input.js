@@ -22,20 +22,30 @@
     }
 
     attachMobileControls(rootElement) {
+      if (!rootElement) return;
       rootElement.querySelectorAll("button[data-action]").forEach((button) => {
         const action = button.dataset.action;
+        const releaseAction = () => {
+          if (action === "slide") this.actions.slide = false;
+        };
+
         button.addEventListener("pointerdown", (event) => {
           event.preventDefault();
+          if (typeof button.setPointerCapture === "function" && event.pointerId != null) {
+            try {
+              button.setPointerCapture(event.pointerId);
+            } catch (_err) {
+              // Ignore browsers that reject capture on synthetic interactions.
+            }
+          }
           if (action === "jump") this.actions.jumpPressed = true;
           if (action === "slide") this.actions.slide = true;
           if (action === "pause") this.actions.pausePressed = true;
         });
-        button.addEventListener("pointerup", () => {
-          if (action === "slide") this.actions.slide = false;
+        ["pointerup", "pointercancel", "pointerleave", "lostpointercapture"].forEach((eventName) => {
+          button.addEventListener(eventName, releaseAction);
         });
-        button.addEventListener("pointercancel", () => {
-          if (action === "slide") this.actions.slide = false;
-        });
+        button.addEventListener("contextmenu", (event) => event.preventDefault());
       });
     }
 

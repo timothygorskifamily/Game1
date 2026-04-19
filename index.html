@@ -11,6 +11,14 @@
   </head>
   <body>
     <div class="app-shell">
+      <div class="mobile-topbar" aria-live="polite">
+        <div class="mobile-topbar-copy">
+          <span id="mobileLayoutLabel" class="mobile-topbar-label">Desktop layout</span>
+          <strong id="mobileScreenTitle">Start</strong>
+        </div>
+        <span class="mobile-topbar-brand">Family Dash</span>
+      </div>
+
       <header class="game-header">
         <p class="eyebrow">Illustrated Browser Runner</p>
         <h1>Family Dash</h1>
@@ -19,13 +27,13 @@
       </header>
 
       <main>
-        <section id="startScreen" class="panel active start-panel">
+        <section id="startScreen" class="panel active start-panel" data-mobile-title="Start Mission">
           <button id="startBtn" class="primary">Play</button>
           <h3>Top Recent Session Scores</h3>
           <ol id="recentScores" class="score-list"></ol>
         </section>
 
-        <section id="characterScreen" class="panel">
+        <section id="characterScreen" class="panel menu-panel" data-mobile-title="Choose Runner">
           <h2>Choose Your Character</h2>
           <p class="character-screen-note">Sorted from easiest to hardest so starter-friendly picks show up first.</p>
           <div id="characterGrid" class="character-grid"></div>
@@ -36,7 +44,7 @@
           </div>
         </section>
 
-        <section id="storeScreen" class="panel">
+        <section id="storeScreen" class="panel menu-panel" data-mobile-title="Store Boosts">
           <h2>Store</h2>
           <p>Wallet: <strong><span id="walletValue">0</span> coins</strong></p>
           <div id="storeGrid" class="level-grid"></div>
@@ -46,7 +54,7 @@
           </div>
         </section>
 
-        <section id="levelScreen" class="panel">
+        <section id="levelScreen" class="panel menu-panel" data-mobile-title="Choose Level">
           <h2>Choose Level</h2>
           <p class="character-screen-note">Each level keeps the same runner mechanics and gets faster, denser, and more demanding.</p>
           <div id="levelGrid" class="level-grid"></div>
@@ -56,38 +64,50 @@
           </div>
         </section>
 
-        <section id="gameScreen" class="panel game-panel">
-          <div class="game-stage">
-            <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
-          </div>
-          <div id="hud" class="hud"></div>
-          <div class="game-support">
-            <aside class="pc-controls" aria-label="How to play on PC">
-              <h3>How To Play On PC</h3>
-              <div class="control-row"><kbd>Space</kbd><span>or</span><kbd>Up Arrow</kbd><span>Jump over hazards</span></div>
-              <div class="control-row"><kbd>Down Arrow</kbd><span>Slide under trouble</span></div>
-              <div class="control-row"><kbd>P</kbd><span>or</span><kbd>Esc</kbd><span>Pause or resume</span></div>
-              <p class="pc-controls-summary">Dodge obstacles, grab coins and powerups, and survive to the end of the level.</p>
-            </aside>
-            <div class="soundtrack-banner">
-              <strong>Soundtrack</strong>
-              <div class="soundtrack-row">
-                <span id="musicTrackName">Stand By</span>
-                <div class="soundtrack-controls">
-                  <button id="prevTrackBtn" type="button" aria-label="Previous soundtrack">Prev</button>
-                  <button id="nextTrackBtn" type="button" aria-label="Next soundtrack">Next</button>
+        <section id="gameScreen" class="panel game-panel" data-mobile-title="Run">
+          <div class="game-layout">
+            <div id="mobileStatusStrip" class="mobile-status-strip"></div>
+            <div class="game-stage">
+              <canvas id="gameCanvas" width="960" height="420" aria-label="Game canvas"></canvas>
+            </div>
+            <div id="hud" class="hud"></div>
+            <div class="game-support">
+              <aside class="pc-controls" aria-label="How to play on PC">
+                <h3>How To Play On PC</h3>
+                <div class="control-row"><kbd>Space</kbd><span>or</span><kbd>Up Arrow</kbd><span>Jump over hazards</span></div>
+                <div class="control-row"><kbd>Down Arrow</kbd><span>Slide under trouble</span></div>
+                <div class="control-row"><kbd>P</kbd><span>or</span><kbd>Esc</kbd><span>Pause or resume</span></div>
+                <p class="pc-controls-summary">Dodge obstacles, grab coins and powerups, and survive to the end of the level.</p>
+              </aside>
+              <div class="soundtrack-banner">
+                <strong>Soundtrack</strong>
+                <div class="soundtrack-row">
+                  <span id="musicTrackName">Stand By</span>
+                  <div class="soundtrack-controls">
+                    <button id="prevTrackBtn" type="button" aria-label="Previous soundtrack">Prev</button>
+                    <button id="nextTrackBtn" type="button" aria-label="Next soundtrack">Next</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div class="mobile-controls">
-            <button data-action="jump">Jump</button>
-            <button data-action="slide">Slide</button>
-            <button data-action="pause">Pause</button>
+            <div class="mobile-controls" aria-label="Touch controls">
+              <button class="mobile-action mobile-action-jump" data-action="jump" type="button">
+                <span class="mobile-action-hint">Tap to</span>
+                <strong>Jump</strong>
+              </button>
+              <button class="mobile-action mobile-action-slide" data-action="slide" type="button">
+                <span class="mobile-action-hint">Hold to</span>
+                <strong>Slide</strong>
+              </button>
+              <button class="mobile-action mobile-action-pause" data-action="pause" type="button">
+                <span class="mobile-action-hint">Tap to</span>
+                <strong>Pause</strong>
+              </button>
+            </div>
           </div>
         </section>
 
-        <section id="overlayScreen" class="panel overlay-panel">
+        <section id="overlayScreen" class="panel overlay-panel" data-mobile-title="Mission Update">
           <h2 id="overlayTitle"></h2>
           <p id="overlayText"></p>
           <div id="overlayNamePrompt" class="overlay-name-prompt" hidden>
