@@ -24,6 +24,7 @@
   const mobileScreenTitle = document.getElementById("mobileScreenTitle");
   const mobileStatusStrip = document.getElementById("mobileStatusStrip");
   const mobileStageHud = document.getElementById("mobileStageHud");
+  const mobileStageHint = document.querySelector(".mobile-stage-hint");
   const musicTrackName = document.getElementById("musicTrackName");
   const prevTrackBtn = document.getElementById("prevTrackBtn");
   const nextTrackBtn = document.getElementById("nextTrackBtn");
@@ -100,6 +101,10 @@
     character: { id: null, at: 0 },
     level: { id: null, at: 0 }
   };
+  const stageHintState = {
+    visible: false,
+    jumps: 0
+  };
 
   function detectMobileDevice() {
     const width = window.innerWidth || document.documentElement.clientWidth || 0;
@@ -131,6 +136,7 @@
     body.dataset.deviceMode = isMobile ? `mobile-${orientation}` : "desktop";
     if (appShell) appShell.dataset.layout = body.dataset.deviceMode;
     if (mobileLayoutLabel) mobileLayoutLabel.textContent = layoutLabel;
+    syncStageHintVisibility();
   }
 
   function syncScreenChrome(name) {
@@ -149,6 +155,7 @@
       || activeScreen?.querySelector("h1, h2")?.textContent
       || "Family Dash";
     if (mobileScreenTitle) mobileScreenTitle.textContent = mobileTitle;
+    syncStageHintVisibility();
   }
 
   function scheduleViewportSync() {
@@ -162,6 +169,36 @@
 
   function isMobileLandscapeMode() {
     return body.classList.contains("is-mobile") && body.classList.contains("mobile-landscape");
+  }
+
+  function syncStageHintVisibility() {
+    if (!mobileStageHint) return;
+    const shouldShow = stageHintState.visible && isMobileLandscapeMode() && activeScreenName === "game";
+    mobileStageHint.hidden = !shouldShow;
+    mobileStageHint.setAttribute("aria-hidden", shouldShow ? "false" : "true");
+  }
+
+  function dismissStageHint() {
+    if (!stageHintState.visible) return;
+    stageHintState.visible = false;
+    syncStageHintVisibility();
+  }
+
+  function resetStageHint() {
+    stageHintState.visible = true;
+    stageHintState.jumps = 0;
+    syncStageHintVisibility();
+  }
+
+  function registerStageHintJump() {
+    if (!stageHintState.visible) return;
+    stageHintState.jumps += 1;
+    if (stageHintState.jumps >= 5) dismissStageHint();
+  }
+
+  function updateStageHintLifetime(elapsedTime) {
+    if (!stageHintState.visible) return;
+    if ((Number(elapsedTime) || 0) >= 5) dismissStageHint();
   }
 
   function resetQuickAdvanceState(group) {
@@ -568,6 +605,7 @@
   }
 
   function updateHud(data) {
+    updateStageHintLifetime(data.elapsedTime);
     const character = FamilyDash.getCharacterById(selectedCharacter);
     const activeBuffs = [];
     if (data.shield > 0) activeBuffs.push(`Shield ${data.shield.toFixed(1)}s`);
@@ -957,6 +995,7 @@
       renderer,
       audio,
       onHud: updateHud,
+      onJump: registerStageHintJump,
       onPause: openPauseOverlay,
       onEnd: ({ outcome, score, coins, distance, stats }) => {
         promptForMissionName({
@@ -971,6 +1010,7 @@
       }
     });
 
+    resetStageHint();
     switchScreen("game");
     renderer.resize && renderer.resize();
     updateHud({
@@ -991,6 +1031,7 @@
       cleanStreak: 0,
       perfectDodges: 0,
       closeCalls: 0,
+      elapsedTime: 0,
       skillLabel: "",
       skillScore: 0
     });

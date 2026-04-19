@@ -9,6 +9,7 @@
       this.audio = config.audio;
       this.onEnd = config.onEnd;
       this.onHud = config.onHud;
+      this.onJump = config.onJump || function () {};
       this.onPause = config.onPause || function () {};
       this.state = "idle";
       this.lastFrame = 0;
@@ -400,6 +401,7 @@
       if (this.input.consumeAction("jumpPressed") && p.jump()) {
         this.lastJumpAt = this.elapsedTime;
         this.audio.jump();
+        this.onJump();
       }
       if (this.input.actions.slide && p.isGrounded() && !p.isSliding) {
         this.lastSlideAt = this.elapsedTime;
@@ -511,6 +513,7 @@
         cleanStreak: this.cleanStreak,
         perfectDodges: this.perfectDodges,
         closeCalls: this.closeCalls,
+        elapsedTime: this.elapsedTime,
         skillLabel: this.highlightLabel,
         skillScore: this.highlightScore
       });
