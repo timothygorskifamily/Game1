@@ -12,7 +12,7 @@ This version is intentionally built with **classic script loading** (no ES modul
 - Distinct per-level biome backgrounds with constantly changing district paths (homes, parks, ponds, playgrounds, streets, stores)
 - Character select with 6 runners and distinct stats
 - **10 progressive levels** with unique biome backgrounds (desert, farm, marsh, city, space, volcano, snow, beach, jungle, cyber) plus increasing speed/difficulty
-- **Level unlock progression** where each new level opens after you collect 50% of the previous level's coin route
+- **Level unlock progression** where each new level opens after you collect 30% of the previous level's coin route
 - In-game store to buy one-run boosts using coins earned in gameplay
 - Boost item dynamics during runs (rush, boost, coin burst, mega-heal, magnet, phase, shield, heal)
 - Session scoreboard showing top recent run results

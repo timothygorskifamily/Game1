@@ -365,7 +365,7 @@
   }
 
   function getLevelCoinGoal(level) {
-    return Math.ceil(getLevelCoinTotal(level) * 0.5);
+    return Math.ceil(getLevelCoinTotal(level) * 0.3);
   }
 
   function getCoinPickupCount(result) {
