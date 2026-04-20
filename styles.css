@@ -1400,6 +1400,110 @@ body.is-mobile.mobile-landscape .soundtrack-controls button {
   min-width: 72px;
 }
 
+body.is-mobile.mobile-landscape.game-screen-active {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(88, 215, 176, 0.12), transparent 38%),
+    linear-gradient(180deg, #04101c, #081522);
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .app-shell {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-height: var(--app-height);
+  padding: 0;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-topbar {
+  display: none;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active main {
+  min-height: var(--app-height);
+  height: var(--app-height);
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .game-panel.active {
+  min-height: var(--app-height);
+  height: var(--app-height);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .game-panel.active::before {
+  display: none;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .game-layout {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "stage";
+  gap: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .game-stage {
+  min-height: 100%;
+  height: 100%;
+  padding:
+    max(8px, var(--safe-area-top))
+    max(8px, calc(var(--safe-area-right) + 108px))
+    max(8px, var(--safe-area-bottom))
+    max(8px, var(--safe-area-left));
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  background: #050f1a;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active #gameCanvas {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 20px;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hud {
+  top: max(12px, var(--safe-area-top));
+  left: max(12px, var(--safe-area-left));
+  max-width: calc(100% - max(12px, calc(var(--safe-area-right) + 124px)) - max(12px, var(--safe-area-left)));
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hint {
+  bottom: max(12px, var(--safe-area-bottom));
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-controls {
+  position: absolute;
+  top: max(10px, var(--safe-area-top));
+  right: max(10px, var(--safe-area-right));
+  bottom: max(10px, var(--safe-area-bottom));
+  align-self: auto;
+  width: clamp(84px, 15vw, 104px);
+  min-height: 0;
+  height: auto;
+  z-index: 4;
+  padding: 0.45rem;
+  gap: 0.45rem;
+  border-radius: 20px;
+  background: rgba(4, 12, 22, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-action {
+  border-radius: 16px;
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .mobile-action-pause {
+  min-height: 68px;
+}
+
 .pause-soundtrack-panel {
   display: grid;
   gap: 0.75rem;

@@ -163,8 +163,17 @@
     viewportSyncFrame = requestAnimationFrame(() => {
       viewportSyncFrame = 0;
       syncViewportMode();
-      if (activeScreenName === "game") renderer.resize && renderer.resize();
+      syncRendererViewport();
     });
+  }
+
+  function syncRendererViewport() {
+    if (!renderer || typeof renderer.resize !== "function") return false;
+    const resized = renderer.resize();
+    if (game && typeof game.handleViewportResize === "function" && typeof renderer.getViewport === "function") {
+      game.handleViewportResize(renderer.getViewport());
+    }
+    return resized;
   }
 
   function isMobileLandscapeMode() {
@@ -442,7 +451,7 @@
     syncScreenChrome(name);
     window.scrollTo(0, 0);
     scheduleViewportSync();
-    if (name === "game") requestAnimationFrame(() => renderer.resize && renderer.resize());
+    if (name === "game") requestAnimationFrame(() => syncRendererViewport());
   }
 
   function renderScoreboard() {
@@ -1078,7 +1087,7 @@
     if (game) game.stop();
     const runModifiers = consumeRunModifiers();
 
-    renderer.resize && renderer.resize();
+    syncRendererViewport();
     game = new FamilyDash.RunnerGame({
       canvas,
       input,
@@ -1102,7 +1111,7 @@
 
     resetStageHint();
     switchScreen("game");
-    renderer.resize && renderer.resize();
+    syncRendererViewport();
     updateHud({
       health: character.gameplay.maxHealth,
       maxHealth: character.gameplay.maxHealth,
@@ -1194,15 +1203,15 @@
 
   window.addEventListener("resize", () => {
     scheduleViewportSync();
-    renderer.resize && renderer.resize();
+    syncRendererViewport();
   });
   window.addEventListener("orientationchange", scheduleViewportSync);
   if (window.ResizeObserver) {
-    const resizeObserver = new ResizeObserver(() => renderer.resize && renderer.resize());
+    const resizeObserver = new ResizeObserver(() => syncRendererViewport());
     resizeObserver.observe(canvas);
   }
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(() => renderer.resize && renderer.resize());
+    document.fonts.ready.then(() => syncRendererViewport());
   }
   [window.matchMedia("(pointer: coarse)"), window.matchMedia("(hover: none)")].forEach((mediaQuery) => {
     if (typeof mediaQuery.addEventListener === "function") {

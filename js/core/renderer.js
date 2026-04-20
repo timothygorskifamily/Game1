@@ -216,15 +216,27 @@
 
     resize() {
       const rect = this.canvas.getBoundingClientRect();
-      if (!rect.width || !rect.height) return;
+      if (!rect.width || !rect.height) return false;
+      const logicalWidth = Math.max(1, Math.round(rect.width));
+      const logicalHeight = Math.max(1, Math.round(rect.height));
       const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
-      const width = Math.round(rect.width * dpr);
-      const height = Math.round(rect.height * dpr);
-      if (width === this.displayWidth && height === this.displayHeight) return;
+      const width = Math.round(logicalWidth * dpr);
+      const height = Math.round(logicalHeight * dpr);
+      if (
+        width === this.displayWidth &&
+        height === this.displayHeight &&
+        logicalWidth === this.logicalWidth &&
+        logicalHeight === this.logicalHeight
+      ) {
+        return false;
+      }
+      this.logicalWidth = logicalWidth;
+      this.logicalHeight = logicalHeight;
       this.displayWidth = width;
       this.displayHeight = height;
       this.canvas.width = width;
       this.canvas.height = height;
+      return true;
     }
 
     palette(biome) {

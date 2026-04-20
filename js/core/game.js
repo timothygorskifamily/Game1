@@ -261,6 +261,53 @@
       this.state = "idle";
     }
 
+    handleViewportResize(viewport) {
+      if (!viewport || !viewport.width || !viewport.height) return;
+      const previousViewport = this.viewport || viewport;
+      const previousWidth = previousViewport.width || viewport.width;
+      const previousGroundY = this.groundY || ((previousViewport.height || viewport.height) - 74);
+      const nextGroundY = viewport.height - 74;
+      const widthRatio = previousWidth > 0 ? viewport.width / previousWidth : 1;
+      const groundDelta = nextGroundY - previousGroundY;
+
+      this.viewport = viewport;
+      this.groundY = nextGroundY;
+
+      if (!this.player) return;
+
+      const wasGrounded = this.player.isGrounded();
+      const airGap = previousGroundY - (this.player.y + this.player.height);
+
+      this.player.canvasHeight = viewport.height;
+      this.player.groundY = nextGroundY;
+      this.player.x = Math.min(
+        Math.round(viewport.width * 0.38),
+        Math.max(72, Math.round(this.player.x * widthRatio))
+      );
+      this.player.y = wasGrounded
+        ? nextGroundY - this.player.height
+        : nextGroundY - this.player.height - Math.max(0, airGap);
+
+      this.obstacles.forEach((obstacle) => {
+        obstacle.x *= widthRatio;
+        obstacle.y += groundDelta;
+        if (typeof obstacle.baseY === "number") obstacle.baseY += groundDelta;
+        if (typeof obstacle.shadowY === "number") obstacle.shadowY += groundDelta;
+      });
+
+      this.coins.forEach((coin) => {
+        coin.x *= widthRatio;
+        coin.y += groundDelta;
+      });
+
+      this.powerups.forEach((powerup) => {
+        powerup.x *= widthRatio;
+        powerup.y += groundDelta;
+      });
+
+      this.emitHud();
+    }
+
     currentSpeed() {
       const base = this.player.speed + this.level.baseSpeedBoost;
       const growth = this.level.difficultyGrowth * this.distance;
