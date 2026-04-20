@@ -143,6 +143,12 @@
     activeScreenName = name;
     body.dataset.activeScreen = name;
     body.classList.toggle("game-screen-active", name === "game");
+    const activeOverlayMode = name === "overlay" ? (screens.overlay?.dataset?.overlayMode || "") : "";
+    body.classList.toggle(
+      "score-save-overlay-active",
+      activeOverlayMode === "score-save"
+    );
+    body.classList.toggle("game-over-overlay-active", activeOverlayMode === "game-over");
     if (appShell) appShell.dataset.activeScreen = name;
 
     Object.entries(screens).forEach(([key, screen]) => {
@@ -783,6 +789,7 @@
     overlayTertiary.textContent = tertiaryLabel;
     overlayDetails.hidden = !config.detailsHtml;
     overlayDetails.innerHTML = config.detailsHtml || "";
+    screens.overlay.dataset.overlayMode = config.overlayMode || "";
 
     overlayNamePrompt.hidden = !showNamePrompt;
     overlayNameInput.value = showNamePrompt ? sanitizePlayerName(config.nameValue || profile.playerName) : "";
@@ -1043,6 +1050,7 @@
       () => startRun(),
       () => openStore(),
       {
+        overlayMode: "game-over",
         detailsHtml,
         tertiaryLabel: "Choose Character",
         tertiaryAction: () => switchScreen("character")
@@ -1073,6 +1081,7 @@
       {
         namePrompt: true,
         requireName: true,
+        overlayMode: "score-save",
         nameValue: profile.playerName,
         nameHint: hint
       }
