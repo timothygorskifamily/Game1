@@ -11,6 +11,8 @@
       this.onHud = config.onHud;
       this.onJump = config.onJump || function () {};
       this.onPauseMenu = config.onPauseMenu || function () {};
+      this.onTutorialComplete = config.onTutorialComplete || function () {};
+      this.tutorialConfig = config.tutorial || null;
       this.state = "idle";
       this.lastFrame = 0;
       this.rafId = null;
@@ -194,6 +196,62 @@
       this.stop();
     }
 
+    initTutorial() {
+      if (!this.tutorialConfig || !this.tutorialConfig.enabled) {
+        this.tutorial = null;
+        return;
+      }
+
+      this.tutorial = {
+        active: true,
+        currentStep: 0,
+        steps: [
+          { id: "jump" },
+          { id: "slide" }
+        ]
+      };
+    }
+
+    isTutorialActive() {
+      return Boolean(this.tutorial && this.tutorial.active);
+    }
+
+    getTutorialStep() {
+      if (!this.tutorial) return null;
+      return this.tutorial.steps[this.tutorial.currentStep] || null;
+    }
+
+    advanceTutorial(expectedStepId) {
+      if (!this.isTutorialActive()) return;
+      const step = this.getTutorialStep();
+      if (!step || step.id !== expectedStepId) return;
+
+      this.tutorial.currentStep += 1;
+      if (this.tutorial.currentStep >= this.tutorial.steps.length) {
+        this.completeTutorial();
+      }
+    }
+
+    completeTutorial() {
+      if (!this.isTutorialActive()) return;
+      this.tutorial.active = false;
+      this.setHighlight("Tutorial Complete", 0);
+      this.onTutorialComplete();
+    }
+
+    getTutorialHudState() {
+      if (!this.isTutorialActive()) return null;
+      const step = this.getTutorialStep();
+      if (!step) return null;
+
+      return {
+        active: true,
+        stepId: step.id,
+        stepIndex: this.tutorial.currentStep + 1,
+        totalSteps: this.tutorial.steps.length
+      };
+    }
+
     start(character, level, runModifiers) {
       this.level = level;
       const viewport = this.renderer.getViewport ? this.renderer.getViewport() : { width: this.canvas.width, height: this.canvas.height };
@@ -242,6 +300,7 @@
       this.highlightScore = 0;
       this.highlightTimer = 0;
       this.bossDefeated = false;
+      this.initTutorial();
       this.spawnTimers = { obstacle: 1.15, coin: 0.65, powerup: 6.5 };
       this.lastFrame = performance.now();
       this.loop(this.lastFrame);
@@ -444,7 +503,7 @@
         coins: this.coinsCollected,
         distance: Math.floor(this.distance),
         level: this.level.id,
-        status: this.state,
+        status: this.isTutorialActive() ? "tutorial" : this.state,
         shield: this.player.shieldTimer,
         rush: this.player.rushTimer,
         phase: this.player.phaseTimer,
@@ -457,7 +516,8 @@
         closeCalls: this.closeCalls,
         elapsedTime: this.elapsedTime,
         skillLabel: this.highlightLabel,
-        skillScore: this.highlightScore
+        skillScore: this.highlightScore,
+        tutorial: this.getTutorialHudState()
       });
     }
 
@@ -479,18 +539,26 @@
       if (this.state !== "running") return;
 
       const p = this.player;
-      this.elapsedTime += delta;
-      this.updateComboState(delta);
       if (this.input.consumeAction("jumpPressed") && p.jump()) {
         this.lastJumpAt = this.elapsedTime;
         this.audio.jump();
         this.onJump();
+        this.advanceTutorial("jump");
       }
       if (this.input.actions.slide && p.isGrounded() && !p.isSliding) {
         this.lastSlideAt = this.elapsedTime;
         p.slide();
+        this.advanceTutorial("slide");
       }
       p.update(delta, this.input);
+
+      if (this.isTutorialActive()) {
+        this.emitHud();
+        return;
+      }
+
+      this.elapsedTime += delta;
+      this.updateComboState(delta);
 
       const speed = this.currentSpeed();
       const travel = speed * delta;

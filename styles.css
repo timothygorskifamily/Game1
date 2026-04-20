@@ -844,6 +844,71 @@ kbd {
   color: #f8fbff;
 }
 
+.tutorial-banner {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.85rem;
+  right: 0.85rem;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.tutorial-card {
+  width: min(560px, 100%);
+  padding: 0.8rem 0.95rem;
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 209, 102, 0.16), rgba(255, 255, 255, 0.05)),
+    rgba(7, 16, 28, 0.88);
+  border: 1px solid rgba(255, 209, 102, 0.24);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
+}
+
+.tutorial-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.tutorial-card-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ffe3a4;
+}
+
+.tutorial-card-progress {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 0.3rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #f7fbff;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.tutorial-card strong {
+  display: block;
+  margin-top: 0.45rem;
+  font-size: 1.02rem;
+  color: #fff7de;
+}
+
+.tutorial-card p {
+  margin: 0.4rem 0 0;
+  color: #eaf4ff;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
 .mobile-stage-hint {
   position: absolute;
   left: 50%;
@@ -1411,6 +1476,25 @@ body.is-mobile .soundtrack-controls button {
   width: 100%;
 }
 
+body.is-mobile .tutorial-banner {
+  top: max(12px, var(--safe-area-top));
+  left: max(12px, var(--safe-area-left));
+  right: max(12px, var(--safe-area-right));
+}
+
+body.is-mobile .tutorial-card {
+  padding: 0.72rem 0.82rem;
+  border-radius: 16px;
+}
+
+body.is-mobile .tutorial-card strong {
+  font-size: 0.96rem;
+}
+
+body.is-mobile .tutorial-card p {
+  font-size: 0.84rem;
+}
+
 body.is-mobile .mobile-controls {
   display: grid;
   padding: 0.72rem;
@@ -1637,6 +1721,12 @@ body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hud {
   top: max(12px, var(--safe-area-top));
   left: max(12px, var(--safe-area-left));
   max-width: calc(100% - max(12px, calc(var(--safe-area-right) + var(--landscape-control-rail) + 8px)) - max(12px, var(--safe-area-left)));
+}
+
+body.is-mobile.mobile-landscape.game-screen-active .tutorial-banner {
+  top: max(12px, calc(var(--safe-area-top) + 56px));
+  left: max(12px, var(--safe-area-left));
+  right: max(12px, calc(var(--safe-area-right) + var(--landscape-control-rail) + 8px));
 }
 
 body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hint {

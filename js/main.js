@@ -20,6 +20,7 @@
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
   const gameStage = document.querySelector(".game-stage");
+  const tutorialBanner = document.getElementById("tutorialBanner");
   const mobileControls = document.querySelector(".mobile-controls");
   const mobileLayoutLabel = document.getElementById("mobileLayoutLabel");
   const mobileScreenTitle = document.getElementById("mobileScreenTitle");
@@ -107,6 +108,7 @@
     visible: false,
     jumps: 0
   };
+  let activeTutorialState = null;
 
   function getViewportMetrics() {
     const visualViewport = window.visualViewport;
@@ -244,7 +246,7 @@
 
   function syncStageHintVisibility() {
     if (!mobileStageHint) return;
-    const shouldShow = stageHintState.visible && isMobileLandscapeMode() && activeScreenName === "game";
+    const shouldShow = stageHintState.visible && isMobileLandscapeMode() && activeScreenName === "game" && !activeTutorialState;
     mobileStageHint.hidden = !shouldShow;
     mobileStageHint.setAttribute("aria-hidden", shouldShow ? "false" : "true");
   }
@@ -270,6 +272,63 @@
   function updateStageHintLifetime(elapsedTime) {
     if (!stageHintState.visible) return;
     if ((Number(elapsedTime) || 0) >= 5) dismissStageHint();
+  }
+
+  function hasCompletedTutorial() {
+    return Boolean(profile.progress?.tutorial?.completed);
+  }
+
+  function markTutorialComplete() {
+    if (hasCompletedTutorial()) return;
+    profile.progress.tutorial.completed = true;
+    saveProfile();
+  }
+
+  function getTutorialInstruction(tutorialState) {
+    if (!tutorialState || !tutorialState.active) return null;
+    const isTouch = detectMobileDevice();
+
+    if (tutorialState.stepId === "jump") {
+      return {
+        title: "Jump once to get moving",
+        description: isTouch
+          ? "Tap the stage or press Jump. Time is paused until you do it."
+          : "Press Space or Up Arrow. Time is paused until you do it."
+      };
+    }
+
+    if (tutorialState.stepId === "slide") {
+      return {
+        title: "Now slide under trouble",
+        description: isTouch
+          ? "Press and hold Slide until your runner ducks."
+          : "Press and hold Down Arrow until your runner slides."
+      };
+    }
+
+    return null;
+  }
+
+  function renderTutorialBanner(tutorialState) {
+    if (!tutorialBanner) return;
+    const tutorialCopy = getTutorialInstruction(tutorialState);
+    if (!tutorialCopy) {
+      tutorialBanner.hidden = true;
+      tutorialBanner.innerHTML = "";
+      return;
+    }
+
+    tutorialBanner.hidden = false;
+    tutorialBanner.innerHTML = `
+      <div class="tutorial-card" role="status" aria-live="polite">
+        <div class="tutorial-card-top">
+          <span class="tutorial-card-label">First Run Tutorial</span>
+          <span class="tutorial-card-progress">${tutorialState.stepIndex}/${tutorialState.totalSteps}</span>
+        </div>
+        <strong>${escapeHtml(tutorialCopy.title)}</strong>
+        <p>${escapeHtml(tutorialCopy.description)}</p>
+      </div>
+    `;
   }
 
   function resetQuickAdvanceState(group) {
@@ -340,15 +399,19 @@
   if (typeof profile.inventory !== "object" || Array.isArray(profile.inventory)) profile.inventory = {};
   if (typeof profile.playerName !== "string") profile.playerName = "";
 
-  function normalizeProgress(progress) {
+  function normalizeProgress(progress, sessions) {
     const source = progress && typeof progress === "object" && !Array.isArray(progress) ? progress : {};
     const levels = source.levels && typeof source.levels === "object" && !Array.isArray(source.levels) ? source.levels : {};
     const bossTrophies = source.bossTrophies && typeof source.bossTrophies === "object" && !Array.isArray(source.bossTrophies) ? source.bossTrophies : {};
     const characterMissions = source.characterMissions && typeof source.characterMissions === "object" && !Array.isArray(source.characterMissions) ? source.characterMissions : {};
-    return { levels, bossTrophies, characterMissions };
+    const tutorialSource = source.tutorial && typeof source.tutorial === "object" && !Array.isArray(source.tutorial) ? source.tutorial : {};
+    const completed = typeof tutorialSource.completed === "boolean"
+      ? tutorialSource.completed
+      : Boolean((sessions || []).length);
+    return { levels, bossTrophies, characterMissions, tutorial: { completed } };
   }
 
-  profile.progress = normalizeProgress(profile.progress);
+  profile.progress = normalizeProgress(profile.progress, profile.sessions);
 
   function saveProfile() {
     localStorage.setItem("familyDashHighScore", String(profile.highScore));
@@ -738,6 +801,9 @@
   }
 
   function updateHud(data) {
+    activeTutorialState = data.tutorial?.active ? data.tutorial : null;
+    renderTutorialBanner(activeTutorialState);
+    syncStageHintVisibility();
     updateStageHintLifetime(data.elapsedTime);
     const character = FamilyDash.getCharacterById(selectedCharacter);
     const activeBuffs = [];
@@ -1161,6 +1227,8 @@
       onHud: updateHud,
       onJump: registerStageHintJump,
       onPauseMenu: openPauseOverlay,
+      onTutorialComplete: markTutorialComplete,
+      tutorial: { enabled: !hasCompletedTutorial() },
       onEnd: ({ outcome, score, coins, distance, stats }) => {
         promptForMissionName({
           outcome,
@@ -1197,7 +1265,10 @@
       closeCalls: 0,
       elapsedTime: 0,
       skillLabel: "",
-      skillScore: 0
+      skillScore: 0,
+      tutorial: !hasCompletedTutorial()
+        ? { active: true, stepId: "jump", stepIndex: 1, totalSteps: 2 }
+        : null
     });
     game.start(character, level, runModifiers);
   }
