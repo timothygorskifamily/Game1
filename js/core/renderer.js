@@ -227,10 +227,9 @@
 
       if (isLandscapeGame && this.canvas.parentElement) {
         const parent = this.canvas.parentElement;
-        const parentRect = parent.getBoundingClientRect();
         const styles = window.getComputedStyle(parent);
-        const availableWidth = parentRect.width - (parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight));
-        const availableHeight = parentRect.height - (parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom));
+        const availableWidth = parent.clientWidth - (parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight));
+        const availableHeight = parent.clientHeight - (parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom));
         if (!availableWidth || !availableHeight) return false;
 
         const aspectRatio = this.logicalWidth / this.logicalHeight;

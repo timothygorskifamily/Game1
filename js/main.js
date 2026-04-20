@@ -20,6 +20,7 @@
   const scoreList = document.getElementById("recentScores");
   const canvas = document.getElementById("gameCanvas");
   const gameStage = document.querySelector(".game-stage");
+  const mobileControls = document.querySelector(".mobile-controls");
   const mobileLayoutLabel = document.getElementById("mobileLayoutLabel");
   const mobileScreenTitle = document.getElementById("mobileScreenTitle");
   const mobileStatusStrip = document.getElementById("mobileStatusStrip");
@@ -117,6 +118,32 @@
     };
   }
 
+  function clampValue(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function clearLandscapeMetrics() {
+    document.documentElement.style.removeProperty("--landscape-control-width");
+    document.documentElement.style.removeProperty("--landscape-control-rail");
+  }
+
+  function syncLandscapeMetrics() {
+    const isLandscapeGame = activeScreenName === "game"
+      && body.classList.contains("is-mobile")
+      && body.classList.contains("mobile-landscape");
+    if (!isLandscapeGame) {
+      clearLandscapeMetrics();
+      return;
+    }
+
+    const viewport = getViewportMetrics();
+    const measuredWidth = mobileControls?.getBoundingClientRect().width || 0;
+    const controlWidth = Math.round(measuredWidth || clampValue(viewport.width * 0.15, 84, 104));
+    const controlRail = controlWidth + 20;
+    document.documentElement.style.setProperty("--landscape-control-width", `${controlWidth}px`);
+    document.documentElement.style.setProperty("--landscape-control-rail", `${controlRail}px`);
+  }
+
   function detectMobileDevice() {
     const { width, height } = getViewportMetrics();
     const shortestSide = Math.min(width, height);
@@ -161,6 +188,7 @@
     );
     body.classList.toggle("game-over-overlay-active", activeOverlayMode === "game-over");
     if (appShell) appShell.dataset.activeScreen = name;
+    if (name !== "game") clearLandscapeMetrics();
 
     Object.entries(screens).forEach(([key, screen]) => {
       if (!screen) return;
@@ -181,6 +209,7 @@
 
     const runSync = () => {
       syncViewportMode();
+      syncLandscapeMetrics();
       syncRendererViewport();
     };
 
@@ -200,6 +229,7 @@
   }
 
   function syncRendererViewport() {
+    syncLandscapeMetrics();
     if (!renderer || typeof renderer.resize !== "function") return false;
     const resized = renderer.resize();
     if (game && typeof game.handleViewportResize === "function" && typeof renderer.getViewport === "function") {
@@ -1246,7 +1276,7 @@
   }
   if (window.ResizeObserver) {
     const resizeObserver = new ResizeObserver(() => syncRendererViewport());
-    resizeObserver.observe(canvas);
+    if (gameStage) resizeObserver.observe(gameStage);
   }
   if (document.fonts && document.fonts.ready) {
     document.fonts.ready.then(() => syncRendererViewport());

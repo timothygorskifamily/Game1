@@ -15,6 +15,8 @@
   --radius-lg: 22px;
   --radius-md: 16px;
   --app-height: 100dvh;
+  --landscape-control-width: 96px;
+  --landscape-control-rail: 116px;
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -1610,7 +1612,7 @@ body.is-mobile.mobile-landscape.game-screen-active .game-stage {
   height: 100%;
   padding:
     max(8px, var(--safe-area-top))
-    max(8px, calc(var(--safe-area-right) + 108px))
+    max(8px, calc(var(--safe-area-right) + var(--landscape-control-rail)))
     max(8px, var(--safe-area-bottom))
     max(8px, var(--safe-area-left));
   border-radius: 0;
@@ -1631,7 +1633,7 @@ body.is-mobile.mobile-landscape.game-screen-active #gameCanvas {
 body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hud {
   top: max(12px, var(--safe-area-top));
   left: max(12px, var(--safe-area-left));
-  max-width: calc(100% - max(12px, calc(var(--safe-area-right) + 124px)) - max(12px, var(--safe-area-left)));
+  max-width: calc(100% - max(12px, calc(var(--safe-area-right) + var(--landscape-control-rail) + 8px)) - max(12px, var(--safe-area-left)));
 }
 
 body.is-mobile.mobile-landscape.game-screen-active .mobile-stage-hint {
@@ -1644,7 +1646,7 @@ body.is-mobile.mobile-landscape.game-screen-active .mobile-controls {
   right: max(10px, var(--safe-area-right));
   bottom: max(10px, var(--safe-area-bottom));
   align-self: auto;
-  width: clamp(84px, 15vw, 104px);
+  width: var(--landscape-control-width);
   min-height: 0;
   height: auto;
   z-index: 4;
