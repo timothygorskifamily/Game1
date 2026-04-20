@@ -215,11 +215,48 @@
     }
 
     resize() {
-      const rect = this.canvas.getBoundingClientRect();
-      if (!rect.width || !rect.height) return false;
+      const body = document.body;
+      const isLandscapeGame = Boolean(
+        body &&
+        body.classList.contains("is-mobile") &&
+        body.classList.contains("mobile-landscape") &&
+        body.classList.contains("game-screen-active")
+      );
+      let targetWidth = 0;
+      let targetHeight = 0;
+
+      if (isLandscapeGame && this.canvas.parentElement) {
+        const parent = this.canvas.parentElement;
+        const parentRect = parent.getBoundingClientRect();
+        const styles = window.getComputedStyle(parent);
+        const availableWidth = parentRect.width - (parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight));
+        const availableHeight = parentRect.height - (parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom));
+        if (!availableWidth || !availableHeight) return false;
+
+        const aspectRatio = this.logicalWidth / this.logicalHeight;
+        targetWidth = availableWidth;
+        targetHeight = targetWidth / aspectRatio;
+        if (targetHeight > availableHeight) {
+          targetHeight = availableHeight;
+          targetWidth = targetHeight * aspectRatio;
+        }
+
+        const cssWidth = `${Math.max(1, Math.round(targetWidth))}px`;
+        const cssHeight = `${Math.max(1, Math.round(targetHeight))}px`;
+        if (this.canvas.style.width !== cssWidth) this.canvas.style.width = cssWidth;
+        if (this.canvas.style.height !== cssHeight) this.canvas.style.height = cssHeight;
+      } else {
+        if (this.canvas.style.width) this.canvas.style.width = "";
+        if (this.canvas.style.height) this.canvas.style.height = "";
+        const rect = this.canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return false;
+        targetWidth = rect.width;
+        targetHeight = rect.height;
+      }
+
       const dpr = clamp(window.devicePixelRatio || 1, 1, 2);
-      const width = Math.round(rect.width * dpr);
-      const height = Math.round(rect.height * dpr);
+      const width = Math.round(targetWidth * dpr);
+      const height = Math.round(targetHeight * dpr);
       if (width === this.displayWidth && height === this.displayHeight) return false;
       this.displayWidth = width;
       this.displayHeight = height;

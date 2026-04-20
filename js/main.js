@@ -96,6 +96,7 @@
   let levelBackTarget = "store";
   let activeScreenName = "start";
   let viewportSyncFrame = 0;
+  let viewportSyncTimer = 0;
   const DOUBLE_TAP_WINDOW_MS = 360;
   const quickAdvanceState = {
     character: { id: null, at: 0 },
@@ -106,9 +107,18 @@
     jumps: 0
   };
 
+  function getViewportMetrics() {
+    const visualViewport = window.visualViewport;
+    const width = visualViewport?.width || window.innerWidth || document.documentElement.clientWidth || 0;
+    const height = visualViewport?.height || window.innerHeight || document.documentElement.clientHeight || 0;
+    return {
+      width: Math.max(0, Math.round(width)),
+      height: Math.max(0, Math.round(height))
+    };
+  }
+
   function detectMobileDevice() {
-    const width = window.innerWidth || document.documentElement.clientWidth || 0;
-    const height = window.innerHeight || document.documentElement.clientHeight || 0;
+    const { width, height } = getViewportMetrics();
     const shortestSide = Math.min(width, height);
     const coarsePointer = window.matchMedia("(pointer: coarse)").matches || navigator.maxTouchPoints > 0;
     const touchPrimary = coarsePointer || window.matchMedia("(hover: none)").matches;
@@ -116,19 +126,20 @@
   }
 
   function detectOrientation() {
-    const width = window.innerWidth || document.documentElement.clientWidth || 0;
-    const height = window.innerHeight || document.documentElement.clientHeight || 0;
+    const { width, height } = getViewportMetrics();
     return width >= height ? "landscape" : "portrait";
   }
 
   function syncViewportMode() {
+    const viewport = getViewportMetrics();
     const isMobile = detectMobileDevice();
     const orientation = detectOrientation();
     const layoutLabel = isMobile
       ? `${orientation.charAt(0).toUpperCase()}${orientation.slice(1)} touch layout`
       : "Desktop layout";
 
-    document.documentElement.style.setProperty("--app-height", `${window.innerHeight || document.documentElement.clientHeight || 0}px`);
+    document.documentElement.style.setProperty("--app-width", `${viewport.width}px`);
+    document.documentElement.style.setProperty("--app-height", `${viewport.height}px`);
     body.classList.toggle("is-mobile", isMobile);
     body.classList.toggle("is-desktop", !isMobile);
     body.classList.toggle("mobile-portrait", isMobile && orientation === "portrait");
@@ -166,11 +177,26 @@
 
   function scheduleViewportSync() {
     if (viewportSyncFrame) cancelAnimationFrame(viewportSyncFrame);
-    viewportSyncFrame = requestAnimationFrame(() => {
-      viewportSyncFrame = 0;
+    if (viewportSyncTimer) clearTimeout(viewportSyncTimer);
+
+    const runSync = () => {
       syncViewportMode();
       syncRendererViewport();
+    };
+
+    viewportSyncFrame = requestAnimationFrame(() => {
+      viewportSyncFrame = requestAnimationFrame(() => {
+        viewportSyncFrame = 0;
+        runSync();
+      });
     });
+
+    // Mobile browsers can settle the rotated viewport a beat later than the
+    // first resize/orientation event, especially on iOS.
+    viewportSyncTimer = setTimeout(() => {
+      viewportSyncTimer = 0;
+      runSync();
+    }, 180);
   }
 
   function syncRendererViewport() {
@@ -1215,6 +1241,9 @@
     syncRendererViewport();
   });
   window.addEventListener("orientationchange", scheduleViewportSync);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleViewportSync);
+  }
   if (window.ResizeObserver) {
     const resizeObserver = new ResizeObserver(() => syncRendererViewport());
     resizeObserver.observe(canvas);
