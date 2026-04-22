@@ -572,19 +572,21 @@
     if (!scoreList) return;
     const valid = profile.sessions.filter((session) => session && Number.isFinite(Number(session.score)));
     const topRecent = [...valid].sort((a, b) => Number(b.score) - Number(a.score)).slice(0, 8);
+    scoreList.replaceChildren();
     if (!topRecent.length) {
-      scoreList.innerHTML = "<li>No runs yet. Start your streak!</li>";
+      const emptyItem = document.createElement("li");
+      emptyItem.textContent = "No runs yet. Start your streak!";
+      scoreList.appendChild(emptyItem);
       return;
     }
 
-    scoreList.innerHTML = topRecent
-      .map((entry, idx) => {
-        const playerName = escapeHtml(entry.playerName || "Player");
-        const characterName = escapeHtml(entry.character || "Unknown");
-        const dateLabel = escapeHtml(entry.date || "today");
-        return `<li>#${idx + 1} ${playerName} - ${entry.score} pts - ${characterName} - L${entry.level || "?"} - ${dateLabel}</li>`;
-      })
-      .join("");
+    topRecent.forEach((entry, idx) => {
+      const item = document.createElement("li");
+      const scoreValue = Number(entry.score) || 0;
+      const levelValue = Number.isFinite(Number(entry.level)) ? Number(entry.level) : "?";
+      item.textContent = `#${idx + 1} ${entry.playerName || "Player"} - ${scoreValue} pts - ${entry.character || "Unknown"} - L${levelValue} - ${entry.date || "today"}`;
+      scoreList.appendChild(item);
+    });
   }
 
   function syncCharacterActions() {
