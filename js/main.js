@@ -27,9 +27,6 @@
   const mobileStatusStrip = document.getElementById("mobileStatusStrip");
   const mobileStageHud = document.getElementById("mobileStageHud");
   const mobileStageHint = document.querySelector(".mobile-stage-hint");
-  const musicTrackName = document.getElementById("musicTrackName");
-  const prevTrackBtn = document.getElementById("prevTrackBtn");
-  const nextTrackBtn = document.getElementById("nextTrackBtn");
   const overlayTitle = document.getElementById("overlayTitle");
   const overlayText = document.getElementById("overlayText");
   const overlayNamePrompt = document.getElementById("overlayNamePrompt");
@@ -54,14 +51,6 @@
   input.attachGameplayTap(gameStage, () => detectMobileDevice() && activeScreenName === "game");
 
   const audio = new FamilyDash.AudioSystem();
-  audio.setTrackChangeListener((track, index) => {
-    if (!musicTrackName || !track) return;
-    const totalTracks = audio.soundtracks?.length || 0;
-    const trackNumber = Number.isFinite(index) ? index + 1 : 0;
-    musicTrackName.textContent = totalTracks > 0
-      ? `${track.name} (${trackNumber} of ${totalTracks})`
-      : track.name;
-  });
 
   const renderer = new FamilyDash.Renderer(canvas, FamilyDash.LEVELS[0]);
   const statLabels = {
@@ -805,6 +794,7 @@
     renderTutorialBanner(activeTutorialState);
     syncStageHintVisibility();
     updateStageHintLifetime(data.elapsedTime);
+    if (data.status === "paused") audio.pauseMusic();
     const character = FamilyDash.getCharacterById(selectedCharacter);
     const activeBuffs = [];
     if (data.shield > 0) activeBuffs.push(`Shield ${data.shield.toFixed(1)}s`);
@@ -947,64 +937,26 @@
     }
   }
 
-  function buildPauseSoundtrackDetails() {
-    const trackLabel = escapeHtml(musicTrackName?.textContent || "Stand By");
-    return `
-      <div class="overlay-detail-block pause-soundtrack-block">
-        <strong>Soundtrack</strong>
-        <div class="pause-soundtrack-panel">
-          <span class="pause-soundtrack-name">${trackLabel}</span>
-          <div class="pause-soundtrack-controls">
-            <button type="button" data-track-nav="prev">Prev</button>
-            <button type="button" data-track-nav="next">Next</button>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function bindPauseSoundtrackControls() {
-    const panel = overlayDetails.querySelector(".pause-soundtrack-panel");
-    if (!panel) return;
-
-    const trackNameLabel = panel.querySelector(".pause-soundtrack-name");
-    const syncTrackLabel = () => {
-      if (trackNameLabel) trackNameLabel.textContent = musicTrackName?.textContent || "Stand By";
-    };
-
-    panel.querySelectorAll("[data-track-nav]").forEach((button) => {
-      button.addEventListener("click", () => {
-        if (button.dataset.trackNav === "prev") audio.previousTrack();
-        if (button.dataset.trackNav === "next") audio.nextTrack();
-        syncTrackLabel();
-      });
-    });
-
-    syncTrackLabel();
-  }
-
   function openPauseOverlay() {
     input.clearPauseActions();
+    audio.pauseMusic();
     showOverlay(
       "Paused",
       "Take a breath. Tap Resume or press P, M, or Esc to continue.",
       "Resume",
       "Home",
-      () => {
-        switchScreen("game");
-        game.pause();
-      },
+      () => resumePausedGame(),
       () => {
         game.stop();
+        audio.stopMusic();
         renderScoreboard();
         switchScreen("start");
       },
       {
-        detailsHtml: buildPauseSoundtrackDetails(),
-        afterRender: bindPauseSoundtrackControls,
         tertiaryLabel: "Store",
         tertiaryAction: () => {
           game.stop();
+          audio.stopMusic();
           openStore();
         }
       }
@@ -1023,6 +975,7 @@
     if (!game || game.state !== "paused") return;
     input.clearPauseActions();
     switchScreen("game");
+    audio.resumeMusic();
     game.pause();
   }
 
@@ -1216,6 +1169,7 @@
     if (!character || !level || !isLevelUnlocked(level.id)) return;
 
     if (game) game.stop();
+    audio.stopMusic();
     const runModifiers = consumeRunModifiers();
 
     syncRendererViewport();
@@ -1230,6 +1184,7 @@
       onTutorialComplete: markTutorialComplete,
       tutorial: { enabled: !hasCompletedTutorial() },
       onEnd: ({ outcome, score, coins, distance, stats }) => {
+        audio.stopMusic();
         promptForMissionName({
           outcome,
           score,
@@ -1245,6 +1200,7 @@
     resetStageHint();
     switchScreen("game");
     syncRendererViewport();
+    audio.startMusic();
     updateHud({
       health: character.gameplay.maxHealth,
       maxHealth: character.gameplay.maxHealth,
@@ -1273,24 +1229,7 @@
     game.start(character, level, runModifiers);
   }
 
-  function activateAudio() {
-    audio.startMusic();
-  }
-
-  if (prevTrackBtn) {
-    prevTrackBtn.addEventListener("click", () => {
-      audio.previousTrack();
-    });
-  }
-
-  if (nextTrackBtn) {
-    nextTrackBtn.addEventListener("click", () => {
-      audio.nextTrack();
-    });
-  }
-
   startBtn.addEventListener("click", () => {
-    activateAudio();
     renderScoreboard();
     renderCharacterCards();
     switchScreen("character");

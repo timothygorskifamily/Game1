@@ -17,7 +17,7 @@ This version is intentionally built with **classic script loading** (no ES modul
 - Boost item dynamics during runs (rush, boost, coin burst, mega-heal, magnet, phase, shield, heal)
 - Session scoreboard showing top recent run results
 - Persistent wallet, inventory, and high score using `localStorage`
-- Hype-style generated background music loop via Web Audio API
+- Rotating background music playlist from local MP3 assets during runs
 - Desktop and mobile/touch controls with separate pause toggle and pause menu flow
 
 ## Run locally

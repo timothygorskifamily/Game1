@@ -700,16 +700,10 @@ button:disabled {
 }
 
 .game-support {
-  grid-area: support;
   margin-top: 0.85rem;
-  display: grid;
-  grid-template-columns: minmax(280px, 340px) 1fr;
-  gap: 0.75rem;
-  align-items: stretch;
 }
 
 .pc-controls,
-.soundtrack-banner,
 .overlay-name-prompt {
   border-radius: 20px;
   background: rgba(9, 18, 30, 0.72);
@@ -717,8 +711,11 @@ button:disabled {
   padding: 0.95rem 1rem;
 }
 
-.pc-controls h3,
-.soundtrack-banner strong {
+.pc-controls {
+  max-width: 340px;
+}
+
+.pc-controls h3 {
   margin: 0 0 0.55rem;
   display: block;
 }
@@ -743,31 +740,6 @@ kbd {
   border: 1px solid rgba(255, 255, 255, 0.16);
   font-family: "Space Grotesk", "Outfit", sans-serif;
   font-size: 0.8rem;
-}
-
-.soundtrack-banner {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 100%;
-}
-
-.soundtrack-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.soundtrack-controls {
-  display: flex;
-  gap: 0.45rem;
-}
-
-.soundtrack-controls button {
-  min-width: 74px;
-  padding: 0.55rem 0.8rem;
-  font-size: 0.84rem;
 }
 
 .mobile-status-strip {
@@ -1128,19 +1100,6 @@ kbd {
     width: 100%;
   }
 
-  .soundtrack-row {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .soundtrack-controls {
-    width: 100%;
-  }
-
-  .soundtrack-controls button {
-    width: 100%;
-  }
-
   .control-row {
     grid-template-columns: auto auto auto;
   }
@@ -1458,24 +1417,6 @@ body.is-mobile .pc-controls {
   display: none;
 }
 
-body.is-mobile .soundtrack-banner {
-  padding: 0.8rem 0.9rem;
-  border-radius: 18px;
-}
-
-body.is-mobile .soundtrack-row {
-  gap: 0.65rem;
-}
-
-body.is-mobile .soundtrack-controls {
-  width: 100%;
-}
-
-body.is-mobile .soundtrack-controls button {
-  min-width: 0;
-  width: 100%;
-}
-
 body.is-mobile .tutorial-banner {
   top: max(12px, var(--safe-area-top));
   left: max(12px, var(--safe-area-left));
@@ -1543,11 +1484,6 @@ body.is-mobile.mobile-portrait .mobile-controls {
 body.is-mobile.mobile-portrait .mobile-action-jump {
   grid-column: 1 / -1;
   min-height: 88px;
-}
-
-body.is-mobile.mobile-portrait .soundtrack-row {
-  align-items: stretch;
-  flex-direction: column;
 }
 
 body.is-mobile.mobile-landscape .game-panel.active {
@@ -1630,20 +1566,6 @@ body.is-mobile.mobile-landscape .game-stage {
   align-self: stretch;
   min-width: 0;
   min-height: 100%;
-}
-
-body.is-mobile.mobile-landscape .soundtrack-row {
-  align-items: center;
-  flex-direction: row;
-}
-
-body.is-mobile.mobile-landscape .soundtrack-controls {
-  width: auto;
-}
-
-body.is-mobile.mobile-landscape .soundtrack-controls button {
-  width: auto;
-  min-width: 72px;
 }
 
 body.is-mobile.mobile-landscape.game-screen-active {
@@ -1758,24 +1680,4 @@ body.is-mobile.mobile-landscape.game-screen-active .mobile-action {
 
 body.is-mobile.mobile-landscape.game-screen-active .mobile-action-pause {
   min-height: 68px;
-}
-
-.pause-soundtrack-panel {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.pause-soundtrack-name {
-  font-size: 0.96rem;
-  font-weight: 700;
-  color: #eff6ff;
-}
-
-.pause-soundtrack-controls {
-  display: flex;
-  gap: 0.55rem;
-}
-
-.pause-soundtrack-controls button {
-  min-width: 86px;
 }
